@@ -17,6 +17,7 @@ export interface Block {
   size?: number;
   align?: AlignChoice;
   width?: number;
+  nowrap?: boolean;
 }
 
 export type HeroLayout = "stack" | "split";

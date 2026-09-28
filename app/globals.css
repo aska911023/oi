@@ -363,6 +363,15 @@ img { display: block; max-width: 100%; }
 .bs-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .bs-right { width: 100%; min-width: 0; }
 @media (max-width: 860px) { .blocks-split { grid-template-columns: 1fr; gap: 22px; } }
+
+/* editor: 區塊虛線框(只在預覽) */
+.preview-outline .blocks > *, .preview-outline .bs-left > *, .preview-outline .bs-right > *, .preview-outline .blocks-split {
+  outline: 1px dashed rgba(23, 99, 90, .4); outline-offset: 6px; border-radius: 4px;
+}
+/* editor: 實際裝置預覽 */
+.device-frame { display: flex; justify-content: center; background: var(--page); border: 1px solid var(--border); border-radius: 14px; padding: 16px; overflow: auto; }
+.device-frame iframe { border: 0; width: 100%; height: 520px; background: #fff; border-radius: 8px; }
+.device-frame[data-mode="mobile"] iframe { width: 390px; min-width: 390px; height: 660px; box-shadow: var(--shadow); border-radius: 22px; }
 @media (max-width: 600px) { .blocks { padding: 22px 0 6px; } .blk-carousel .disc-img { height: 220px; } }
 
 /* block editor */

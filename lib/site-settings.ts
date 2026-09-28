@@ -23,6 +23,7 @@ function sanitizeBlock(raw: unknown, i: number): Block | null {
     size: typeof b.size === "number" ? b.size : undefined,
     align: b.align === "left" || b.align === "center" || b.align === "right" ? b.align : undefined,
     width: typeof b.width === "number" ? b.width : undefined,
+    nowrap: typeof b.nowrap === "boolean" ? b.nowrap : undefined,
   };
 }
 

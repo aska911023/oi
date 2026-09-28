@@ -26,6 +26,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [previewKey, setPreviewKey] = useState(0);
 
   const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => { setS((p) => ({ ...p, [k]: v })); setSaved(false); };
   const updateBlock = (id: string, patch: Partial<Block>) => set("blocks", s.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
@@ -60,6 +62,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
     setSaved(true);
+    setPreviewKey((k) => k + 1); // 重載實際版面預覽
   }
 
   const StyleRow = ({ b }: { b: Block }) => (
@@ -91,10 +94,24 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     <div style={{ maxWidth: 860 }}>
       {/* 即時預覽 */}
       <div className="panel">
-        <div className="panel-head"><b>即時預覽</b><span className="sub">改哪裡,這裡立刻變</span></div>
-        <div style={{ background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: "24px 26px" }}>
+        <div className="panel-head"><b>內容預覽(即時)</b><span className="sub">改文字/顏色會立刻變;虛線=區塊範圍</span></div>
+        <div className="preview-outline" style={{ background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: "24px 26px" }}>
           <BlocksRender blocks={s.blocks} layout={s.hero_layout} />
         </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-head">
+          <b>實際版面預覽</b>
+          <div className="align-seg">
+            <button className={previewMode === "desktop" ? "on" : ""} onClick={() => setPreviewMode("desktop")}>電腦</button>
+            <button className={previewMode === "mobile" ? "on" : ""} onClick={() => setPreviewMode("mobile")}>手機</button>
+          </div>
+        </div>
+        <div className="device-frame" data-mode={previewMode}>
+          <iframe key={previewKey} src="/" title="實際預覽" />
+        </div>
+        <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 10 }}>這是真實響應式效果(依裝置螢幕)。改完按下方「儲存並套用」,這裡會自動更新。</p>
       </div>
 
       {/* 區塊編輯 */}
