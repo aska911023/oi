@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import type { SiteSettings, Block, BlockType, AlignChoice, FontChoice } from "@/lib/site-settings-types";
@@ -28,16 +28,44 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [previewKey, setPreviewKey] = useState(0);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewOuterRef = useRef<HTMLDivElement>(null);
+  const previewInnerRef = useRef<HTMLDivElement>(null);
+  const deviceRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const [pScale, setPScale] = useState(1); // 即時預覽縮放
+  const [pH, setPH] = useState<number | undefined>(undefined); // 縮放後高度
+  const [fScale, setFScale] = useState(1); // iframe 桌機縮放
 
-  const PAD = 26; // .preview-outline 左右內距,分隔線對齊用
+  const REAL_W = 1136; // 前台 shell 內容寬(1200 − padding)
+  const DESK_W = 1440; // 桌機模擬寬
+  const PAD = 26; // 即時預覽左右內距,分隔線對齊用
+
+  useEffect(() => {
+    const measure = () => {
+      const outer = previewOuterRef.current, inner = previewInnerRef.current;
+      if (outer && inner) {
+        const sc = Math.min(1, outer.clientWidth / REAL_W);
+        setPScale(sc);
+        setPH(inner.offsetHeight * sc);
+      }
+      const dev = deviceRef.current;
+      if (dev) setFScale(Math.min(1, (dev.clientWidth - 32) / DESK_W));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (previewOuterRef.current) ro.observe(previewOuterRef.current);
+    if (previewInnerRef.current) ro.observe(previewInnerRef.current);
+    if (deviceRef.current) ro.observe(deviceRef.current);
+    return () => ro.disconnect();
+  }, [s.blocks, s.hero_layout, s.hero_split_ratio, s.bg_color, s.color_primary, s.color_accent, previewMode]);
+
   function onDividerMove(clientX: number) {
-    if (!dragging.current || !previewRef.current) return;
-    const r = previewRef.current.getBoundingClientRect();
-    const inner = r.width - PAD * 2;
-    if (inner <= 0) return;
-    const pct = Math.round(((clientX - r.left - PAD) / inner) * 100);
+    if (!dragging.current || !previewInnerRef.current) return;
+    const r = previewInnerRef.current.getBoundingClientRect(); // 已縮放後尺寸
+    const padS = PAD * pScale;
+    const content = r.width - padS * 2;
+    if (content <= 0) return;
+    const pct = Math.round(((clientX - r.left - padS) / content) * 100);
     set("hero_split_ratio", Math.min(80, Math.max(20, pct)));
   }
 
@@ -107,22 +135,25 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       {/* 即時預覽 */}
       <div className="panel">
         <div className="panel-head"><b>內容預覽(即時)</b><span className="sub">{s.hero_layout === "split" ? "拖拉中間綠線調文字/圖片比例" : "改文字/顏色會立刻變;虛線=區塊範圍"}</span></div>
-        <div className="preview-outline" ref={previewRef}
-          style={{ position: "relative", background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: `24px ${PAD}px`, touchAction: "none" }}>
-          <BlocksRender blocks={s.blocks} layout={s.hero_layout} ratio={s.hero_split_ratio} />
-          {s.hero_layout === "split" && (
-            <div
-              className="split-divider"
-              style={{ left: `calc(${PAD}px + (100% - ${PAD * 2}px) * ${s.hero_split_ratio} / 100)` }}
-              title="拖拉調整 文字 / 圖片 比例"
-              onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = true; }}
-              onPointerMove={(e) => onDividerMove(e.clientX)}
-              onPointerUp={(e) => { dragging.current = false; e.currentTarget.releasePointerCapture(e.pointerId); }}
-            >
-              <span className="split-grip" />
-              <span className="split-badge">{s.hero_split_ratio}% / {100 - s.hero_split_ratio}%</span>
-            </div>
-          )}
+        <div className="preview-outline" ref={previewOuterRef}
+          style={{ position: "relative", overflow: "hidden", height: pH, background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", touchAction: "none" }}>
+          <div ref={previewInnerRef}
+            style={{ width: REAL_W, transform: `scale(${pScale})`, transformOrigin: "top left", padding: `24px ${PAD}px`, boxSizing: "border-box", position: "relative" }}>
+            <BlocksRender blocks={s.blocks} layout={s.hero_layout} ratio={s.hero_split_ratio} />
+            {s.hero_layout === "split" && (
+              <div
+                className="split-divider"
+                style={{ left: `calc(${PAD}px + (100% - ${PAD * 2}px) * ${s.hero_split_ratio} / 100)` }}
+                title="拖拉調整 文字 / 圖片 比例"
+                onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = true; }}
+                onPointerMove={(e) => onDividerMove(e.clientX)}
+                onPointerUp={(e) => { dragging.current = false; e.currentTarget.releasePointerCapture(e.pointerId); }}
+              >
+                <span className="split-grip" />
+                <span className="split-badge">{s.hero_split_ratio}% / {100 - s.hero_split_ratio}%</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -134,10 +165,17 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
             <button className={previewMode === "mobile" ? "on" : ""} onClick={() => setPreviewMode("mobile")}>手機</button>
           </div>
         </div>
-        <div className="device-frame" data-mode={previewMode}>
-          <iframe key={previewKey} src="/" title="實際預覽" />
+        <div className="device-frame" data-mode={previewMode} ref={deviceRef}>
+          {previewMode === "desktop" ? (
+            <div style={{ width: DESK_W * fScale, height: 860 * fScale, overflow: "hidden", borderRadius: 8, boxShadow: "var(--shadow)" }}>
+              <iframe key={previewKey} src="/" title="實際預覽"
+                style={{ width: DESK_W, height: 860, border: 0, transform: `scale(${fScale})`, transformOrigin: "top left", background: "#fff" }} />
+            </div>
+          ) : (
+            <iframe key={previewKey} src="/" title="實際預覽" />
+          )}
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 10 }}>這是真實響應式效果(依裝置螢幕)。改完按下方「儲存並套用」,這裡會自動更新。</p>
+        <p style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 10 }}>電腦模式=模擬 1440px 桌機寬(等比縮小),手機=390px。改完按下方「儲存並套用」會自動更新。</p>
       </div>
 
       {/* 區塊編輯 */}
