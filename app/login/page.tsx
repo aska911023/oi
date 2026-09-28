@@ -1,0 +1,108 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Logo } from "@/components/logo";
+import { createClient } from "@/lib/supabase/client";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+
+  // fields
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const supabase = createClient();
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(""); setMsg("");
+
+    if (mode === "register") {
+      if (!displayName.trim() || !fullName.trim() || !phone.trim() || !address.trim() || !email.trim())
+        return setErr("請完整填寫所有欄位。");
+      if (password.length < 8) return setErr("密碼至少 8 碼。");
+      if (password !== confirm) return setErr("兩次密碼不一致。");
+      setBusy(true);
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { display_name: displayName.trim(), full_name: fullName.trim(), phone: phone.trim(), address: address.trim() } },
+      });
+      setBusy(false);
+      if (error) return setErr(error.message);
+      if (!data.session) {
+        // 需要 email 驗證
+        return setMsg("註冊成功!請到信箱點擊驗證連結後再登入。");
+      }
+      router.push("/account");
+      router.refresh();
+      return;
+    }
+
+    // login
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    setBusy(false);
+    if (error) return setErr("登入失敗:帳號或密碼錯誤。");
+    router.push("/account");
+    router.refresh();
+  }
+
+  return (
+    <>
+      <header className="topbar solid">
+        <div className="shell"><Logo /></div>
+      </header>
+
+      <div className="auth-wrap">
+        <div className="auth-card">
+          <div className="auth-mark">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#17635a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s7-6.3 7-12a7 7 0 1 0-14 0c0 5.7 7 12 7 12z" /><circle cx="12" cy="9" r="2.4" /></svg>
+          </div>
+          <h1>{mode === "login" ? "歡迎回來" : "加入偶宿"}</h1>
+          <p>{mode === "login" ? "登入後收藏你喜歡的民宿。" : "填一下基本資料,開始你的下一段小旅行。"}</p>
+
+          <div className="auth-tabs">
+            <button className={mode === "login" ? "on" : ""} onClick={() => { setMode("login"); setErr(""); setMsg(""); }}>登入</button>
+            <button className={mode === "register" ? "on" : ""} onClick={() => { setMode("register"); setErr(""); setMsg(""); }}>註冊</button>
+          </div>
+
+          <form onSubmit={submit}>
+            {mode === "register" && (
+              <>
+                <div className="auth-field"><label>暱稱 *</label><input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="想被怎麼稱呼" required /></div>
+                <div className="auth-field"><label>姓名 *</label><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="真實姓名(訂房聯絡用)" required /></div>
+                <div className="auth-field"><label>手機 *</label><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09xx-xxx-xxx" inputMode="tel" required /></div>
+                <div className="auth-field"><label>通訊地址 *</label><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="縣市 / 鄉鎮 / 街道地址" required /></div>
+              </>
+            )}
+            <div className="auth-field"><label>Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
+            <div className="auth-field"><label>密碼 *</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? "至少 8 碼" : "輸入密碼"} required /></div>
+            {mode === "register" && (
+              <div className="auth-field"><label>確認密碼 *</label><input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="再輸入一次" required /></div>
+            )}
+
+            {err && <div className="auth-err">{err}</div>}
+            {msg && <div className="notice" style={{ marginTop: 12 }}>{msg}</div>}
+
+            <button className="btn btn-primary" style={{ width: "100%", marginTop: 8 }} disabled={busy}>
+              {busy ? "處理中…" : mode === "login" ? "登入" : "建立帳號"}
+            </button>
+          </form>
+
+          <p className="auth-note">註冊即表示同意偶宿的服務條款與隱私權政策。你的資料僅用於帳號與訂房聯絡。</p>
+        </div>
+      </div>
+    </>
+  );
+}

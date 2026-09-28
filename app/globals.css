@@ -159,4 +159,30 @@ img { display: block; max-width: 100%; }
 .footer .tagline { font-size: 13.5px; }
 .footer a:hover { color: #fff; }
 
+/* ── auth / account ── */
+.auth-wrap { min-height: calc(100dvh - 84px); display: grid; place-items: center; padding: 60px 20px; }
+.auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 34px; box-shadow: var(--shadow); }
+.auth-mark { width: 52px; height: 52px; border-radius: 15px; background: var(--green-soft); display: grid; place-items: center; margin-bottom: 18px; }
+.auth-card h1 { font-family: var(--serif); font-size: 26px; margin: 0 0 6px; }
+.auth-card > p { font-size: 14px; color: var(--text-2); margin: 0 0 22px; }
+.auth-tabs { display: flex; background: var(--green-soft); border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 24px; }
+.auth-tabs button { flex: 1; padding: 10px; border-radius: 7px; font-size: 14px; font-weight: 700; color: var(--text-2); }
+.auth-tabs button.on { background: #fff; color: var(--green); box-shadow: var(--shadow-sm); }
+.auth-field { margin-bottom: 15px; }
+.auth-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+.auth-field input { width: 100%; border: 1px solid var(--border-strong); border-radius: 10px; padding: 12px 14px; font-size: 15px; background: #fff; color: var(--text); }
+.auth-field input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+.auth-err { font-size: 13.5px; color: #a5303a; background: #fdf1f0; border: 1px solid #f2d5d2; border-radius: 8px; padding: 10px 12px; margin: 12px 0; }
+.auth-note { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.7; }
+
+.account { max-width: 680px; margin: 50px auto; padding: 0 24px; }
+.account h1 { font-family: var(--serif); font-size: 30px; margin: 0 0 8px; }
+.account-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 8px 26px; margin: 24px 0; }
+.account-row { display: flex; justify-content: space-between; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+.account-row:last-child { border-bottom: 0; }
+.account-row dt { color: var(--muted); margin: 0; }
+.account-row dd { margin: 0; font-weight: 600; }
+.role-badge { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); }
+.account-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
