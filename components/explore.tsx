@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Stay, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
+import HeroCarousel from "@/components/hero-carousel";
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -30,7 +31,7 @@ interface HeroContent {
   hero_title?: string;
   hero_subtitle?: string;
   hero_caption?: string;
-  hero_image?: string;
+  hero_images?: string[];
   search_hint?: string;
 }
 
@@ -83,10 +84,10 @@ export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroCon
             <h1>{hero?.hero_title || "找一間民宿,住進好風景。"}</h1>
             <p>{hero?.hero_subtitle || "選個地方、挑種步調,出發就這麼簡單。"}</p>
           </div>
-          <div className="disc-img">
-            <img src={hero?.hero_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"} alt="民宿情境" />
-            <span>{hero?.hero_caption || "留一點時間,給旅行。"}</span>
-          </div>
+          <HeroCarousel
+            images={hero?.hero_images && hero.hero_images.length ? hero.hero_images : ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"]}
+            caption={hero?.hero_caption || "留一點時間,給旅行。"}
+          />
         </div>
 
         <div className="shell">

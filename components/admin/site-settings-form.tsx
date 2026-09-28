@@ -2,66 +2,111 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { SiteSettings } from "@/lib/site-settings";
+import type { SiteSettings, ElStyle, AlignChoice, FontChoice } from "@/lib/site-settings";
+
+const famCss = (f: FontChoice) => (f === "sans" ? '"Noto Sans TC",sans-serif' : '"Noto Serif TC",serif');
+const ALIGN: [AlignChoice, string][] = [["left", "靠左"], ["center", "置中"], ["right", "靠右"]];
+type ElKey = "eyebrow" | "title" | "subtitle";
 
 export default function SiteSettingsForm({ initial }: { initial: SiteSettings }) {
   const [s, setS] = useState<SiteSettings>(initial);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => {
-    setS((p) => ({ ...p, [k]: v }));
+  const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => { setS((p) => ({ ...p, [k]: v })); setSaved(false); };
+  const setStyle = (el: ElKey, patch: Partial<ElStyle>) => {
+    setS((p) => ({ ...p, hero_styles: { ...p.hero_styles, [el]: { ...p.hero_styles[el], ...patch } } }));
     setSaved(false);
   };
 
-  async function upload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { alert("請選擇圖片檔"); return; }
-    setUploading(true);
+  async function uploadFile(file: File): Promise<string | null> {
+    if (!file.type.startsWith("image/")) { alert("請選擇圖片檔"); return null; }
     const sb = createClient();
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `hero-${Date.now()}.${ext}`;
+    const path = `hero-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
     const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
-    if (error) { setUploading(false); alert("上傳失敗:" + error.message); return; }
-    const { data } = sb.storage.from("site").getPublicUrl(path);
-    set("hero_image", data.publicUrl);
-    setUploading(false);
+    if (error) { alert("上傳失敗:" + error.message); return null; }
+    return sb.storage.from("site").getPublicUrl(path).data.publicUrl;
   }
+  async function onUpload(i: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploading(i);
+    const url = await uploadFile(file);
+    setUploading(null);
+    if (url) { const imgs = [...s.hero_images]; imgs[i] = url; set("hero_images", imgs); }
+  }
+  const addImage = () => { if (s.hero_images.length < 4) set("hero_images", [...s.hero_images, ""]); };
+  const removeImage = (i: number) => set("hero_images", s.hero_images.filter((_, k) => k !== i));
+  const setImageUrl = (i: number, v: string) => { const imgs = [...s.hero_images]; imgs[i] = v; set("hero_images", imgs); };
 
   async function save() {
     setBusy(true);
     const sb = createClient();
     const { error } = await sb.from("site_settings").update({
       hero_eyebrow: s.hero_eyebrow, hero_title: s.hero_title, hero_subtitle: s.hero_subtitle,
-      hero_caption: s.hero_caption, search_hint: s.search_hint, hero_image: s.hero_image,
+      hero_caption: s.hero_caption, search_hint: s.search_hint,
+      hero_images: s.hero_images.filter((x) => x.trim()),
       color_primary: s.color_primary, color_accent: s.color_accent,
-      heading_font: s.heading_font, hero_title_size: Number(s.hero_title_size),
-      updated_at: new Date().toISOString(),
+      hero_styles: s.hero_styles, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
     setSaved(true);
   }
 
+  const StyleRow = ({ el }: { el: ElKey }) => {
+    const st = s.hero_styles[el];
+    return (
+      <div className="style-controls">
+        <select value={st.font} onChange={(e) => setStyle(el, { font: e.target.value as FontChoice })}>
+          <option value="serif">襯線</option><option value="sans">黑體</option>
+        </select>
+        <input type="color" value={st.color} onChange={(e) => setStyle(el, { color: e.target.value })} title="文字顏色" />
+        <span className="sc-num"><input type="number" min={10} max={80} value={st.size} onChange={(e) => setStyle(el, { size: Number(e.target.value) })} />px</span>
+        <div className="align-seg">
+          {ALIGN.map(([v, l]) => (
+            <button key={v} className={st.align === v ? "on" : ""} onClick={() => setStyle(el, { align: v })}>{l}</button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const eb = s.hero_styles.eyebrow, tt = s.hero_styles.title, sub = s.hero_styles.subtitle;
+
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 820 }}>
+      {/* 即時預覽 */}
       <div className="panel">
-        <div className="panel-head"><b>文字內容</b><span className="sub">首頁主視覺文案</span></div>
-        <div className="field"><label>上標(小字)</label><input value={s.hero_eyebrow} onChange={(e) => set("hero_eyebrow", e.target.value)} /></div>
-        <div className="field"><label>大標題</label><input value={s.hero_title} onChange={(e) => set("hero_title", e.target.value)} /></div>
-        <div className="field"><label>副標</label><input value={s.hero_subtitle} onChange={(e) => set("hero_subtitle", e.target.value)} /></div>
+        <div className="panel-head"><b>即時預覽</b><span className="sub">改哪裡,這裡立刻變</span></div>
+        <div className="hero-preview">
+          <div className="hp-copy">
+            <div style={{ color: eb.color, fontFamily: famCss(eb.font), fontSize: 12, textAlign: eb.align, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>{s.hero_eyebrow}</div>
+            <div style={{ color: tt.color, fontFamily: famCss(tt.font), fontSize: Math.min(tt.size, 34), textAlign: tt.align, fontWeight: 800, lineHeight: 1.3, margin: "4px 0 8px" }}>{s.hero_title}</div>
+            <div style={{ color: sub.color, fontFamily: famCss(sub.font), fontSize: Math.min(sub.size, 16), textAlign: sub.align }}>{s.hero_subtitle}</div>
+          </div>
+          <div className="hp-img">{s.hero_images[0] ? <img src={s.hero_images[0]} alt="" /> : <div className="hp-empty">尚無圖片</div>}</div>
+        </div>
+      </div>
+
+      {/* 文字 + 每段樣式 */}
+      <div className="panel">
+        <div className="panel-head"><b>文字內容與樣式</b><span className="sub">每段可各自選字體 / 顏色 / 大小 / 對齊</span></div>
+        <div className="field"><label>上標(小字)</label><input value={s.hero_eyebrow} onChange={(e) => set("hero_eyebrow", e.target.value)} /><StyleRow el="eyebrow" /></div>
+        <div className="field"><label>大標題</label><input value={s.hero_title} onChange={(e) => set("hero_title", e.target.value)} /><StyleRow el="title" /></div>
+        <div className="field"><label>副標</label><input value={s.hero_subtitle} onChange={(e) => set("hero_subtitle", e.target.value)} /><StyleRow el="subtitle" /></div>
         <div className="frow">
           <div className="field"><label>圖片說明</label><input value={s.hero_caption} onChange={(e) => set("hero_caption", e.target.value)} /></div>
           <div className="field"><label>搜尋列下方備註</label><input value={s.search_hint} onChange={(e) => set("search_hint", e.target.value)} /></div>
         </div>
       </div>
 
+      {/* 品牌色 */}
       <div className="panel">
-        <div className="panel-head"><b>外觀</b><span className="sub">顏色・字體・大小</span></div>
+        <div className="panel-head"><b>品牌色</b><span className="sub">按鈕與標籤(全站)</span></div>
         <div className="frow">
-          <div className="field"><label>主色(按鈕/重點)</label>
+          <div className="field"><label>主色(按鈕)</label>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <input type="color" value={s.color_primary} onChange={(e) => set("color_primary", e.target.value)} style={{ width: 52, height: 42, padding: 2 }} />
               <input value={s.color_primary} onChange={(e) => set("color_primary", e.target.value)} style={{ flex: 1 }} />
@@ -74,36 +119,32 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
             </div>
           </div>
         </div>
-        <div className="frow">
-          <div className="field"><label>標題字體</label>
-            <select value={s.heading_font} onChange={(e) => set("heading_font", e.target.value as "serif" | "sans")}>
-              <option value="serif">襯線(Noto Serif TC)</option>
-              <option value="sans">黑體(Noto Sans TC)</option>
-            </select>
-          </div>
-          <div className="field"><label>大標尺寸(px)</label>
-            <input type="number" min={24} max={72} value={s.hero_title_size} onChange={(e) => set("hero_title_size", Number(e.target.value))} />
-          </div>
-        </div>
       </div>
 
+      {/* 主視覺輪播 */}
       <div className="panel">
-        <div className="panel-head"><b>主視覺圖片</b><span className="sub">可直接選檔上傳,或貼圖片網址</span></div>
-        {s.hero_image && (
-          <img src={s.hero_image} alt="預覽" style={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 12, marginBottom: 14 }} />
-        )}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
-            {uploading ? "上傳中…" : "選擇檔案上傳"}
-            <input type="file" accept="image/*" onChange={upload} style={{ display: "none" }} disabled={uploading} />
-          </label>
-          <input value={s.hero_image} onChange={(e) => set("hero_image", e.target.value)} placeholder="或貼上圖片網址 https://…" style={{ flex: 1, minWidth: 220, padding: "11px 13px", border: "1px solid var(--border-strong)", borderRadius: 10, fontSize: 14 }} />
+        <div className="panel-head"><b>主視覺輪播</b><span className="sub">最多 4 張,自動輪播</span></div>
+        <div className="img-list">
+          {s.hero_images.map((img, i) => (
+            <div className="img-item" key={i}>
+              <div className="img-thumb">{img ? <img src={img} alt="" /> : <span>空</span>}</div>
+              <div className="img-ctl">
+                <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+                  {uploading === i ? "上傳中…" : img ? "更換" : "選檔上傳"}
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => onUpload(i, e)} disabled={uploading !== null} />
+                </label>
+                <input value={img} onChange={(e) => setImageUrl(i, e.target.value)} placeholder="或貼網址" />
+                <button className="lnk danger" onClick={() => removeImage(i)}>移除</button>
+              </div>
+            </div>
+          ))}
         </div>
+        {s.hero_images.length < 4 && <button className="btn btn-ghost btn-sm" style={{ marginTop: 12 }} onClick={addImage}>＋ 新增照片</button>}
       </div>
 
       <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 6 }}>
-        <button className="btn btn-primary" onClick={save} disabled={busy || uploading}>{busy ? "儲存中…" : "儲存並套用"}</button>
-        {saved && <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ 已儲存,重新整理首頁即可看到</span>}
+        <button className="btn btn-primary" onClick={save} disabled={busy || uploading !== null}>{busy ? "儲存中…" : "儲存並套用"}</button>
+        {saved && <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ 已儲存,重整首頁即可看到</span>}
       </div>
     </div>
   );

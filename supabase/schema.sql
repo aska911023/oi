@@ -223,6 +223,8 @@ create table if not exists public.site_settings (
   updated_at     timestamptz not null default now(),
   constraint site_settings_single check (id = 1)
 );
+alter table public.site_settings add column if not exists hero_styles jsonb;
+alter table public.site_settings add column if not exists hero_images jsonb;
 insert into public.site_settings (id) values (1) on conflict (id) do nothing;
 alter table public.site_settings enable row level security;
 drop policy if exists site_sel on public.site_settings;
