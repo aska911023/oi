@@ -9,3 +9,6 @@ build
 .vercel
 next-env.d.ts
 .data
+
+.vercel
+.env*
