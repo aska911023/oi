@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
+import PasswordInput from "@/components/password-input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -86,9 +87,9 @@ export default function LoginPage() {
               </>
             )}
             <div className="auth-field"><label>Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
-            <div className="auth-field"><label>密碼 *</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? "至少 8 碼" : "輸入密碼"} required /></div>
+            <div className="auth-field"><label>密碼 *</label><PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "register" ? "至少 8 碼" : "輸入密碼"} minLength={mode === "register" ? 8 : undefined} /></div>
             {mode === "register" && (
-              <div className="auth-field"><label>確認密碼 *</label><input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="再輸入一次" required /></div>
+              <div className="auth-field"><label>確認密碼 *</label><PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="再輸入一次" /></div>
             )}
 
             {err && <div className="auth-err">{err}</div>}
