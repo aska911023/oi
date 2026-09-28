@@ -355,6 +355,10 @@ img { display: block; max-width: 100%; }
 .blk-image { border-radius: 16px; box-shadow: var(--shadow-sm); }
 .blk-carousel { width: 100%; }
 .blk-carousel .disc-img { height: 340px; }
+.blk-split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+.blk-split .bs-img img { width: 100%; border-radius: 16px; box-shadow: var(--shadow-sm); display: block; }
+.blk-split .bs-text p { margin: 0; line-height: 1.8; }
+@media (max-width: 640px) { .blk-split { grid-template-columns: 1fr; gap: 16px; } }
 @media (max-width: 600px) { .blocks { padding: 22px 0 6px; } .blk-carousel .disc-img { height: 220px; } }
 
 /* block editor */

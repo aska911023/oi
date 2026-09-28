@@ -2,7 +2,7 @@
 
 export type FontChoice = "serif" | "sans";
 export type AlignChoice = "left" | "center" | "right";
-export type BlockType = "heading" | "text" | "image" | "carousel" | "button" | "spacer";
+export type BlockType = "heading" | "text" | "image" | "carousel" | "button" | "spacer" | "split";
 
 export interface Block {
   id: string;

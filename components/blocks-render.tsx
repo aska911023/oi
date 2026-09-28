@@ -41,6 +41,20 @@ export default function BlocksRender({ blocks }: { blocks: Block[] }) {
                 <a className="btn btn-primary" href={b.href || "#"}>{b.text}</a>
               </div>
             ) : null;
+          case "split": {
+            const imageRight = b.align !== "left"; // 預設圖在右
+            const imgEl = (
+              <div className="bs-img" key="img">
+                {b.image ? <img src={b.image} alt="" style={b.height ? { height: b.height, objectFit: "cover" } : undefined} /> : null}
+              </div>
+            );
+            const txtEl = (
+              <div className="bs-text" key="txt">
+                <p style={{ color: b.color, fontFamily: fam(b.font), fontSize: b.size, margin: 0, lineHeight: 1.8 }}>{b.text}</p>
+              </div>
+            );
+            return <div key={b.id} className="blk-split">{imageRight ? [txtEl, imgEl] : [imgEl, txtEl]}</div>;
+          }
           case "spacer":
             return <div key={b.id} style={{ height: b.height || 24 }} />;
           default:

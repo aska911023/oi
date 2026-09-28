@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS, type SiteSettings, type Block, type BlockType } from 
 
 export * from "./site-settings-types";
 
-const TYPES: BlockType[] = ["heading", "text", "image", "carousel", "button", "spacer"];
+const TYPES: BlockType[] = ["heading", "text", "image", "carousel", "button", "spacer", "split"];
 
 function sanitizeBlock(raw: unknown, i: number): Block | null {
   if (!raw || typeof raw !== "object") return null;

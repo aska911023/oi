@@ -6,7 +6,7 @@ import BlocksRender from "@/components/blocks-render";
 import type { SiteSettings, Block, BlockType, AlignChoice, FontChoice } from "@/lib/site-settings-types";
 
 const ALIGN: [AlignChoice, string][] = [["left", "靠左"], ["center", "置中"], ["right", "靠右"]];
-const TYPE_LABEL: Record<BlockType, string> = { heading: "標題", text: "文字", image: "圖片", carousel: "輪播", button: "按鈕", spacer: "間距" };
+const TYPE_LABEL: Record<BlockType, string> = { heading: "標題", text: "文字", image: "圖片", carousel: "輪播", split: "圖文並排", button: "按鈕", spacer: "間距" };
 const genId = () => "b" + Math.random().toString(36).slice(2, 9);
 
 function newBlock(type: BlockType): Block {
@@ -17,6 +17,7 @@ function newBlock(type: BlockType): Block {
     case "carousel": return { id: genId(), type, images: [""], width: 100 };
     case "button": return { id: genId(), type, text: "按鈕文字", href: "", align: "left" };
     case "spacer": return { id: genId(), type, height: 32 };
+    case "split": return { id: genId(), type, image: "", text: "在這裡寫一段介紹文字,放在圖片旁邊。", align: "right", color: "#5D706A", font: "sans", size: 16 };
   }
 }
 
@@ -153,6 +154,22 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
               )}
               {b.type === "spacer" && (
                 <span className="sc-num">高度<input type="number" min={8} max={200} value={b.height || 24} onChange={(e) => updateBlock(b.id, { height: Number(e.target.value) })} />px</span>
+              )}
+              {b.type === "split" && (
+                <>
+                  <textarea rows={3} value={b.text || ""} onChange={(e) => updateBlock(b.id, { text: e.target.value })} placeholder="圖片旁邊的文字" />
+                  <div style={{ marginTop: 8 }}><ImgField id={b.id} value={b.image || ""} onChange={(v) => updateBlock(b.id, { image: v })} /></div>
+                  <div className="style-controls">
+                    <select value={b.font || "sans"} onChange={(e) => updateBlock(b.id, { font: e.target.value as FontChoice })}><option value="serif">襯線</option><option value="sans">黑體</option></select>
+                    <input type="color" value={b.color || "#5D706A"} onChange={(e) => updateBlock(b.id, { color: e.target.value })} title="文字顏色" />
+                    <span className="sc-num"><input type="number" min={10} max={40} value={b.size || 16} onChange={(e) => updateBlock(b.id, { size: Number(e.target.value) })} />px</span>
+                    <div className="align-seg">
+                      <button className={b.align === "left" ? "on" : ""} onClick={() => updateBlock(b.id, { align: "left" })}>圖在左</button>
+                      <button className={b.align !== "left" ? "on" : ""} onClick={() => updateBlock(b.id, { align: "right" })}>圖在右</button>
+                    </div>
+                    <span className="sc-num">圖高<input type="number" min={0} max={800} value={b.height ?? ""} placeholder="自動" onChange={(e) => updateBlock(b.id, { height: e.target.value ? Number(e.target.value) : undefined })} />px</span>
+                  </div>
+                </>
               )}
             </div>
           ))}
