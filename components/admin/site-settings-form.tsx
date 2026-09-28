@@ -55,7 +55,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     const sb = createClient();
     const { error } = await sb.from("site_settings").update({
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
-      search_hint: s.search_hint, blocks: s.blocks, updated_at: new Date().toISOString(),
+      search_hint: s.search_hint, hero_layout: s.hero_layout, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -93,13 +93,21 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       <div className="panel">
         <div className="panel-head"><b>即時預覽</b><span className="sub">改哪裡,這裡立刻變</span></div>
         <div style={{ background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: "24px 26px" }}>
-          <BlocksRender blocks={s.blocks} />
+          <BlocksRender blocks={s.blocks} layout={s.hero_layout} />
         </div>
       </div>
 
       {/* 區塊編輯 */}
       <div className="panel">
         <div className="panel-head"><b>首頁區塊</b><span className="sub">新增 / 排序 / 刪除,每塊可調樣式</span></div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
+          <span style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>版面</span>
+          <div className="align-seg">
+            <button className={s.hero_layout === "stack" ? "on" : ""} onClick={() => set("hero_layout", "stack")}>直式堆疊</button>
+            <button className={s.hero_layout === "split" ? "on" : ""} onClick={() => set("hero_layout", "split")}>左文右圖</button>
+          </div>
+          <span style={{ fontSize: 12, color: "var(--muted)" }}>「左文右圖」= 文字排左、圖片/輪播排右(手機自動堆疊)</span>
+        </div>
         <div className="blk-list">
           {s.blocks.map((b, i) => (
             <div className="blk-card" key={b.id}>

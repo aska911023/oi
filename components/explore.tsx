@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { Stay, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
 import BlocksRender from "@/components/blocks-render";
-import { DEFAULT_BLOCKS, type Block } from "@/lib/site-settings-types";
+import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -27,7 +27,7 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ stays, blocks, searchHint }: { stays: Stay[]; blocks?: Block[]; searchHint?: string }) {
+export default function Explore({ stays, blocks, searchHint, heroLayout }: { stays: Stay[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -71,7 +71,7 @@ export default function Explore({ stays, blocks, searchHint }: { stays: Stay[]; 
       {/* discovery hero(白底綠字) */}
       <section className="disc">
         <div className="shell">
-          <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} />
+          <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} layout={heroLayout} />
         </div>
 
         <div className="shell">

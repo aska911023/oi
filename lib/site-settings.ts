@@ -37,6 +37,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       if (typeof d.color_accent === "string" && d.color_accent) s.color_accent = d.color_accent;
       if (typeof d.bg_color === "string" && d.bg_color) s.bg_color = d.bg_color;
       if (typeof d.search_hint === "string" && d.search_hint) s.search_hint = d.search_hint;
+      if (d.hero_layout === "stack" || d.hero_layout === "split") s.hero_layout = d.hero_layout;
       if (Array.isArray(d.blocks) && d.blocks.length) {
         const parsed = d.blocks.map(sanitizeBlock).filter(Boolean) as Block[];
         if (parsed.length) s.blocks = parsed;

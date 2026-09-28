@@ -19,11 +19,14 @@ export interface Block {
   width?: number;
 }
 
+export type HeroLayout = "stack" | "split";
+
 export interface SiteSettings {
   color_primary: string;
   color_accent: string;
   bg_color: string;
   search_hint: string;
+  hero_layout: HeroLayout;
   blocks: Block[];
 }
 
@@ -41,5 +44,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   color_accent: "#E5FA00",
   bg_color: "#F6F4EE",
   search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
+  hero_layout: "split",
   blocks: DEFAULT_BLOCKS,
 };
