@@ -1,0 +1,168 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { GEOGRAPHIC_AREAS, CATEGORIES, priceLabel } from "@/lib/data";
+import type { Stay } from "@/lib/types";
+
+const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
+
+type Form = Omit<Stay, "id"> & { id?: string };
+const EMPTY: Form = {
+  name: "", region: REGIONS[0], town: "", category: "設計旅宿",
+  price: 2000, guests: 2, image: "", description: "", amenities: "Wi-Fi",
+  website: "", published: false, featured: false, sample: false,
+};
+
+export default function StaysAdmin({ initial }: { initial: Stay[] }) {
+  const [list, setList] = useState<Stay[]>(initial);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState<"all" | "published" | "draft">("all");
+  const [form, setForm] = useState<Form | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const stats = useMemo(() => ({
+    total: list.length,
+    published: list.filter((s) => s.published).length,
+    draft: list.filter((s) => !s.published).length,
+    featured: list.filter((s) => s.featured).length,
+  }), [list]);
+
+  const filtered = useMemo(() => list.filter((s) => {
+    if (status === "published" && !s.published) return false;
+    if (status === "draft" && s.published) return false;
+    if (q.trim()) {
+      const hay = (s.name + s.region + s.town + s.category).toLowerCase();
+      if (!hay.includes(q.trim().toLowerCase())) return false;
+    }
+    return true;
+  }), [list, q, status]);
+
+  async function refresh() {
+    const sb = createClient();
+    const { data } = await sb.from("stays").select("*").order("created_at", { ascending: false });
+    setList((data as Stay[]) || []);
+  }
+
+  async function save() {
+    if (!form) return;
+    if (!form.name.trim() || !form.town.trim()) { alert("請填名稱與鄉鎮市區"); return; }
+    setBusy(true);
+    const sb = createClient();
+    const payload = {
+      name: form.name.trim(), region: form.region, town: form.town.trim(),
+      category: form.category, price: Number(form.price) || 0, guests: Number(form.guests) || 1,
+      image: form.image.trim(), description: form.description.trim(), amenities: form.amenities.trim(),
+      website: form.website.trim(), published: form.published, featured: form.featured, sample: form.sample,
+    };
+    let error;
+    if (form.id) {
+      ({ error } = await sb.from("stays").update(payload).eq("id", form.id));
+    } else {
+      ({ error } = await sb.from("stays").insert(payload));
+    }
+    setBusy(false);
+    if (error) { alert("儲存失敗:" + error.message); return; }
+    setForm(null);
+    await refresh();
+  }
+
+  async function togglePublish(s: Stay) {
+    const sb = createClient();
+    await sb.from("stays").update({ published: !s.published }).eq("id", s.id);
+    await refresh();
+  }
+  async function toggleFeatured(s: Stay) {
+    const sb = createClient();
+    await sb.from("stays").update({ featured: !s.featured }).eq("id", s.id);
+    await refresh();
+  }
+  async function remove(s: Stay) {
+    if (!confirm(`確定刪除「${s.name}」?此動作無法復原。`)) return;
+    const sb = createClient();
+    await sb.from("stays").delete().eq("id", s.id);
+    await refresh();
+  }
+
+  return (
+    <>
+      <div className="stats">
+        <div className="stat-card"><div className="n">{stats.total}</div><div className="l">全部民宿</div></div>
+        <div className="stat-card"><div className="n">{stats.published}</div><div className="l">已上架</div></div>
+        <div className="stat-card"><div className="n">{stats.draft}</div><div className="l">草稿 / 下架</div></div>
+        <div className="stat-card"><div className="n">{stats.featured}</div><div className="l">精選置頂</div></div>
+      </div>
+
+      <div className="admin-bar">
+        <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋名稱、地區、鄉鎮…" />
+        <div className="seg">
+          {(["all", "published", "draft"] as const).map((v) => (
+            <button key={v} className={status === v ? "on" : ""} onClick={() => setStatus(v)}>
+              {v === "all" ? "全部" : v === "published" ? "已上架" : "草稿"}
+            </button>
+          ))}
+        </div>
+        <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>＋ 新增民宿</button>
+      </div>
+
+      <div className="atable-wrap">
+        <table className="atable">
+          <thead>
+            <tr><th></th><th>名稱</th><th>地區</th><th>風格</th><th>每晚起價</th><th>人數</th><th>狀態</th><th>操作</th></tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && <tr><td colSpan={8} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {filtered.map((s) => (
+              <tr key={s.id}>
+                <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
+                <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
+                <td>{s.region} · {s.town}</td>
+                <td>{s.category}</td>
+                <td>{priceLabel(s.price)}</td>
+                <td>{s.guests} 人</td>
+                <td><span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span></td>
+                <td>
+                  <div className="row-actions">
+                    <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
+                    <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                    <button className="lnk" onClick={() => toggleFeatured(s)}>{s.featured ? "取消置頂" : "置頂"}</button>
+                    <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {form && (
+        <>
+          <div className="overlay" onClick={() => setForm(null)} />
+          <div className="editor" role="dialog" aria-modal="true">
+            <h2>{form.id ? "編輯民宿" : "新增民宿"}</h2>
+            <div className="form-grid">
+              <div className="wide"><label>名稱 *</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="例:海邊的日子" /></div>
+              <div><label>縣市</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
+              <div><label>鄉鎮市區 *</label><input value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} placeholder="例:恆春鎮" /></div>
+              <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+              <div><label>每晚起價 (NT$)</label><input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
+              <div><label>最多入住人數</label><input type="number" value={form.guests} onChange={(e) => setForm({ ...form, guests: Number(e.target.value) })} /></div>
+              <div><label>設備(以「、」分隔)</label><input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="泳池、Wi-Fi、停車位" /></div>
+              <div className="wide"><label>圖片網址(https)</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://…" /></div>
+              <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
+              <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
+            </div>
+            <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+              <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>
+              <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選置頂(贊助)</label>
+            </div>
+            <div className="editor-actions">
+              <button className="btn btn-ghost" onClick={() => setForm(null)}>取消</button>
+              <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "儲存中…" : "儲存"}</button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}

@@ -21,11 +21,10 @@ export default function LoginPage() {
   const [address, setAddress] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  const supabase = createClient();
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(""); setMsg("");
+    const supabase = createClient();
 
     if (mode === "register") {
       if (!displayName.trim() || !fullName.trim() || !phone.trim() || !address.trim() || !email.trim())
