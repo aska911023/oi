@@ -40,6 +40,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       if (typeof d.search_hint === "string" && d.search_hint) s.search_hint = d.search_hint;
       if (d.hero_layout === "stack" || d.hero_layout === "split") s.hero_layout = d.hero_layout;
       if (typeof d.logo_image === "string") s.logo_image = d.logo_image;
+      if (typeof d.logo_size === "number" && d.logo_size > 0) s.logo_size = d.logo_size;
       if (Array.isArray(d.blocks) && d.blocks.length) {
         const parsed = d.blocks.map(sanitizeBlock).filter(Boolean) as Block[];
         if (parsed.length) s.blocks = parsed;

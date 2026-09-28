@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <>
       <header className="topbar solid">
         <div className="shell">
-          <Logo href="/admin" src={settings.logo_image || undefined} />
+          <Logo href="/admin" src={settings.logo_image || undefined} size={settings.logo_size} />
           <nav className="topnav">
             <Link href="/">看前台</Link>
             <Link href="/account">我的帳號</Link>

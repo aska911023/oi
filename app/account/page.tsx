@@ -35,7 +35,7 @@ export default async function Account() {
     <>
       <header className="topbar solid">
         <div className="shell">
-          <Logo src={settings.logo_image || undefined} />
+          <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
           <nav className="topnav"><Link href="/">探索民宿</Link></nav>
         </div>
       </header>

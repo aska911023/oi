@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-export function Logo({ href = "/", src }: { href?: string; src?: string }) {
+export function Logo({ href = "/", src, size }: { href?: string; src?: string; size?: number }) {
   return (
     <Link href={href} className="brand" aria-label="偶宿 O!">
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="brand-logo" src={src} alt="偶宿 O!" />
+        <img className="brand-logo" src={src} alt="偶宿 O!" style={size ? { height: size, maxHeight: size } : undefined} />
       ) : (
         <>
           <svg className="mk" viewBox="0 0 46 40" fill="none" aria-hidden>

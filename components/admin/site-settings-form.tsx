@@ -57,7 +57,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     const sb = createClient();
     const { error } = await sb.from("site_settings").update({
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
-      search_hint: s.search_hint, hero_layout: s.hero_layout, logo_image: s.logo_image, blocks: s.blocks, updated_at: new Date().toISOString(),
+      search_hint: s.search_hint, hero_layout: s.hero_layout, logo_image: s.logo_image, logo_size: s.logo_size, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -234,7 +234,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
         <div className="field"><label>搜尋列下方備註</label><input value={s.search_hint} onChange={(e) => set("search_hint", e.target.value)} /></div>
         <div className="field"><label>網站 Logo(左上角;留空用預設 O!)</label>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            {s.logo_image && <img src={s.logo_image} alt="logo" style={{ height: 38 }} />}
+            {s.logo_image && <img src={s.logo_image} alt="logo" style={{ height: s.logo_size }} />}
             <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
               {uploadingId === "logo" ? "上傳中…" : s.logo_image ? "更換" : "選檔上傳"}
               <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingId !== null}
@@ -242,6 +242,9 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
             </label>
             <input value={s.logo_image} onChange={(e) => set("logo_image", e.target.value)} placeholder="或貼網址" style={{ flex: 1, minWidth: 180 }} />
             {s.logo_image && <button className="lnk danger" onClick={() => set("logo_image", "")}>移除</button>}
+          </div>
+          <div className="style-controls" style={{ marginTop: 8 }}>
+            <span className="sc-num">Logo 大小<input type="number" min={20} max={120} value={s.logo_size} onChange={(e) => set("logo_size", Number(e.target.value))} />px</span>
           </div>
         </div>
       </div>

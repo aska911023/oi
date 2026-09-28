@@ -29,6 +29,7 @@ export interface SiteSettings {
   search_hint: string;
   hero_layout: HeroLayout;
   logo_image: string;
+  logo_size: number;
   blocks: Block[];
 }
 
@@ -48,5 +49,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
   hero_layout: "split",
   logo_image: "",
+  logo_size: 42,
   blocks: DEFAULT_BLOCKS,
 };

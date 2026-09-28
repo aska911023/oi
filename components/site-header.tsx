@@ -19,7 +19,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
   return (
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
       <div className="shell">
-        <Logo src={settings.logo_image || undefined} />
+        <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
         <nav className="topnav">
           <Link href="/">探索民宿</Link>
           {user ? (
