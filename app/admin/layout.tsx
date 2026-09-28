@@ -19,7 +19,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (user.email && admins.includes(user.email.toLowerCase()) && profile?.role !== "admin" && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       await createAdminClient().from("profiles").update({ role: "admin" }).eq("id", user.id);
-      profile = { role: "admin" };
+      const { data: p2 } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      profile = p2; // 以資料庫真實 role 把關(升級若被擋則不放行)
     } catch {}
   }
 

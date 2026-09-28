@@ -128,7 +128,8 @@ end; $$;
 create or replace function public.guard_profile_role()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if new.role is distinct from old.role and not public.is_admin() then
+  -- 只擋「登入中的一般會員」偷改 role;server 端(service_role / SQL Editor,auth.uid() 為 NULL)與 admin 放行
+  if new.role is distinct from old.role and auth.uid() is not null and not public.is_admin() then
     new.role := old.role;
   end if;
   return new;

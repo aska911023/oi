@@ -102,7 +102,7 @@ img { display: block; max-width: 100%; }
 .search-go { height: 50px; min-width: 124px; }
 
 /* ── filters ── */
-.filters { padding: 40px 0 8px; }
+.filters { padding: 64px 0 10px; }
 .filter-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .filter-cap { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: 1px; }
 .chips { display: flex; flex-wrap: wrap; gap: 9px; }
@@ -268,6 +268,8 @@ img { display: block; max-width: 100%; }
 .pill.approved { background: #e4f3ea; color: #1f7a4d; }
 .pill.rejected { background: #fdeeec; color: #a5303a; }
 .row-actions { display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.role-select { border: 1px solid var(--border-strong); border-radius: 8px; padding: 7px 10px; font-size: 13px; background: #fff; color: var(--text); font-family: inherit; }
+.role-select:focus { outline: none; border-color: var(--green); }
 .lnk { color: var(--green); font-weight: 700; font-size: 13px; }
 .lnk:hover { text-decoration: underline; }
 .lnk.danger { color: #a5303a; }

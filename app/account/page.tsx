@@ -20,9 +20,9 @@ export default async function Account() {
   const admins = (process.env.OUSU_ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (user.email && admins.includes(user.email.toLowerCase()) && profile?.role !== "admin" && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
-      const admin = createAdminClient();
-      await admin.from("profiles").update({ role: "admin" }).eq("id", user.id);
-      profile = { ...(profile || {}), role: "admin" };
+      await createAdminClient().from("profiles").update({ role: "admin" }).eq("id", user.id);
+      const { data: p2 } = await sb.from("profiles").select("*").eq("id", user.id).maybeSingle();
+      if (p2) profile = p2;
     } catch {}
   }
 
