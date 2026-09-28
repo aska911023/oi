@@ -162,8 +162,8 @@ export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroCon
         {/* cards */}
         <div className="cards">
           {results.length === 0 && <div className="empty">找不到符合條件的民宿,換個關鍵字或風格試試。</div>}
-          {results.map((s, i) => (
-            <button key={s.id} className="card reveal-card" style={{ animationDelay: `${(i % 9) * 45}ms` }} onClick={() => setActive(s)}>
+          {results.map((s) => (
+            <button key={s.id} className="card" onClick={() => setActive(s)}>
               <div className="photo">
                 <img src={s.image} alt={s.name} loading="lazy" />
                 {s.featured && <span className="tag-feat">精選置頂</span>}

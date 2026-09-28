@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import SiteHeader from "@/components/site-header";
 import Explore from "@/components/explore";
+import SiteTheme from "@/components/site-theme";
 import { getPublishedStays } from "@/lib/stays";
 import { getSiteSettings } from "@/lib/site-settings";
 
@@ -14,6 +15,7 @@ export default async function Home() {
 
   return (
     <>
+      <SiteTheme s={settings} />
       <SiteHeader />
 
       <main>
