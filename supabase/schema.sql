@@ -226,6 +226,7 @@ create table if not exists public.site_settings (
 alter table public.site_settings add column if not exists hero_styles jsonb;
 alter table public.site_settings add column if not exists hero_images jsonb;
 alter table public.site_settings add column if not exists bg_color text;
+alter table public.site_settings add column if not exists blocks jsonb;
 insert into public.site_settings (id) values (1) on conflict (id) do nothing;
 alter table public.site_settings enable row level security;
 drop policy if exists site_sel on public.site_settings;

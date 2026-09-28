@@ -19,7 +19,7 @@ export default async function Home() {
       <SiteHeader />
 
       <main>
-        <Explore stays={stays} hero={settings} />
+        <Explore stays={stays} blocks={settings.blocks} searchHint={settings.search_hint} />
       </main>
 
       <footer className="footer">

@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import type { Stay, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
-import HeroCarousel from "@/components/hero-carousel";
+import BlocksRender from "@/components/blocks-render";
+import { DEFAULT_BLOCKS, type Block } from "@/lib/site-settings-types";
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -26,16 +27,7 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-interface HeroContent {
-  hero_eyebrow?: string;
-  hero_title?: string;
-  hero_subtitle?: string;
-  hero_caption?: string;
-  hero_images?: string[];
-  search_hint?: string;
-}
-
-export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroContent }) {
+export default function Explore({ stays, blocks, searchHint }: { stays: Stay[]; blocks?: Block[]; searchHint?: string }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -78,16 +70,8 @@ export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroCon
     <>
       {/* discovery hero(白底綠字) */}
       <section className="disc">
-        <div className="shell disc-grid">
-          <div className="disc-copy">
-            <div className="eyebrow">{hero?.hero_eyebrow || "TAIWAN · STAY A LITTLE LONGER"}</div>
-            <h1>{hero?.hero_title || "找一間民宿,住進好風景。"}</h1>
-            <p>{hero?.hero_subtitle || "選個地方、挑種步調,出發就這麼簡單。"}</p>
-          </div>
-          <HeroCarousel
-            images={hero?.hero_images && hero.hero_images.length ? hero.hero_images : ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"]}
-            caption={hero?.hero_caption || "留一點時間,給旅行。"}
-          />
+        <div className="shell">
+          <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} />
         </div>
 
         <div className="shell">
@@ -116,7 +100,7 @@ export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroCon
             </div>
             <button className="btn btn-primary ds-go">找民宿 {I.arrow}</button>
           </div>
-          <p className="search-hint">{hero?.search_hint || "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。"}</p>
+          <p className="search-hint">{searchHint || "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。"}</p>
 
           <div className="disc-filters">
             {regionsWithData.length > 0 && (

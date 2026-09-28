@@ -1,49 +1,28 @@
 import { createClient } from "./supabase/server";
+import { DEFAULT_SETTINGS, type SiteSettings, type Block, type BlockType } from "./site-settings-types";
 
-export type FontChoice = "serif" | "sans";
-export type AlignChoice = "left" | "center" | "right";
-export interface ElStyle { color: string; font: FontChoice; size: number; align: AlignChoice; }
+export * from "./site-settings-types";
 
-export interface HeroStyles { eyebrow: ElStyle; title: ElStyle; subtitle: ElStyle; }
+const TYPES: BlockType[] = ["heading", "text", "image", "carousel", "button", "spacer"];
 
-export interface SiteSettings {
-  hero_eyebrow: string;
-  hero_title: string;
-  hero_subtitle: string;
-  hero_caption: string;
-  search_hint: string;
-  hero_images: string[];
-  color_primary: string;
-  color_accent: string;
-  bg_color: string;
-  hero_styles: HeroStyles;
-}
-
-export const DEFAULT_SETTINGS: SiteSettings = {
-  hero_eyebrow: "TAIWAN · STAY A LITTLE LONGER",
-  hero_title: "找一間民宿,住進好風景。",
-  hero_subtitle: "選個地方、挑種步調,出發就這麼簡單。",
-  hero_caption: "留一點時間,給旅行。",
-  search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
-  hero_images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"],
-  color_primary: "#17635A",
-  color_accent: "#E5FA00",
-  bg_color: "#F6F4EE",
-  hero_styles: {
-    eyebrow: { color: "#17635A", font: "sans", size: 12, align: "left" },
-    title: { color: "#12201C", font: "serif", size: 44, align: "left" },
-    subtitle: { color: "#5D706A", font: "sans", size: 16, align: "left" },
-  },
-};
-
-function mergeEl(base: ElStyle, override: unknown): ElStyle {
-  if (!override || typeof override !== "object") return base;
-  const o = override as Partial<ElStyle>;
+function sanitizeBlock(raw: unknown, i: number): Block | null {
+  if (!raw || typeof raw !== "object") return null;
+  const b = raw as Record<string, unknown>;
+  const type = TYPES.includes(b.type as BlockType) ? (b.type as BlockType) : null;
+  if (!type) return null;
   return {
-    color: typeof o.color === "string" ? o.color : base.color,
-    font: o.font === "serif" || o.font === "sans" ? o.font : base.font,
-    size: typeof o.size === "number" ? o.size : base.size,
-    align: o.align === "left" || o.align === "center" || o.align === "right" ? o.align : base.align,
+    id: typeof b.id === "string" ? b.id : `b${i}-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    text: typeof b.text === "string" ? b.text : undefined,
+    image: typeof b.image === "string" ? b.image : undefined,
+    images: Array.isArray(b.images) ? (b.images as string[]).filter((x) => typeof x === "string") : undefined,
+    href: typeof b.href === "string" ? b.href : undefined,
+    height: typeof b.height === "number" ? b.height : undefined,
+    color: typeof b.color === "string" ? b.color : undefined,
+    font: b.font === "serif" || b.font === "sans" ? b.font : undefined,
+    size: typeof b.size === "number" ? b.size : undefined,
+    align: b.align === "left" || b.align === "center" || b.align === "right" ? b.align : undefined,
+    width: typeof b.width === "number" ? b.width : undefined,
   };
 }
 
@@ -53,19 +32,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const { data } = await sb.from("site_settings").select("*").eq("id", 1).maybeSingle();
     if (data) {
       const d = data as Record<string, unknown>;
-      const s: SiteSettings = { ...DEFAULT_SETTINGS, hero_styles: { ...DEFAULT_SETTINGS.hero_styles } };
-      for (const k of ["hero_eyebrow", "hero_title", "hero_subtitle", "hero_caption", "search_hint", "color_primary", "color_accent", "bg_color"] as const) {
-        if (d[k]) (s as unknown as Record<string, unknown>)[k] = d[k];
-      }
-      if (Array.isArray(d.hero_images) && d.hero_images.length) s.hero_images = d.hero_images as string[];
-      else if (typeof d.hero_image === "string" && d.hero_image) s.hero_images = [d.hero_image];
-      if (d.hero_styles && typeof d.hero_styles === "object") {
-        const hs = d.hero_styles as Record<string, unknown>;
-        s.hero_styles = {
-          eyebrow: mergeEl(DEFAULT_SETTINGS.hero_styles.eyebrow, hs.eyebrow),
-          title: mergeEl(DEFAULT_SETTINGS.hero_styles.title, hs.title),
-          subtitle: mergeEl(DEFAULT_SETTINGS.hero_styles.subtitle, hs.subtitle),
-        };
+      const s: SiteSettings = { ...DEFAULT_SETTINGS };
+      if (typeof d.color_primary === "string" && d.color_primary) s.color_primary = d.color_primary;
+      if (typeof d.color_accent === "string" && d.color_accent) s.color_accent = d.color_accent;
+      if (typeof d.bg_color === "string" && d.bg_color) s.bg_color = d.bg_color;
+      if (typeof d.search_hint === "string" && d.search_hint) s.search_hint = d.search_hint;
+      if (Array.isArray(d.blocks) && d.blocks.length) {
+        const parsed = d.blocks.map(sanitizeBlock).filter(Boolean) as Block[];
+        if (parsed.length) s.blocks = parsed;
       }
       return s;
     }
