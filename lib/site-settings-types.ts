@@ -28,6 +28,7 @@ export interface SiteSettings {
   bg_color: string;
   search_hint: string;
   hero_layout: HeroLayout;
+  logo_image: string;
   blocks: Block[];
 }
 
@@ -46,5 +47,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   bg_color: "#F6F4EE",
   search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
   hero_layout: "split",
+  logo_image: "",
   blocks: DEFAULT_BLOCKS,
 };

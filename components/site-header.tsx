@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 
 export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
+  const settings = await getSiteSettings();
 
   let name = "";
   let role = "user";
@@ -17,7 +19,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
   return (
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
       <div className="shell">
-        <Logo />
+        <Logo src={settings.logo_image || undefined} />
         <nav className="topnav">
           <Link href="/">探索民宿</Link>
           {user ? (

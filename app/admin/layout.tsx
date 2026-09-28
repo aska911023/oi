@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import AdminTabs from "@/components/admin/admin-tabs";
 
@@ -26,11 +27,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (profile?.role !== "admin") redirect("/");
 
+  const settings = await getSiteSettings();
+
   return (
     <>
       <header className="topbar solid">
         <div className="shell">
-          <Logo href="/admin" />
+          <Logo href="/admin" src={settings.logo_image || undefined} />
           <nav className="topnav">
             <Link href="/">看前台</Link>
             <Link href="/account">我的帳號</Link>

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import SignOutButton from "@/components/signout-button";
 
@@ -13,6 +14,7 @@ export default async function Account() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login");
+  const settings = await getSiteSettings();
 
   let { data: profile } = await sb.from("profiles").select("*").eq("id", user.id).maybeSingle();
 
@@ -33,7 +35,7 @@ export default async function Account() {
     <>
       <header className="topbar solid">
         <div className="shell">
-          <Logo />
+          <Logo src={settings.logo_image || undefined} />
           <nav className="topnav"><Link href="/">探索民宿</Link></nav>
         </div>
       </header>
