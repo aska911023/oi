@@ -28,6 +28,7 @@ export interface SiteSettings {
   bg_color: string;
   search_hint: string;
   hero_layout: HeroLayout;
+  hero_split_ratio: number; // 左文欄佔比 %(20–80),兩邊一致
   logo_image: string;
   logo_size: number;
   blocks: Block[];
@@ -48,6 +49,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   bg_color: "#F6F4EE",
   search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
   hero_layout: "split",
+  hero_split_ratio: 50,
   logo_image: "",
   logo_size: 42,
   blocks: DEFAULT_BLOCKS,

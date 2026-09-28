@@ -228,6 +228,7 @@ alter table public.site_settings add column if not exists hero_images jsonb;
 alter table public.site_settings add column if not exists bg_color text;
 alter table public.site_settings add column if not exists blocks jsonb;
 alter table public.site_settings add column if not exists hero_layout text;
+alter table public.site_settings add column if not exists hero_split_ratio int;
 alter table public.site_settings add column if not exists logo_image text;
 alter table public.site_settings add column if not exists logo_size int;
 insert into public.site_settings (id) values (1) on conflict (id) do nothing;

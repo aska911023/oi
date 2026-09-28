@@ -49,13 +49,14 @@ function renderBlock(b: Block) {
   }
 }
 
-export default function BlocksRender({ blocks, layout = "stack" }: { blocks: Block[]; layout?: HeroLayout }) {
+export default function BlocksRender({ blocks, layout = "stack", ratio = 50 }: { blocks: Block[]; layout?: HeroLayout; ratio?: number }) {
   if (layout === "split") {
     const isMedia = (b: Block) => b.type === "image" || b.type === "carousel";
     const media = blocks.filter(isMedia);
     const rest = blocks.filter((b) => !isMedia(b));
+    const r = Math.min(80, Math.max(20, ratio || 50));
     return (
-      <div className="blocks-split">
+      <div className="blocks-split" style={{ ["--split-cols" as string]: `${r}fr ${100 - r}fr` } as React.CSSProperties}>
         <div className="bs-left">{rest.map(renderBlock)}</div>
         <div className="bs-right">{media.map(renderBlock)}</div>
       </div>

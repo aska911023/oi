@@ -360,10 +360,17 @@ img { display: block; max-width: 100%; }
 .blk-split .bs-img img { width: 100%; border-radius: 16px; box-shadow: var(--shadow-sm); display: block; }
 .blk-split .bs-text p { margin: 0; line-height: 1.8; }
 @media (max-width: 640px) { .blk-split { grid-template-columns: 1fr; gap: 16px; } }
-.blocks-split { display: grid; grid-template-columns: fit-content(560px) minmax(0, 1fr); gap: 40px; align-items: center; padding: 30px 0 8px; }
+.blocks-split { display: grid; grid-template-columns: var(--split-cols, 1fr 1fr); gap: 40px; align-items: center; padding: 30px 0 8px; }
 .bs-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .bs-right { width: 100%; min-width: 0; }
 @media (max-width: 860px) { .blocks-split { grid-template-columns: 1fr; gap: 22px; } }
+
+/* editor: 可拖拉的文字/圖片分隔線(只在即時預覽) */
+.split-divider { position: absolute; top: 18px; bottom: 18px; width: 22px; transform: translateX(-50%); cursor: col-resize; z-index: 5; display: flex; align-items: center; justify-content: center; touch-action: none; }
+.split-divider .split-grip { width: 3px; height: 100%; border-radius: 3px; background: var(--green); opacity: .55; transition: opacity .15s; }
+.split-divider:hover .split-grip, .split-divider:active .split-grip { opacity: 1; }
+.split-divider::before { content: "⇔"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+.split-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 
 /* editor: 區塊虛線框(只在預覽) */
 .preview-outline .blocks > *, .preview-outline .bs-left > *, .preview-outline .bs-right > *, .preview-outline .blocks-split {

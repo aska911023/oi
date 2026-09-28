@@ -39,6 +39,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       if (typeof d.bg_color === "string" && d.bg_color) s.bg_color = d.bg_color;
       if (typeof d.search_hint === "string" && d.search_hint) s.search_hint = d.search_hint;
       if (d.hero_layout === "stack" || d.hero_layout === "split") s.hero_layout = d.hero_layout;
+      if (typeof d.hero_split_ratio === "number" && d.hero_split_ratio >= 20 && d.hero_split_ratio <= 80) s.hero_split_ratio = d.hero_split_ratio;
       if (typeof d.logo_image === "string") s.logo_image = d.logo_image;
       if (typeof d.logo_size === "number" && d.logo_size > 0) s.logo_size = d.logo_size;
       if (Array.isArray(d.blocks) && d.blocks.length) {

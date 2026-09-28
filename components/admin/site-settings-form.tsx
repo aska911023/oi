@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import type { SiteSettings, Block, BlockType, AlignChoice, FontChoice } from "@/lib/site-settings-types";
@@ -28,6 +28,18 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [previewKey, setPreviewKey] = useState(0);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const PAD = 26; // .preview-outline 左右內距,分隔線對齊用
+  function onDividerMove(clientX: number) {
+    if (!dragging.current || !previewRef.current) return;
+    const r = previewRef.current.getBoundingClientRect();
+    const inner = r.width - PAD * 2;
+    if (inner <= 0) return;
+    const pct = Math.round(((clientX - r.left - PAD) / inner) * 100);
+    set("hero_split_ratio", Math.min(80, Math.max(20, pct)));
+  }
 
   const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) => { setS((p) => ({ ...p, [k]: v })); setSaved(false); };
   const updateBlock = (id: string, patch: Partial<Block>) => set("blocks", s.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
@@ -57,7 +69,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     const sb = createClient();
     const { error } = await sb.from("site_settings").update({
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
-      search_hint: s.search_hint, hero_layout: s.hero_layout, logo_image: s.logo_image, logo_size: s.logo_size, blocks: s.blocks, updated_at: new Date().toISOString(),
+      search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -94,9 +106,23 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     <div style={{ maxWidth: 860 }}>
       {/* 即時預覽 */}
       <div className="panel">
-        <div className="panel-head"><b>內容預覽(即時)</b><span className="sub">改文字/顏色會立刻變;虛線=區塊範圍</span></div>
-        <div className="preview-outline" style={{ background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: "24px 26px" }}>
-          <BlocksRender blocks={s.blocks} layout={s.hero_layout} />
+        <div className="panel-head"><b>內容預覽(即時)</b><span className="sub">{s.hero_layout === "split" ? "拖拉中間綠線調文字/圖片比例" : "改文字/顏色會立刻變;虛線=區塊範圍"}</span></div>
+        <div className="preview-outline" ref={previewRef}
+          style={{ position: "relative", background: s.bg_color, borderRadius: 14, border: "1px solid var(--border)", padding: `24px ${PAD}px`, touchAction: "none" }}>
+          <BlocksRender blocks={s.blocks} layout={s.hero_layout} ratio={s.hero_split_ratio} />
+          {s.hero_layout === "split" && (
+            <div
+              className="split-divider"
+              style={{ left: `calc(${PAD}px + (100% - ${PAD * 2}px) * ${s.hero_split_ratio} / 100)` }}
+              title="拖拉調整 文字 / 圖片 比例"
+              onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); dragging.current = true; }}
+              onPointerMove={(e) => onDividerMove(e.clientX)}
+              onPointerUp={(e) => { dragging.current = false; e.currentTarget.releasePointerCapture(e.pointerId); }}
+            >
+              <span className="split-grip" />
+              <span className="split-badge">{s.hero_split_ratio}% / {100 - s.hero_split_ratio}%</span>
+            </div>
+          )}
         </div>
       </div>
 

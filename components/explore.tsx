@@ -27,7 +27,7 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ stays, blocks, searchHint, heroLayout }: { stays: Stay[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout }) {
+export default function Explore({ stays, blocks, searchHint, heroLayout, heroSplitRatio }: { stays: Stay[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -71,7 +71,7 @@ export default function Explore({ stays, blocks, searchHint, heroLayout }: { sta
       {/* discovery hero(白底綠字) */}
       <section className="disc">
         <div className="shell">
-          <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} layout={heroLayout} />
+          <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} layout={heroLayout} ratio={heroSplitRatio} />
         </div>
 
         <div className="shell">
