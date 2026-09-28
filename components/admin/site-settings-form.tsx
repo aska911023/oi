@@ -130,7 +130,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
                 <>
                   <ImgField id={b.id} value={b.image || ""} onChange={(v) => updateBlock(b.id, { image: v })} />
                   <div className="style-controls">
-                    <span className="sc-num">寬度<input type="number" min={20} max={100} value={b.width || 100} onChange={(e) => updateBlock(b.id, { width: Number(e.target.value) })} />%</span>
+                    <span className="sc-num">寬<input type="number" min={20} max={100} value={b.width || 100} onChange={(e) => updateBlock(b.id, { width: Number(e.target.value) })} />%</span>
+                    <span className="sc-num">高<input type="number" min={0} max={800} value={b.height ?? ""} placeholder="自動" onChange={(e) => updateBlock(b.id, { height: e.target.value ? Number(e.target.value) : undefined })} />px</span>
                     <div className="align-seg">{ALIGN.map(([v, l]) => <button key={v} className={b.align === v ? "on" : ""} onClick={() => updateBlock(b.id, { align: v })}>{l}</button>)}</div>
                   </div>
                 </>
@@ -144,6 +145,10 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
                     </div>
                   ))}
                   {(b.images || []).length < 4 && <button className="btn btn-ghost btn-sm" onClick={() => updateBlock(b.id, { images: [...(b.images || []), ""] })}>＋ 加照片</button>}
+                  <div className="style-controls" style={{ marginTop: 10 }}>
+                    <span className="sc-num">寬<input type="number" min={20} max={100} value={b.width || 100} onChange={(e) => updateBlock(b.id, { width: Number(e.target.value) })} />%</span>
+                    <span className="sc-num">高<input type="number" min={120} max={800} value={b.height ?? 340} onChange={(e) => updateBlock(b.id, { height: Number(e.target.value) })} />px</span>
+                  </div>
                 </>
               )}
               {b.type === "spacer" && (

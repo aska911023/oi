@@ -22,13 +22,17 @@ export default function BlocksRender({ blocks }: { blocks: Block[] }) {
           case "image":
             return b.image ? (
               <div key={b.id} style={{ textAlign: b.align || "left" }}>
-                <img className="blk-image" src={b.image} alt="" style={{ maxWidth: `${b.width || 100}%` }} />
+                <img className="blk-image" src={b.image} alt="" style={
+                  b.height
+                    ? { width: `${b.width || 100}%`, height: b.height, objectFit: "cover" }
+                    : { maxWidth: `${b.width || 100}%` }
+                } />
               </div>
             ) : null;
           case "carousel":
             return (
               <div key={b.id} className="blk-carousel" style={{ maxWidth: `${b.width || 100}%` }}>
-                <HeroCarousel images={(b.images || []).filter(Boolean)} />
+                <HeroCarousel images={(b.images || []).filter(Boolean)} height={b.height} />
               </div>
             );
           case "button":
