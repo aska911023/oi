@@ -47,7 +47,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       hero_eyebrow: s.hero_eyebrow, hero_title: s.hero_title, hero_subtitle: s.hero_subtitle,
       hero_caption: s.hero_caption, search_hint: s.search_hint,
       hero_images: s.hero_images.filter((x) => x.trim()),
-      color_primary: s.color_primary, color_accent: s.color_accent,
+      color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
       hero_styles: s.hero_styles, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
@@ -80,7 +80,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       {/* 即時預覽 */}
       <div className="panel">
         <div className="panel-head"><b>即時預覽</b><span className="sub">改哪裡,這裡立刻變</span></div>
-        <div className="hero-preview">
+        <div className="hero-preview" style={{ background: s.bg_color }}>
           <div className="hp-copy">
             <div style={{ color: eb.color, fontFamily: famCss(eb.font), fontSize: 12, textAlign: eb.align, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, marginBottom: 8 }}>{s.hero_eyebrow}</div>
             <div style={{ color: tt.color, fontFamily: famCss(tt.font), fontSize: Math.min(tt.size, 34), textAlign: tt.align, fontWeight: 800, lineHeight: 1.3, margin: "4px 0 8px" }}>{s.hero_title}</div>
@@ -104,7 +104,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
 
       {/* 品牌色 */}
       <div className="panel">
-        <div className="panel-head"><b>品牌色</b><span className="sub">按鈕與標籤(全站)</span></div>
+        <div className="panel-head"><b>品牌色與底色</b><span className="sub">按鈕、標籤與頁面底色(全站)</span></div>
         <div className="frow">
           <div className="field"><label>主色(按鈕)</label>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -117,6 +117,13 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
               <input type="color" value={s.color_accent} onChange={(e) => set("color_accent", e.target.value)} style={{ width: 52, height: 42, padding: 2 }} />
               <input value={s.color_accent} onChange={(e) => set("color_accent", e.target.value)} style={{ flex: 1 }} />
             </div>
+          </div>
+        </div>
+        <div className="field"><label>頁面底色</label>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="color" value={s.bg_color} onChange={(e) => set("bg_color", e.target.value)} style={{ width: 52, height: 42, padding: 2 }} />
+            <input value={s.bg_color} onChange={(e) => set("bg_color", e.target.value)} style={{ maxWidth: 200 }} />
+            <span style={{ fontSize: 12.5, color: "var(--muted)" }}>整個消費者網站的背景色</span>
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ export interface SiteSettings {
   hero_images: string[];
   color_primary: string;
   color_accent: string;
+  bg_color: string;
   hero_styles: HeroStyles;
 }
 
@@ -27,6 +28,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   hero_images: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"],
   color_primary: "#17635A",
   color_accent: "#E5FA00",
+  bg_color: "#F6F4EE",
   hero_styles: {
     eyebrow: { color: "#17635A", font: "sans", size: 12, align: "left" },
     title: { color: "#12201C", font: "serif", size: 44, align: "left" },
@@ -52,7 +54,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     if (data) {
       const d = data as Record<string, unknown>;
       const s: SiteSettings = { ...DEFAULT_SETTINGS, hero_styles: { ...DEFAULT_SETTINGS.hero_styles } };
-      for (const k of ["hero_eyebrow", "hero_title", "hero_subtitle", "hero_caption", "search_hint", "color_primary", "color_accent"] as const) {
+      for (const k of ["hero_eyebrow", "hero_title", "hero_subtitle", "hero_caption", "search_hint", "color_primary", "color_accent", "bg_color"] as const) {
         if (d[k]) (s as unknown as Record<string, unknown>)[k] = d[k];
       }
       if (Array.isArray(d.hero_images) && d.hero_images.length) s.hero_images = d.hero_images as string[];
