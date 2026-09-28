@@ -12,7 +12,7 @@ export default async function Home() {
 
   return (
     <>
-      <SiteHeader onGreen />
+      <SiteHeader />
 
       <main>
         <Explore stays={stays} />

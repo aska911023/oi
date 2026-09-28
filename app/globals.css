@@ -80,6 +80,37 @@ img { display: block; max-width: 100%; }
 .hero-figure img { width: 100%; height: 480px; object-fit: cover; border-radius: 20px; box-shadow: var(--shadow-lg); }
 .hero-figure .cap { position: absolute; left: 18px; bottom: 16px; color: #fff; font-size: 12px; letter-spacing: 1px; text-shadow: 0 1px 12px rgba(11,58,52,.8); }
 
+/* ── discovery hero(白底綠字・簡潔) ── */
+.disc { padding: 26px 0 6px; }
+.disc-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 44px; align-items: center; }
+@media (max-width: 860px) { .disc-grid { grid-template-columns: 1fr; gap: 20px; } .disc-img { display: none; } }
+.disc-copy .eyebrow { margin-bottom: 14px; }
+.disc-copy h1 { font-family: var(--serif); font-size: clamp(28px, 4.4vw, 44px); font-weight: 800; line-height: 1.35; letter-spacing: .5px; color: var(--ink); margin: 0 0 10px; }
+.disc-copy > p { font-size: 15.5px; color: var(--text-2); margin: 0; max-width: 460px; }
+.disc-img { height: 190px; border-radius: 16px; overflow: hidden; position: relative; box-shadow: var(--shadow-sm); }
+.disc-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; }
+.disc-img span { position: absolute; left: 16px; bottom: 14px; color: #fff; font-size: 12px; letter-spacing: 1px; text-shadow: 0 1px 12px rgba(11,58,52,.85); }
+
+.disc-search { display: flex; align-items: stretch; gap: 0; background: #fff; border: 1px solid var(--border-strong); border-radius: 16px; box-shadow: var(--shadow); padding: 10px 10px 10px 22px; margin-top: 28px; flex-wrap: wrap; }
+.ds-field { display: flex; align-items: center; gap: 13px; padding: 6px 22px; border-left: 1px solid var(--border); min-width: 0; }
+.ds-field:first-child { border-left: 0; padding-left: 0; }
+.ds-field.kw { flex: 1 1 280px; }
+.ds-icon { color: var(--green); flex: none; display: grid; }
+.ds-body { min-width: 0; flex: 1; }
+.ds-cap { display: block; font-size: 12px; font-weight: 700; color: var(--green); margin-bottom: 3px; }
+.ds-field input, .ds-field select { border: 0; outline: none; background: transparent; font-size: 14.5px; color: var(--text); width: 100%; padding: 0; }
+.ds-field input::placeholder { color: #9aa79e; }
+.ds-go { align-self: center; margin-left: auto; height: 52px; min-width: 130px; border-radius: 11px; }
+@media (max-width: 760px) { .disc-search { padding: 12px; } .ds-field { border-left: 0; padding: 8px 6px; flex-basis: 100%; } .ds-go { width: 100%; margin: 4px 0 0; } }
+.search-hint { font-size: 12.5px; color: var(--muted); margin: 12px 4px 0; }
+
+.disc-filters { margin: 26px 0 0; }
+.disc-filters .filter-row { display: flex; align-items: center; gap: 16px; padding: 9px 0; flex-wrap: wrap; }
+.disc-filters .filter-cap { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); font-weight: 600; flex: 0 0 84px; }
+.disc-filters .filter-cap svg { color: var(--muted); width: 15px; height: 15px; }
+.style-chip { display: inline-flex; align-items: center; gap: 7px; }
+.style-chip svg { width: 16px; height: 16px; color: currentColor; }
+
 /* ── search (floating card bridging hero → list) ── */
 .searchwrap { position: relative; z-index: 10; margin-top: -46px; }
 .searchbar { background: #fff; border-radius: 16px; box-shadow: var(--shadow); padding: 12px 12px 12px 22px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
