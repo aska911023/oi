@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [agreed, setAgreed] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +33,7 @@ export default function LoginPage() {
         return setErr("請完整填寫所有欄位。");
       if (password.length < 8) return setErr("密碼至少 8 碼。");
       if (password !== confirm) return setErr("兩次密碼不一致。");
+      if (!agreed) return setErr("請先勾選同意服務條款與隱私權政策。");
       setBusy(true);
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
@@ -44,7 +46,7 @@ export default function LoginPage() {
         // 需要 email 驗證
         return setMsg("註冊成功!請到信箱點擊驗證連結後再登入。");
       }
-      router.push("/account");
+      router.push("/");
       router.refresh();
       return;
     }
@@ -54,7 +56,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) return setErr("登入失敗:帳號或密碼錯誤。");
-    router.push("/account");
+    router.push("/");
     router.refresh();
   }
 
@@ -92,15 +94,22 @@ export default function LoginPage() {
               <div className="auth-field"><label>確認密碼 *</label><PasswordInput value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="再輸入一次" /></div>
             )}
 
+            {mode === "register" && (
+              <label className="auth-consent">
+                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+                <span>我已閱讀並同意 <a href="/terms" target="_blank" rel="noopener">服務條款</a> 與 <a href="/privacy" target="_blank" rel="noopener">隱私權與個人資料保護政策</a>,並同意本平台依政策蒐集、處理及利用我的個人資料。</span>
+              </label>
+            )}
+
             {err && <div className="auth-err">{err}</div>}
             {msg && <div className="notice" style={{ marginTop: 12 }}>{msg}</div>}
 
-            <button className="btn btn-primary" style={{ width: "100%", marginTop: 8 }} disabled={busy}>
+            <button className="btn btn-primary" style={{ width: "100%", marginTop: 14 }} disabled={busy}>
               {busy ? "處理中…" : mode === "login" ? "登入" : "建立帳號"}
             </button>
           </form>
 
-          <p className="auth-note">註冊即表示同意偶宿的服務條款與隱私權政策。你的資料僅用於帳號與訂房聯絡。</p>
+          <p className="auth-note">你的密碼以加密雜湊儲存,本平台無法得知明碼。</p>
         </div>
       </div>
     </>

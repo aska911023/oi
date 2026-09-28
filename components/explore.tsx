@@ -95,6 +95,17 @@ export default function Explore({ stays }: { stays: Stay[] }) {
 
         {/* filters */}
         <div className="filters">
+          {regionsWithData.length > 0 && (
+            <div className="filter-row">
+              <span className="filter-cap">地區</span>
+              <div className="chips">
+                <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部</button>
+                {regionsWithData.map((r) => (
+                  <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="filter-row">
             <span className="filter-cap">風格</span>
             <div className="chips">
@@ -125,8 +136,8 @@ export default function Explore({ stays }: { stays: Stay[] }) {
         {/* cards */}
         <div className="cards">
           {results.length === 0 && <div className="empty">找不到符合條件的民宿,換個關鍵字或風格試試。</div>}
-          {results.map((s) => (
-            <button key={s.id} className="card" onClick={() => setActive(s)}>
+          {results.map((s, i) => (
+            <button key={s.id} className="card reveal-card" style={{ animationDelay: `${(i % 9) * 45}ms` }} onClick={() => setActive(s)}>
               <div className="photo">
                 <img src={s.image} alt={s.name} loading="lazy" />
                 {s.featured && <span className="tag-feat">精選置頂</span>}
@@ -160,7 +171,9 @@ export default function Explore({ stays }: { stays: Stay[] }) {
               <div className="detail-meta">
                 <span>{priceLabel(active.price)} / 晚起</span>
                 <span>最多 {active.guests} 人</span>
-                <span>{active.amenities}</span>
+              </div>
+              <div className="m-amenities">
+                {active.amenities.split("、").filter(Boolean).map((a) => <span key={a} className="am-chip">{a}</span>)}
               </div>
               <p>{active.description}</p>
               <div className="notice">依每晚起價與最多入住人數提供參考;實際房價、空房與訂房請向民宿確認。</div>
