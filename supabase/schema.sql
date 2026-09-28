@@ -207,6 +207,40 @@ drop policy if exists track_sel on public.track_events;
 create policy track_sel on public.track_events for select
   using (public.is_admin() or exists (select 1 from public.stays s where s.id = stay_id and s.owner_id = auth.uid()));
 
+-- ── site_settings（首頁/外觀設定,單列 id=1） ──
+create table if not exists public.site_settings (
+  id             int primary key default 1,
+  hero_eyebrow   text,
+  hero_title     text,
+  hero_subtitle  text,
+  hero_caption   text,
+  search_hint    text,
+  hero_image     text,
+  color_primary  text,
+  color_accent   text,
+  heading_font   text,
+  hero_title_size int,
+  updated_at     timestamptz not null default now(),
+  constraint site_settings_single check (id = 1)
+);
+insert into public.site_settings (id) values (1) on conflict (id) do nothing;
+alter table public.site_settings enable row level security;
+drop policy if exists site_sel on public.site_settings;
+create policy site_sel on public.site_settings for select using (true);
+drop policy if exists site_upd on public.site_settings;
+create policy site_upd on public.site_settings for all using (public.is_admin()) with check (public.is_admin());
+
+-- ── Storage：site bucket（首頁圖片上傳,公開讀、admin 寫） ──
+insert into storage.buckets (id, name, public) values ('site','site',true) on conflict (id) do nothing;
+drop policy if exists site_obj_read on storage.objects;
+create policy site_obj_read on storage.objects for select using (bucket_id = 'site');
+drop policy if exists site_obj_write on storage.objects;
+create policy site_obj_write on storage.objects for insert with check (bucket_id = 'site' and public.is_admin());
+drop policy if exists site_obj_update on storage.objects;
+create policy site_obj_update on storage.objects for update using (bucket_id = 'site' and public.is_admin());
+drop policy if exists site_obj_delete on storage.objects;
+create policy site_obj_delete on storage.objects for delete using (bucket_id = 'site' and public.is_admin());
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

@@ -3,19 +3,21 @@ import { Logo } from "@/components/logo";
 import SiteHeader from "@/components/site-header";
 import Explore from "@/components/explore";
 import { getPublishedStays } from "@/lib/stays";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   // 有 Supabase 且有資料 → 讀已上架民宿;否則用範例(fallback)。
   const { stays } = await getPublishedStays();
+  const settings = await getSiteSettings();
 
   return (
     <>
       <SiteHeader />
 
       <main>
-        <Explore stays={stays} />
+        <Explore stays={stays} hero={settings} />
       </main>
 
       <footer className="footer">

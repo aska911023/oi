@@ -7,6 +7,7 @@ const TABS = [
   { href: "/admin", label: "民宿管理" },
   { href: "/admin/members", label: "會員" },
   { href: "/admin/vendors", label: "業者審核" },
+  { href: "/admin/site", label: "首頁設定" },
   { href: "/admin/analytics", label: "數據" },
 ];
 

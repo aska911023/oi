@@ -25,7 +25,16 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ stays }: { stays: Stay[] }) {
+interface HeroContent {
+  hero_eyebrow?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  hero_caption?: string;
+  hero_image?: string;
+  search_hint?: string;
+}
+
+export default function Explore({ stays, hero }: { stays: Stay[]; hero?: HeroContent }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -70,13 +79,13 @@ export default function Explore({ stays }: { stays: Stay[] }) {
       <section className="disc">
         <div className="shell disc-grid">
           <div className="disc-copy">
-            <div className="eyebrow">TAIWAN · STAY A LITTLE LONGER</div>
-            <h1>找一間民宿,住進好風景。</h1>
-            <p>選個地方、挑種步調,出發就這麼簡單。</p>
+            <div className="eyebrow">{hero?.hero_eyebrow || "TAIWAN · STAY A LITTLE LONGER"}</div>
+            <h1>{hero?.hero_title || "找一間民宿,住進好風景。"}</h1>
+            <p>{hero?.hero_subtitle || "選個地方、挑種步調,出發就這麼簡單。"}</p>
           </div>
           <div className="disc-img">
-            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85" alt="靜謐旅宿" />
-            <span>留一點時間,給旅行。</span>
+            <img src={hero?.hero_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85"} alt="民宿情境" />
+            <span>{hero?.hero_caption || "留一點時間,給旅行。"}</span>
           </div>
         </div>
 
@@ -106,7 +115,7 @@ export default function Explore({ stays }: { stays: Stay[] }) {
             </div>
             <button className="btn btn-primary ds-go">找民宿 {I.arrow}</button>
           </div>
-          <p className="search-hint">依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。</p>
+          <p className="search-hint">{hero?.search_hint || "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。"}</p>
 
           <div className="disc-filters">
             {regionsWithData.length > 0 && (
