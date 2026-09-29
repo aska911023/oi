@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
+import SiteTheme from "@/components/site-theme";
 import AdminTabs from "@/components/admin/admin-tabs";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <>
+      <SiteTheme s={settings} />
       <header className="topbar solid">
         <div className="shell">
           <Logo href="/admin" src={settings.logo_image || undefined} size={settings.logo_size} />
