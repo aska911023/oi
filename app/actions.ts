@@ -8,3 +8,4 @@ export async function revalidateStays() { revalidatePath("/"); }
 export async function revalidatePois() { revalidatePath("/places/[kind]", "page"); }
 export async function revalidateSettings() { revalidatePath("/", "layout"); }
 export async function revalidateTrips() { revalidatePath("/trips"); }
+export async function revalidateRentals() { revalidatePath("/rentals"); }

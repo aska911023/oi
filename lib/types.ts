@@ -28,6 +28,41 @@ export interface Stay {
 
 export type SortMode = "default" | "low" | "high";
 
+// 租車店 + 方案
+export interface RentalShop {
+  id: string;
+  name: string;
+  region: string;
+  town: string;
+  address: string;
+  phone?: string | null;
+  image: string;
+  description: string;
+  website: string;
+  line_url?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  published: boolean;
+  featured?: boolean;
+  price_from?: number; // search_rentals 彙整:最低日租
+  units_left?: number; // 方案可租數加總
+}
+
+export interface RentalPlan {
+  id: string;
+  shop_id: string;
+  name: string;
+  price_per_day: number;
+  deposit?: number | null;
+  includes: string;
+  count_total?: number | null;
+  count_left?: number | null;
+  image: string;
+  description: string;
+  sort: number;
+  published: boolean;
+}
+
 // 民宿房型(掛在 stays 下)
 export interface RoomType {
   id: string;
