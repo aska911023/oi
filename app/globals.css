@@ -587,6 +587,24 @@ img { display: block; max-width: 100%; }
 .rt-num input { width: 66px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px 8px; font: inherit; background: #fff; }
 .btn.btn-sm { padding: 7px 13px; font-size: 13px; }
 
+/* 後台 details 清單編輯(菜單/活動) */
+.details-form { margin-top: 6px; }
+.dlist { margin-top: 12px; }
+.dlist > label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.dlist-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.dlist-row input { flex: 1; border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; font: inherit; background: #fff; }
+
+/* 前台詳情:分類專屬資訊 */
+.place-details { margin: 14px 0; border-top: 1px solid var(--border); padding-top: 12px; }
+.pd-scalars { margin: 0 0 6px; }
+.pd-scalars > div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 6px 0; }
+.pd-scalars dt { color: var(--muted); font-size: 13px; }
+.pd-scalars dd { margin: 0; font-size: 14.5px; color: var(--ink); }
+.pd-list { margin-top: 12px; }
+.pd-list-row { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; border-bottom: 1px dotted var(--border-strong); font-size: 14px; }
+.pd-li-main { color: var(--ink); font-weight: 600; }
+.pd-li-sub { color: var(--green); white-space: nowrap; }
+
 /* 前台詳情:房型列表 */
 .room-list { margin: 16px 0; border-top: 1px solid var(--border); padding-top: 14px; }
 .room-list-h { font-family: var(--serif); font-size: 17px; margin: 0 0 10px; color: var(--ink); }

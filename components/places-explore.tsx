@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { Poi, PoiKind } from "@/lib/types";
+import type { Place, PoiKind } from "@/lib/types";
 import { POI_KINDS } from "@/lib/types";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
+import { KIND_TABLE, DETAILS, safeKw } from "@/lib/places-config";
 
 const PAGE = 24;
 
@@ -23,20 +24,20 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois: Poi[]; total?: number; regions?: string[]; kind: PoiKind }) {
+export default function PlacesExplore({ places, total = 0, regions, kind }: { places: Place[]; total?: number; regions?: string[]; kind: PoiKind }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
-  const [active, setActive] = useState<Poi | null>(null);
+  const [active, setActive] = useState<Place | null>(null);
   const [kindState, setKindState] = useState<PoiKind>(kind);
   const copy = KIND_COPY[kindState];
 
-  const [rows, setRows] = useState<Poi[]>(pois);
+  const [rows, setRows] = useState<Place[]>(places);
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
   const firstRun = useRef(true);
 
   // 直接進入某個路由(SSR)時,以 props 重置
-  useEffect(() => { setKindState(kind); setRows(pois); setRpcTotal(total); setKw(""); setRegion("all"); firstRun.current = true; }, [pois, total, kind]);
+  useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion("all"); firstRun.current = true; }, [places, total, kind]);
 
   const regionsWithData = useMemo(() => {
     const src = kindState === kind && regions && regions.length ? regions : Array.from(new Set(rows.map((p) => p.region)));
@@ -46,9 +47,13 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
   async function load(k: PoiKind, kwv: string, regionv: string, off: number, append: boolean) {
     setLoading(true);
     const sb = createClient();
-    const { data } = await sb.rpc("search_pois", { p_kind: k, kw: kwv.trim(), p_region: regionv === "all" ? null : regionv, lim: PAGE, off });
-    const newRows = (data?.rows || []) as Poi[];
-    setRpcTotal(data?.total ?? 0);
+    let query = sb.from(KIND_TABLE[k]).select("*", { count: "exact" }).eq("published", true);
+    if (regionv !== "all") query = query.eq("region", regionv);
+    const kwv2 = safeKw(kwv);
+    if (kwv2) query = query.or(`name.ilike.%${kwv2}%,region.ilike.%${kwv2}%,town.ilike.%${kwv2}%,address.ilike.%${kwv2}%`);
+    const { data, count } = await query.order("featured", { ascending: false }).order("created_at", { ascending: false }).range(off, off + PAGE - 1);
+    const newRows = (data || []) as Place[];
+    setRpcTotal(count ?? 0);
     setRows((prev) => (append ? [...prev, ...newRows] : newRows));
     setLoading(false);
   }
@@ -74,10 +79,15 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
   const results = rows;
   const canLoadMore = rows.length < rpcTotal;
 
-  const mapHref = (p: Poi) =>
+  const mapHref = (p: Place) =>
     p.lat != null && p.lng != null
       ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((p.name + " " + p.region + p.town + p.address).trim())}`;
+
+  // details 渲染輔助
+  const detail = active ? (active.details || {}) as Record<string, unknown> : {};
+  const dText = (k: string) => (typeof detail[k] === "string" ? (detail[k] as string) : "");
+  const dList = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as Record<string, string>[]) : []);
 
   return (
     <>
@@ -166,6 +176,34 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
               <h2>{active.name}</h2>
               {active.address && <div className="detail-meta"><span>{I.pin} {active.address}</span></div>}
               {active.description && <p>{active.description}</p>}
+
+              {/* 分類專屬資訊 */}
+              {(() => {
+                const scalars = DETAILS[kindState].filter((f) => f.type === "text" && dText(f.key));
+                const lists = DETAILS[kindState].filter((f) => f.type === "list" && dList(f.key).length > 0);
+                if (!scalars.length && !lists.length) return null;
+                return (
+                  <div className="place-details">
+                    {scalars.length > 0 && (
+                      <dl className="pd-scalars">
+                        {scalars.map((f) => <div key={f.key}><dt>{f.label}</dt><dd>{dText(f.key)}</dd></div>)}
+                      </dl>
+                    )}
+                    {lists.map((f) => f.type === "list" && (
+                      <div className="pd-list" key={f.key}>
+                        <h3 className="room-list-h">{f.label}</h3>
+                        {dList(f.key).map((it, i) => (
+                          <div className="pd-list-row" key={i}>
+                            <span className="pd-li-main">{it[f.cols[0].key]}</span>
+                            {f.cols[1] && it[f.cols[1].key] && <span className="pd-li-sub">{it[f.cols[1].key]}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               <div className="detail-actions">
                 <a className="btn btn-primary" href={mapHref(active)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 160 }}>
                   {I.map} 在地圖開啟

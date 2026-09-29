@@ -99,6 +99,23 @@ export interface Poi {
   featured?: boolean;
 }
 
+// 景點/美食/停車(三張獨立表共用形狀:base + details jsonb)
+export interface Place {
+  id: string;
+  name: string;
+  region: string;
+  town: string;
+  address: string;
+  image: string;
+  description: string;
+  website: string;
+  lat?: number | null;
+  lng?: number | null;
+  details: Record<string, unknown>;
+  published: boolean;
+  featured?: boolean;
+}
+
 export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
   { kind: "attraction", label: "探索景點", slug: "attraction" },
   { kind: "food", label: "探索美食", slug: "food" },
