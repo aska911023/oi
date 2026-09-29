@@ -408,6 +408,212 @@ create or replace function public.search_trips(
 $$;
 grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
 
+-- ── 第二層:房型 / 租車(店+方案)/ 景點·美食·停車獨立表 ──
+-- ================= 家族 A:場所 + 方案/庫存 =================
+
+-- 民宿房型
+create table if not exists public.room_types (
+  id          uuid primary key default gen_random_uuid(),
+  stay_id     uuid not null references public.stays(id) on delete cascade,
+  name        text not null,
+  price       integer not null default 0,
+  capacity    integer not null default 2,
+  rooms_total integer,
+  rooms_left  integer,
+  beds        text,
+  amenities   text not null default '',
+  image       text not null default '',
+  description text not null default '',
+  sort        integer not null default 0,
+  published   boolean not null default true,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists room_types_stay_idx on public.room_types(stay_id);
+drop trigger if exists trg_room_types_touch on public.room_types;
+create trigger trg_room_types_touch before update on public.room_types for each row execute function public.touch_updated_at();
+alter table public.room_types enable row level security;
+drop policy if exists rt_sel on public.room_types;
+create policy rt_sel on public.room_types for select using (
+  public.is_admin() or exists (select 1 from public.stays s where s.id = stay_id
+    and ((s.published and s.visibility='published') or s.owner_id = auth.uid())));
+drop policy if exists rt_manage on public.room_types;
+create policy rt_manage on public.room_types for all using (
+  public.is_admin() or exists (select 1 from public.stays s where s.id = stay_id and s.owner_id = auth.uid())
+) with check (
+  public.is_admin() or exists (select 1 from public.stays s where s.id = stay_id and s.owner_id = auth.uid()));
+
+-- 租車店
+create table if not exists public.rental_shops (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  region      text not null,
+  town        text not null default '',
+  address     text not null default '',
+  phone       text,
+  image       text not null default '',
+  description text not null default '',
+  website     text not null default '',
+  line_url    text,
+  lat         double precision,
+  lng         double precision,
+  published   boolean not null default false,
+  featured    boolean not null default false,
+  owner_id    uuid references public.profiles(id) on delete set null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists rental_shops_region_idx on public.rental_shops(region);
+create index if not exists rental_shops_pub_idx on public.rental_shops(published);
+drop trigger if exists trg_rental_shops_touch on public.rental_shops;
+create trigger trg_rental_shops_touch before update on public.rental_shops for each row execute function public.touch_updated_at();
+alter table public.rental_shops enable row level security;
+drop policy if exists rs_sel on public.rental_shops;
+create policy rs_sel on public.rental_shops for select using (published = true or public.is_admin() or owner_id = auth.uid());
+drop policy if exists rs_ins on public.rental_shops;
+create policy rs_ins on public.rental_shops for insert with check (public.is_admin() or owner_id = auth.uid());
+drop policy if exists rs_upd on public.rental_shops;
+create policy rs_upd on public.rental_shops for update using (public.is_admin() or owner_id = auth.uid()) with check (public.is_admin() or owner_id = auth.uid());
+drop policy if exists rs_del on public.rental_shops;
+create policy rs_del on public.rental_shops for delete using (public.is_admin() or owner_id = auth.uid());
+
+-- 租車方案
+create table if not exists public.rental_plans (
+  id            uuid primary key default gen_random_uuid(),
+  shop_id       uuid not null references public.rental_shops(id) on delete cascade,
+  name          text not null,
+  price_per_day integer not null default 0,
+  deposit       integer,
+  includes      text not null default '',
+  count_total   integer,
+  count_left    integer,
+  image         text not null default '',
+  description   text not null default '',
+  sort          integer not null default 0,
+  published     boolean not null default true,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+create index if not exists rental_plans_shop_idx on public.rental_plans(shop_id);
+drop trigger if exists trg_rental_plans_touch on public.rental_plans;
+create trigger trg_rental_plans_touch before update on public.rental_plans for each row execute function public.touch_updated_at();
+alter table public.rental_plans enable row level security;
+drop policy if exists rp_sel on public.rental_plans;
+create policy rp_sel on public.rental_plans for select using (
+  public.is_admin() or exists (select 1 from public.rental_shops s where s.id = shop_id
+    and (s.published or s.owner_id = auth.uid())));
+drop policy if exists rp_manage on public.rental_plans;
+create policy rp_manage on public.rental_plans for all using (
+  public.is_admin() or exists (select 1 from public.rental_shops s where s.id = shop_id and s.owner_id = auth.uid())
+) with check (
+  public.is_admin() or exists (select 1 from public.rental_shops s where s.id = shop_id and s.owner_id = auth.uid()));
+
+-- ================= 家族 B:場所 + 資訊(details jsonb) =================
+do $$
+declare t text;
+begin
+  foreach t in array array['attractions','restaurants','parking_lots'] loop
+    execute format($f$
+      create table if not exists public.%1$I (
+        id          uuid primary key default gen_random_uuid(),
+        name        text not null,
+        region      text not null,
+        town        text not null default '',
+        address     text not null default '',
+        image       text not null default '',
+        description text not null default '',
+        website     text not null default '',
+        lat         double precision,
+        lng         double precision,
+        details     jsonb not null default '{}'::jsonb,
+        published   boolean not null default true,
+        featured    boolean not null default false,
+        owner_id    uuid references public.profiles(id) on delete set null,
+        created_at  timestamptz not null default now(),
+        updated_at  timestamptz not null default now()
+      );
+      create index if not exists %1$s_region_idx on public.%1$I(region);
+      create index if not exists %1$s_pub_idx on public.%1$I(published);
+      drop trigger if exists trg_%1$s_touch on public.%1$I;
+      create trigger trg_%1$s_touch before update on public.%1$I for each row execute function public.touch_updated_at();
+      alter table public.%1$I enable row level security;
+      drop policy if exists %1$s_sel on public.%1$I;
+      create policy %1$s_sel on public.%1$I for select using (published = true or public.is_admin() or owner_id = auth.uid());
+      drop policy if exists %1$s_ins on public.%1$I;
+      create policy %1$s_ins on public.%1$I for insert with check (public.is_admin() or owner_id = auth.uid());
+      drop policy if exists %1$s_upd on public.%1$I;
+      create policy %1$s_upd on public.%1$I for update using (public.is_admin() or owner_id = auth.uid()) with check (public.is_admin() or owner_id = auth.uid());
+      drop policy if exists %1$s_del on public.%1$I;
+      create policy %1$s_del on public.%1$I for delete using (public.is_admin() or owner_id = auth.uid());
+    $f$, t);
+  end loop;
+end $$;
+
+-- ================= 改 search_stays:起價/剩餘/人數 自動吃房型(無房型則沿用民宿欄位) =================
+drop function if exists public.search_stays(text,text,int,int,int,text,text,int,int);
+create or replace function public.search_stays(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_sort text default 'default',
+  lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with agg as (
+    select rt.stay_id,
+           min(rt.price) filter (where rt.published) as mn,
+           sum(rt.rooms_left) filter (where rt.published) as sm,
+           max(rt.capacity) filter (where rt.published) as mx
+    from public.room_types rt group by rt.stay_id
+  ),
+  base as (
+    select s.id, s.name, s.region, s.town, s.category,
+           coalesce(a.mn, s.price) as price,
+           coalesce(a.mx, s.guests) as guests,
+           s.image, s.description, s.amenities, s.website,
+           coalesce(a.sm, s.rooms_left) as rooms_left,
+           s.published, s.sample, s.featured, s.created_at
+    from public.stays s left join agg a on a.stay_id = s.id
+    where s.published and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or coalesce(a.mn, s.price) >= p_price_min)
+      and (p_price_max is null or coalesce(a.mn, s.price) <= p_price_max)
+      and (p_guests is null or coalesce(a.mx, s.guests) >= p_guests)
+      and (coalesce(kw,'') = '' or
+           (coalesce(s.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (
+    select * from base order by featured desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      created_at desc
+    limit greatest(lim,0) offset greatest(off,0)
+  )
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_stays(text,text,int,int,int,text,text,int,int) to anon, authenticated;
+
+-- ================= 租車分頁搜尋(起價=最低日租、剩餘=方案加總) =================
+create or replace function public.search_rentals(
+  kw text default '', p_region text default null, p_price_max int default null, lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with agg as (
+    select p.shop_id, min(p.price_per_day) filter (where p.published) as mn, sum(p.count_left) filter (where p.published) as sm
+    from public.rental_plans p group by p.shop_id
+  ),
+  base as (
+    select rs.id, rs.name, rs.region, rs.town, rs.address, rs.phone, rs.image, rs.description, rs.website, rs.line_url,
+           rs.lat, rs.lng, rs.featured, rs.created_at,
+           coalesce(a.mn,0) as price_from, coalesce(a.sm,0) as units_left
+    from public.rental_shops rs left join agg a on a.shop_id = rs.id
+    where rs.published
+      and (p_region is null or rs.region = p_region)
+      and (p_price_max is null or coalesce(a.mn,0) <= p_price_max)
+      and (coalesce(kw,'') = '' or (coalesce(rs.name,'')||' '||coalesce(rs.region,'')||' '||coalesce(rs.town,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by featured desc nulls last, created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_rentals(text,text,int,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
