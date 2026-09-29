@@ -278,6 +278,39 @@ drop policy if exists vdoc_delete on storage.objects;
 create policy vdoc_delete on storage.objects for delete
   using (bucket_id = 'vendor-docs' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
 
+-- ── pois（二級分類:探索景點 attraction / 探索美食 food / 停車區域 parking） ──
+create table if not exists public.pois (
+  id          uuid primary key default gen_random_uuid(),
+  kind        text not null check (kind in ('attraction','food','parking')),
+  name        text not null,
+  region      text not null,
+  town        text not null default '',
+  address     text not null default '',
+  description text not null default '',
+  image       text not null default '',
+  website     text not null default '',
+  lat         double precision,
+  lng         double precision,
+  published   boolean not null default true,
+  featured    boolean not null default false,
+  owner_id    uuid references public.profiles(id) on delete set null,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists pois_kind_idx   on public.pois(kind, published);
+create index if not exists pois_region_idx on public.pois(region);
+drop trigger if exists trg_pois_touch on public.pois;
+create trigger trg_pois_touch before update on public.pois for each row execute function public.touch_updated_at();
+alter table public.pois enable row level security;
+drop policy if exists pois_sel on public.pois;
+create policy pois_sel on public.pois for select using (published = true or public.is_admin() or owner_id = auth.uid());
+drop policy if exists pois_ins on public.pois;
+create policy pois_ins on public.pois for insert with check (public.is_admin() or owner_id = auth.uid());
+drop policy if exists pois_upd on public.pois;
+create policy pois_upd on public.pois for update using (public.is_admin() or owner_id = auth.uid()) with check (public.is_admin() or owner_id = auth.uid());
+drop policy if exists pois_del on public.pois;
+create policy pois_del on public.pois for delete using (public.is_admin() or owner_id = auth.uid());
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

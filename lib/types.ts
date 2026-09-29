@@ -27,3 +27,28 @@ export interface Stay {
 }
 
 export type SortMode = "default" | "low" | "high";
+
+// 二級分類:探索景點 / 探索美食 / 停車區域
+export type PoiKind = "attraction" | "food" | "parking";
+
+export interface Poi {
+  id: string;
+  kind: PoiKind;
+  name: string;
+  region: string;
+  town: string;
+  address: string;
+  description: string;
+  image: string;
+  website: string;
+  lat?: number | null;
+  lng?: number | null;
+  published: boolean;
+  featured?: boolean;
+}
+
+export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
+  { kind: "attraction", label: "探索景點", slug: "attraction" },
+  { kind: "food", label: "探索美食", slug: "food" },
+  { kind: "parking", label: "停車區域", slug: "parking" },
+];
