@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "./supabase/server";
 import { DEFAULT_SETTINGS, type SiteSettings, type Block, type BlockType } from "./site-settings-types";
 
@@ -27,7 +28,7 @@ function sanitizeBlock(raw: unknown, i: number): Block | null {
   };
 }
 
-export async function getSiteSettings(): Promise<SiteSettings> {
+export const getSiteSettings = cache(async function getSiteSettings(): Promise<SiteSettings> {
   try {
     const sb = await createClient();
     const { data } = await sb.from("site_settings").select("*").eq("id", 1).maybeSingle();
@@ -50,4 +51,4 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     }
   } catch {}
   return DEFAULT_SETTINGS;
-}
+});

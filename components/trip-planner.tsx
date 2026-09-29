@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
-import { TRANSPORTS, TRIP_ITEM_LABEL, type TripItem, type TripItemType } from "@/lib/types";
+import { TRANSPORTS, TRIP_ITEM_LABEL, type Trip, type TripItem, type TripItemType } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const genId = () => "t" + Math.random().toString(36).slice(2, 9);
@@ -18,19 +18,26 @@ const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
   { type: "parking", label: "停車", key: "parkings" },
 ];
 
-export default function TripPlanner({ stays, attractions, foods, parkings, loggedIn }: Pools & { loggedIn: boolean }) {
+export default function TripPlanner({ stays, attractions, foods, parkings, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
   const pools: Pools = useMemo(() => ({ stays, attractions, foods, parkings }), [stays, attractions, foods, parkings]);
 
-  const [tripId, setTripId] = useState<string | null>(null);
-  const [title, setTitle] = useState("我的行程");
-  const [days, setDays] = useState(2);
-  const [headcount, setHeadcount] = useState(2);
-  const [budget, setBudget] = useState<string>("");
-  const [transport, setTransport] = useState<string>("開車");
-  const [region, setRegion] = useState<string>("");
-  const [summary, setSummary] = useState("");
-  const [items, setItems] = useState<TripItem[]>([]);
+  const [tripId, setTripId] = useState<string | null>(initial && initialOwned ? initial.id : null);
+  const [title, setTitle] = useState(initial ? (initialOwned ? initial.title : initial.title + "(複製)") : "我的行程");
+  const [days, setDays] = useState(initial?.days || 2);
+  const [headcount, setHeadcount] = useState(initial?.headcount || 2);
+  const [budget, setBudget] = useState<string>(initial?.budget != null ? String(initial.budget) : "");
+  const [transport, setTransport] = useState<string>(initial?.transport || "開車");
+  const [region, setRegion] = useState<string>(initial?.region || "");
+  const [summary, setSummary] = useState(initial?.summary || "");
+  const [items, setItems] = useState<TripItem[]>(initial?.items?.map((it) => ({ ...it, id: it.id || genId() })) || []);
+  const [isPublic, setIsPublic] = useState<boolean>(initialOwned ? !!initial?.is_public : false);
   const [saving, setSaving] = useState(false);
+
+  function copyShareLink() {
+    if (!tripId) return;
+    const url = `${window.location.origin}/trips/${tripId}`;
+    navigator.clipboard?.writeText(url).then(() => alert("分享連結已複製:\n" + url), () => prompt("複製這個連結分享:", url));
+  }
 
   // picker
   const [pickDay, setPickDay] = useState<number | null>(null);
@@ -65,11 +72,21 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
   }
 
   const pickResults = useMemo(() => {
-    const tab = PICK_TABS.find((t) => t.type === pickTab)!;
+    const tab = PICK_TABS.find((t) => t.type === pickTab);
+    if (!tab) return []; // 「自訂」沒有清單
     const pool = pools[tab.key];
     const q = pickQ.trim().toLowerCase();
     return pool.filter((x) => !q || (x.name + x.region + x.town).toLowerCase().includes(q)).slice(0, 60);
   }, [pickTab, pickQ, pools]);
+
+  const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId);
+  function togglePoolItem(day: number, type: TripItemType, name: string, refId: string) {
+    setItems((p) => {
+      const found = p.find((it) => it.day === day && it.refId === refId);
+      if (found) return p.filter((it) => it.id !== found.id);
+      return [...p, { id: genId(), day, type, name, refId, time: "", note: "" }];
+    });
+  }
 
   function download() {
     const data = { title, days, headcount, budget: budget ? Number(budget) : null, transport, region, summary, items };
@@ -98,6 +115,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
         setSummary(d.summary || "");
         setItems(Array.isArray(d.items) ? d.items.map((it: TripItem) => ({ ...it, id: it.id || genId() })) : []);
         setTripId(null);
+        setIsPublic(false);
         alert("已載入行程檔案。");
       } catch {
         alert("檔案格式不正確,請選擇之前從這裡下載的 .json。");
@@ -115,6 +133,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
     const payload = {
       owner_id: user.id, title, days, headcount,
       budget: budget ? Number(budget) : null, transport, region: region || null, summary: summary || null, items,
+      is_public: isPublic,
     };
     let error, id = tripId;
     if (tripId) {
@@ -172,16 +191,24 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
           ))}
         </div>
 
+        {/* 分享設定 */}
+        {loggedIn && (
+          <div className="plan-share">
+            <label className="check"><input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} /> 公開到「行程分享牆」讓大家參考</label>
+            {tripId && isPublic && <button className="lnk" onClick={copyShareLink}>複製分享連結</button>}
+          </div>
+        )}
+
         {/* 動作列 */}
         <div className="plan-actions">
-          <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存到我的行程"}</button>
+          <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : tripId ? "更新行程" : "儲存到我的行程"}</button>
           <button className="btn btn-ghost" onClick={download}>下載檔案(.json)</button>
           <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>匯入檔案</button>
           <button className="btn btn-ghost" onClick={() => window.print()}>列印 / 存 PDF</button>
           <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
         </div>
-        {!loggedIn && <p className="plan-hint">未登入也能規劃並「下載檔案」與旅伴互傳;登入後可存到帳號、之後分享。</p>}
+        {!loggedIn && <p className="plan-hint">未登入也能規劃並「下載檔案」與旅伴互傳;登入後可存到帳號、公開分享。</p>}
       </div>
 
       {/* 列印用版面 */}
@@ -210,31 +237,42 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
           <div className="overlay no-print" onClick={() => setPickDay(null)} />
           <div className="editor no-print" role="dialog" aria-modal="true">
             <h2>Day {pickDay} · 加入項目</h2>
+            <p className="pick-tip">可以連續點選加入多個(再點一下取消);「自訂」用來手動加清單裡沒有的項目。加完按「完成」。</p>
             <div className="seg" style={{ marginBottom: 12 }}>
               {PICK_TABS.map((t) => <button key={t.type} className={pickTab === t.type ? "on" : ""} onClick={() => setPickTab(t.type)}>{t.label}</button>)}
               <button className={pickTab === "note" ? "on" : ""} onClick={() => setPickTab("note")}>自訂</button>
             </div>
 
             {pickTab === "note" ? (
-              <div style={{ display: "flex", gap: 10 }}>
-                <input value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="自訂項目(例:海邊看日落)" style={{ flex: 1 }} />
-                <button className="btn btn-primary" onClick={() => { if (customName.trim()) { addItem(pickDay, "note", customName.trim()); setCustomName(""); } }}>加入</button>
+              <div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <input value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="自訂項目,例:海邊看日落、休息站、加油"
+                    onKeyDown={(e) => { if (e.key === "Enter" && customName.trim()) { addItem(pickDay, "note", customName.trim()); setCustomName(""); } }} style={{ flex: 1 }} />
+                  <button className="btn btn-primary" onClick={() => { if (customName.trim()) { addItem(pickDay, "note", customName.trim()); setCustomName(""); } }}>加入</button>
+                </div>
+                <p className="pick-tip" style={{ marginTop: 8 }}>輸入後按「加入」或 Enter,可一直加。</p>
               </div>
             ) : (
               <>
                 <input className="admin-search" value={pickQ} onChange={(e) => setPickQ(e.target.value)} placeholder="搜尋名稱、地區…" style={{ width: "100%", marginBottom: 10 }} />
                 <div className="pick-list">
-                  {pickResults.length === 0 && <div className="day-empty">找不到,或這個分類還沒有資料。可用「自訂」手動加。</div>}
-                  {pickResults.map((x) => (
-                    <button key={x.id} className="pick-row" onClick={() => addItem(pickDay, pickTab, x.name, x.id)}>
-                      <span>{x.name}</span><small>{x.region}{x.town ? " · " + x.town : ""}</small>
-                    </button>
-                  ))}
+                  {pickResults.length === 0 && <div className="day-empty">找不到,或這個分類還沒有資料。可切到「自訂」手動加。</div>}
+                  {pickResults.map((x) => {
+                    const added = isAdded(pickDay, x.id);
+                    return (
+                      <button key={x.id} className={"pick-row" + (added ? " added" : "")} onClick={() => togglePoolItem(pickDay, pickTab, x.name, x.id)}>
+                        <span className="pick-check">{added ? "✓" : "＋"}</span>
+                        <span className="pick-nm">{x.name}</span>
+                        <small>{x.region}{x.town ? " · " + x.town : ""}</small>
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
             <div className="editor-actions">
-              <button className="btn btn-ghost" onClick={() => setPickDay(null)}>完成</button>
+              <span style={{ marginRight: "auto", fontSize: 13, color: "var(--text-2)" }}>Day {pickDay} 已排 {itemsOfDay(pickDay).length} 項</span>
+              <button className="btn btn-primary" onClick={() => setPickDay(null)}>完成</button>
             </div>
           </div>
         </>

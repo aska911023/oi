@@ -31,9 +31,11 @@ export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: bool
           <Link href="/" onClick={close}>探索民宿</Link>
           {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`} onClick={close}>{k.label}</Link>)}
           <Link href="/plan" onClick={close}>規劃行程</Link>
+          <Link href="/trips" onClick={close}>行程分享</Link>
           <div className="m-div" />
           {loggedIn ? (
             <>
+              <Link href="/me/trips" onClick={close}>我的行程</Link>
               {isAdmin && <Link href="/admin" onClick={close}>管理後台</Link>}
               <Link href="/account" onClick={close}>我的帳號</Link>
             </>

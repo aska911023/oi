@@ -9,7 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlanPage() {
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ load?: string }> }) {
+  const { load } = await searchParams;
   const settings = await getSiteSettings();
   const [{ stays }, attractions, foods, parkings] = await Promise.all([
     getPublishedStays(),
@@ -20,6 +21,16 @@ export default async function PlanPage() {
 
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
+
+  let initial = null;
+  let initialOwned = false;
+  if (load) {
+    const { data } = await sb.from("trips").select("*").eq("id", load).maybeSingle();
+    if (data) {
+      initial = data;
+      initialOwned = !!user && data.owner_id === user.id;
+    }
+  }
 
   return (
     <>
@@ -36,6 +47,8 @@ export default async function PlanPage() {
           foods={foods.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
           parkings={parkings.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
           loggedIn={!!user}
+          initial={initial}
+          initialOwned={initialOwned}
         />
       </main>
       <footer className="footer">
