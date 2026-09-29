@@ -1,14 +1,10 @@
 import TripsExplore from "@/components/trips-explore";
-import { createClient } from "@/lib/supabase/server";
-import type { Trip } from "@/lib/types";
+import { getTripsInitial } from "@/lib/trips";
 
 export const dynamic = "force-dynamic";
 
 export default async function TripsPage() {
-  const sb = await createClient();
-  const { data } = await sb.rpc("search_trips", { lim: 24, off: 0 });
-  const initial = (data?.rows || []) as Trip[];
-  const total: number = data?.total ?? 0;
+  const { trips: initial, total } = await getTripsInitial();
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 60 }}>

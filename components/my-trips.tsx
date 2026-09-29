@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { revalidateTrips } from "@/app/actions";
 import type { Trip } from "@/lib/types";
 
 export default function MyTrips({ initial }: { initial: Trip[] }) {
@@ -15,6 +16,7 @@ export default function MyTrips({ initial }: { initial: Trip[] }) {
     if (!user) return;
     const { data } = await sb.from("trips").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false });
     setList((data as Trip[]) || []);
+    revalidateTrips().catch(() => {});
   }
 
   async function togglePublic(t: Trip) {

@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { revalidateTrips } from "@/app/actions";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { TRANSPORTS, TRIP_ITEM_LABEL, type Trip, type TripItem, type TripItemType } from "@/lib/types";
 
@@ -145,6 +146,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, logge
     setSaving(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
     setTripId(id);
+    revalidateTrips().catch(() => {}); // 公開行程牆快取失效
     alert("已儲存到你的行程 ✓");
   }
 

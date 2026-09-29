@@ -1,5 +1,5 @@
-import { cache } from "react";
-import { createClient } from "./supabase/server";
+import { unstable_cache } from "next/cache";
+import { createPublicClient } from "./supabase/public";
 import { DEFAULT_SETTINGS, type SiteSettings, type Block, type BlockType } from "./site-settings-types";
 
 export * from "./site-settings-types";
@@ -28,9 +28,9 @@ function sanitizeBlock(raw: unknown, i: number): Block | null {
   };
 }
 
-export const getSiteSettings = cache(async function getSiteSettings(): Promise<SiteSettings> {
+export const getSiteSettings = unstable_cache(async function getSiteSettings(): Promise<SiteSettings> {
   try {
-    const sb = await createClient();
+    const sb = createPublicClient();
     const { data } = await sb.from("site_settings").select("*").eq("id", 1).maybeSingle();
     if (data) {
       const d = data as Record<string, unknown>;
@@ -51,4 +51,4 @@ export const getSiteSettings = cache(async function getSiteSettings(): Promise<S
     }
   } catch {}
   return DEFAULT_SETTINGS;
-});
+}, ["site-settings"], { tags: ["settings"], revalidate: 300 });

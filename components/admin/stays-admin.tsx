@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, priceLabel } from "@/lib/data";
+import { revalidateStays } from "@/app/actions";
 import type { Stay } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -42,6 +43,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
     const sb = createClient();
     const { data } = await sb.from("stays").select("*").order("created_at", { ascending: false });
     setList((data as Stay[]) || []);
+    revalidateStays().catch(() => {}); // 讓前台讀取快取即時失效
   }
 
   async function save() {

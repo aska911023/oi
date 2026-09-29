@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import { revalidatePois } from "@/app/actions";
 import { POI_KINDS, type Poi, type PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -42,6 +43,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Poi[]; kind: P
     const sb = createClient();
     const { data } = await sb.from("pois").select("*").order("created_at", { ascending: false });
     setList((data as Poi[]) || []);
+    revalidatePois().catch(() => {});
   }
 
   async function upload(file: File) {

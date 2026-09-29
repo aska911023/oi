@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
+import { revalidateSettings } from "@/app/actions";
 import type { SiteSettings, Block, BlockType, AlignChoice, FontChoice } from "@/lib/site-settings-types";
 
 const ALIGN: [AlignChoice, string][] = [["left", "靠左"], ["center", "置中"], ["right", "靠右"]];
@@ -101,6 +102,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
+    revalidateSettings().catch(() => {}); // 讓前台讀取快取即時失效
     setSaved(true);
     setPreviewKey((k) => k + 1); // 重載實際版面預覽
   }
