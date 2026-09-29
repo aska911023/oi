@@ -1,17 +1,19 @@
 import TripPlanner from "@/components/trip-planner";
 import { getPublishedStays } from "@/lib/stays";
-import { getPublishedPois } from "@/lib/pois";
+import { getPublishedPlaces } from "@/lib/places";
+import { getPublishedRentalShops } from "@/lib/rentals";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ load?: string }> }) {
   const { load } = await searchParams;
-  const [{ stays }, attractions, foods, parkings] = await Promise.all([
+  const [{ stays }, attractions, foods, parkings, rentals] = await Promise.all([
     getPublishedStays(),
-    getPublishedPois("attraction"),
-    getPublishedPois("food"),
-    getPublishedPois("parking"),
+    getPublishedPlaces("attraction"),
+    getPublishedPlaces("food"),
+    getPublishedPlaces("parking"),
+    getPublishedRentalShops(),
   ]);
 
   const sb = await createClient();
@@ -38,6 +40,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         attractions={attractions.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         foods={foods.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         parkings={parkings.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
+        rentals={rentals.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         loggedIn={!!user}
         initial={initial}
         initialOwned={initialOwned}

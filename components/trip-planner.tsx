@@ -10,17 +10,18 @@ const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const genId = () => "t" + Math.random().toString(36).slice(2, 9);
 
 interface PoolItem { id: string; name: string; region: string; town: string; }
-type Pools = { stays: PoolItem[]; attractions: PoolItem[]; foods: PoolItem[]; parkings: PoolItem[] };
+type Pools = { stays: PoolItem[]; attractions: PoolItem[]; foods: PoolItem[]; parkings: PoolItem[]; rentals: PoolItem[] };
 
 const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
   { type: "stay", label: "住宿", key: "stays" },
   { type: "attraction", label: "景點", key: "attractions" },
   { type: "food", label: "美食", key: "foods" },
   { type: "parking", label: "停車", key: "parkings" },
+  { type: "rental", label: "租車", key: "rentals" },
 ];
 
-export default function TripPlanner({ stays, attractions, foods, parkings, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
-  const pools: Pools = useMemo(() => ({ stays, attractions, foods, parkings }), [stays, attractions, foods, parkings]);
+export default function TripPlanner({ stays, attractions, foods, parkings, rentals, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
+  const pools: Pools = useMemo(() => ({ stays, attractions, foods, parkings, rentals }), [stays, attractions, foods, parkings, rentals]);
 
   const [tripId, setTripId] = useState<string | null>(initial && initialOwned ? initial.id : null);
   const [title, setTitle] = useState(initial ? (initialOwned ? initial.title : initial.title + "(複製)") : "我的行程");

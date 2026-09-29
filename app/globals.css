@@ -509,6 +509,7 @@ img { display: block; max-width: 100%; }
 .ti-type.ti-attraction { background: #eaf3d8; color: #5a7d17; }
 .ti-type.ti-food { background: #fdeede; color: #b26a17; }
 .ti-type.ti-parking { background: #e5ecfa; color: #2f4fb2; }
+.ti-type.ti-rental { background: #e0f0f2; color: #17726b; }
 .ti-type.ti-note { background: #efeaf6; color: #6a4bb2; }
 .ti-main { flex: 1; min-width: 0; }
 .ti-name { font-weight: 600; font-size: 14.5px; color: var(--ink); }

@@ -614,6 +614,10 @@ create or replace function public.search_rentals(
 $$;
 grant execute on function public.search_rentals(text,text,int,int,int) to anon, authenticated;
 
+-- ── pois 已退役(景點/美食/停車改用 attractions/restaurants/parking_lots 三張獨立表) ──
+drop function if exists public.search_pois(text,text,text,int,int);
+drop table if exists public.pois cascade;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
