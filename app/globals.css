@@ -474,4 +474,70 @@ img { display: block; max-width: 100%; }
 .check input { width: 17px; height: 17px; accent-color: var(--green); }
 .editor-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
 
+/* ── ⑤ 行程規劃 ── */
+.plan-wrap { padding-top: 100px; padding-bottom: 60px; }
+.plan-head { margin-bottom: 20px; }
+.plan-head h1 { font-family: var(--serif); font-size: clamp(26px, 3.6vw, 38px); font-weight: 800; margin: 0 0 6px; color: var(--ink); }
+.plan-head p { color: var(--text-2); margin: 0; max-width: 620px; font-size: 15px; }
+.plan-basic { padding: 20px; }
+.pb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px; }
+.pb-grid .wide { grid-column: 1 / -1; }
+.pb-grid label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.pb-grid input, .pb-grid select { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: inherit; background: #fff; }
+.pb-grid input:focus, .pb-grid select:focus { outline: none; border-color: var(--green); }
+@media (max-width: 700px) { .pb-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 460px) { .pb-grid { grid-template-columns: 1fr; } }
+
+.plan-days { display: flex; flex-direction: column; gap: 16px; margin: 18px 0; }
+.day-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; }
+.day-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.day-head b { font-family: var(--serif); font-size: 19px; color: var(--green); }
+.day-empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
+.day-items { display: flex; flex-direction: column; gap: 10px; }
+.trip-item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--page); }
+.ti-time { width: 96px; flex: none; border: 1px solid var(--border-strong); border-radius: 8px; padding: 7px 8px; font: inherit; background: #fff; }
+.ti-type { flex: none; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; background: var(--green-soft); color: var(--green); }
+.ti-type.ti-stay { background: #e3f0ec; color: #17635a; }
+.ti-type.ti-attraction { background: #eaf3d8; color: #5a7d17; }
+.ti-type.ti-food { background: #fdeede; color: #b26a17; }
+.ti-type.ti-parking { background: #e5ecfa; color: #2f4fb2; }
+.ti-type.ti-note { background: #efeaf6; color: #6a4bb2; }
+.ti-main { flex: 1; min-width: 0; }
+.ti-name { font-weight: 600; font-size: 14.5px; color: var(--ink); }
+.ti-note { width: 100%; border: 0; border-bottom: 1px dashed var(--border-strong); background: transparent; font-size: 13px; padding: 3px 0; margin-top: 3px; color: var(--text-2); }
+.ti-note:focus { outline: none; border-color: var(--green); }
+.ti-actions { display: flex; gap: 6px; flex: none; }
+@media (max-width: 560px) {
+  .trip-item { flex-wrap: wrap; }
+  .ti-main { flex-basis: 100%; order: 3; }
+}
+
+.plan-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.plan-hint { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+.pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow-y: auto; }
+.pick-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; text-align: left; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: #fff; cursor: pointer; }
+.pick-row:hover { border-color: var(--green); background: var(--green-soft); }
+.pick-row small { color: var(--muted); font-size: 12px; flex: none; }
+
+/* 列印用行程表(螢幕隱藏,列印顯示) */
+.trip-print { display: none; }
+.trip-print h1 { font-family: var(--serif); font-size: 26px; margin: 0 0 4px; }
+.trip-print .tp-meta { color: #444; font-size: 13px; margin: 0 0 4px; }
+.trip-print .tp-summary { font-size: 14px; margin: 0 0 12px; }
+.trip-print .tp-day { margin: 14px 0; page-break-inside: avoid; }
+.trip-print .tp-day h2 { font-size: 18px; border-bottom: 2px solid #17635a; padding-bottom: 4px; margin: 0 0 8px; }
+.trip-print ul { margin: 0; padding-left: 4px; list-style: none; }
+.trip-print li { padding: 5px 0; border-bottom: 1px dotted #ccc; font-size: 14px; }
+.trip-print .tp-time { display: inline-block; min-width: 52px; font-weight: 700; color: #17635a; }
+.trip-print .tp-empty { color: #999; font-size: 13px; }
+.trip-print .tp-foot { margin-top: 22px; font-size: 11px; color: #999; }
+
+@media print {
+  body * { visibility: hidden; }
+  .trip-print { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 8px 12px; }
+  .trip-print, .trip-print * { visibility: visible; }
+  .topbar, .footer { display: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

@@ -52,3 +52,38 @@ export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
   { kind: "food", label: "探索美食", slug: "food" },
   { kind: "parking", label: "停車區域", slug: "parking" },
 ];
+
+// ⑤ 行程規劃 / ⑥ 分享平台
+export type TripItemType = "stay" | "attraction" | "food" | "parking" | "note";
+
+export interface TripItem {
+  id: string;
+  day: number; // 第幾天(1-based)
+  time?: string; // "09:30"
+  type: TripItemType;
+  refId?: string; // 對應 stays/pois id(自訂項為空)
+  name: string;
+  note?: string;
+}
+
+export interface Trip {
+  id: string;
+  owner_id?: string | null;
+  title: string;
+  days: number;
+  headcount: number;
+  budget?: number | null;
+  transport?: string | null;
+  region?: string | null;
+  summary?: string | null;
+  items: TripItem[];
+  is_public: boolean;
+  share_slug?: string | null;
+  created_at?: string;
+}
+
+export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;
+
+export const TRIP_ITEM_LABEL: Record<TripItemType, string> = {
+  stay: "住宿", attraction: "景點", food: "美食", parking: "停車", note: "自訂",
+};

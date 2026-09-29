@@ -311,6 +311,38 @@ create policy pois_upd on public.pois for update using (public.is_admin() or own
 drop policy if exists pois_del on public.pois;
 create policy pois_del on public.pois for delete using (public.is_admin() or owner_id = auth.uid());
 
+-- ── trips（⑤行程規劃 + ⑥分享平台共用） ──
+create table if not exists public.trips (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid references public.profiles(id) on delete set null,
+  title       text not null default '我的行程',
+  days        int not null default 2 check (days between 1 and 30),
+  headcount   int not null default 2 check (headcount between 1 and 99),
+  budget      int,
+  transport   text,
+  region      text,
+  summary     text,
+  items       jsonb not null default '[]'::jsonb,
+  is_public   boolean not null default false,
+  share_slug  text unique,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists trips_owner_idx  on public.trips(owner_id);
+create index if not exists trips_public_idx on public.trips(is_public, created_at);
+create index if not exists trips_region_idx on public.trips(region);
+drop trigger if exists trg_trips_touch on public.trips;
+create trigger trg_trips_touch before update on public.trips for each row execute function public.touch_updated_at();
+alter table public.trips enable row level security;
+drop policy if exists trips_sel on public.trips;
+create policy trips_sel on public.trips for select using (is_public = true or owner_id = auth.uid() or public.is_admin());
+drop policy if exists trips_ins on public.trips;
+create policy trips_ins on public.trips for insert with check (owner_id = auth.uid());
+drop policy if exists trips_upd on public.trips;
+create policy trips_upd on public.trips for update using (owner_id = auth.uid() or public.is_admin()) with check (owner_id = auth.uid() or public.is_admin());
+drop policy if exists trips_del on public.trips;
+create policy trips_del on public.trips for delete using (owner_id = auth.uid() or public.is_admin());
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

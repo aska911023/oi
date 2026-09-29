@@ -26,6 +26,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           <Link href="/places/attraction">景點</Link>
           <Link href="/places/food">美食</Link>
           <Link href="/places/parking">停車</Link>
+          <Link href="/plan">規劃行程</Link>
           {user ? (
             <>
               <span className="greet">歡迎,{name}</span>
