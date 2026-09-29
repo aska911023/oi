@@ -27,34 +27,46 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [active, setActive] = useState<Poi | null>(null);
-  const copy = KIND_COPY[kind];
+  const [kindState, setKindState] = useState<PoiKind>(kind);
+  const copy = KIND_COPY[kindState];
 
   const [rows, setRows] = useState<Poi[]>(pois);
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
   const firstRun = useRef(true);
 
-  // 切換分類時重置(景點↔美食↔停車是不同路由,通常會重掛,但保險)
-  useEffect(() => { setRows(pois); setRpcTotal(total); firstRun.current = true; }, [pois, total]);
+  // 直接進入某個路由(SSR)時,以 props 重置
+  useEffect(() => { setKindState(kind); setRows(pois); setRpcTotal(total); setKw(""); setRegion("all"); firstRun.current = true; }, [pois, total, kind]);
 
   const regionsWithData = useMemo(() => {
-    const src = regions && regions.length ? regions : Array.from(new Set(rows.map((p) => p.region)));
+    const src = kindState === kind && regions && regions.length ? regions : Array.from(new Set(rows.map((p) => p.region)));
     return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
-  }, [regions, rows]);
+  }, [regions, rows, kindState, kind]);
 
-  async function fetchPage(off: number, append: boolean) {
+  async function load(k: PoiKind, kwv: string, regionv: string, off: number, append: boolean) {
     setLoading(true);
     const sb = createClient();
-    const { data } = await sb.rpc("search_pois", { p_kind: kind, kw: kw.trim(), p_region: region === "all" ? null : region, lim: PAGE, off });
+    const { data } = await sb.rpc("search_pois", { p_kind: k, kw: kwv.trim(), p_region: regionv === "all" ? null : regionv, lim: PAGE, off });
     const newRows = (data?.rows || []) as Poi[];
     setRpcTotal(data?.total ?? 0);
     setRows((prev) => (append ? [...prev, ...newRows] : newRows));
     setLoading(false);
   }
 
+  // 前端即時切換分類(不重載整頁,只打 RPC + 同步網址)
+  function switchKind(k: PoiKind) {
+    if (k === kindState) return;
+    setKindState(k);
+    setKw(""); setRegion("all");
+    firstRun.current = true; // 避免下方 debounce 再打一次
+    const slug = POI_KINDS.find((x) => x.kind === k)?.slug || k;
+    window.history.replaceState(null, "", `/places/${slug}`);
+    load(k, "", "all", 0, false);
+  }
+
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return; }
-    const t = setTimeout(() => { fetchPage(0, false); }, 300);
+    const t = setTimeout(() => { load(kindState, kw, region, 0, false); }, 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kw, region]);
@@ -75,7 +87,7 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
           <div className="places-tabs">
             <Link href="/" className="chip">全部民宿</Link>
             {POI_KINDS.map((k) => (
-              <Link key={k.slug} href={`/places/${k.slug}`} className={"chip" + (k.kind === kind ? " on" : "")}>{k.label}</Link>
+              <button key={k.slug} type="button" onClick={() => switchKind(k.kind)} className={"chip" + (k.kind === kindState ? " on" : "")}>{k.label}</button>
             ))}
           </div>
 
@@ -135,7 +147,7 @@ export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois
 
         {canLoadMore && (
           <div style={{ textAlign: "center", marginTop: 30 }}>
-            <button className="btn btn-ghost" onClick={() => fetchPage(rows.length, true)} disabled={loading}>
+            <button className="btn btn-ghost" onClick={() => load(kindState, kw, region, rows.length, true)} disabled={loading}>
               {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
             </button>
           </div>

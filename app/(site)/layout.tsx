@@ -1,27 +1,20 @@
 import Link from "next/link";
-import { Logo } from "@/components/logo";
 import SiteHeader from "@/components/site-header";
-import Explore from "@/components/explore";
 import SiteTheme from "@/components/site-theme";
-import { getStaysInitial } from "@/lib/stays";
+import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
+import { POI_KINDS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  // 第一頁(RPC 分頁)+ 總數 + 地區;DB 無資料 → 範例 fallback。
-  const { stays, total, usingSamples, regions } = await getStaysInitial();
+// 共用外殼:header / 主題 / footer 常駐,導航時只換 children(不再每頁重查登入)
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
-
   return (
     <>
       <SiteTheme s={settings} />
       <SiteHeader />
-
-      <main>
-        <Explore stays={stays} total={total} usingSamples={usingSamples} regions={regions} blocks={settings.blocks} searchHint={settings.search_hint} heroLayout={settings.hero_layout} heroSplitRatio={settings.hero_split_ratio} />
-      </main>
-
+      {children}
       <footer className="footer">
         <div className="shell footer-grid">
           <div className="footer-brand">
@@ -31,16 +24,16 @@ export default async function Home() {
           <div className="footer-col">
             <h4>探索</h4>
             <Link href="/">全部民宿</Link>
-            <Link href="/">熱門地區</Link>
-            <Link href="/">精選推薦</Link>
+            {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`}>{k.label}</Link>)}
           </div>
           <div className="footer-col">
-            <h4>業者</h4>
-            <Link href="/login">業者上架</Link>
-            <Link href="/login">登入 / 註冊</Link>
+            <h4>行程</h4>
+            <Link href="/plan">規劃行程</Link>
+            <Link href="/trips">行程分享</Link>
           </div>
           <div className="footer-col">
-            <h4>關於偶宿</h4>
+            <h4>業者 / 關於</h4>
+            <Link href="/apply">業者上架</Link>
             <Link href="/terms">服務條款</Link>
             <Link href="/privacy">隱私權政策</Link>
           </div>

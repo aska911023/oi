@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getSiteSettings } from "@/lib/site-settings";
-import { Logo } from "@/components/logo";
 import SignOutButton from "@/components/signout-button";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +12,6 @@ export default async function Account() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login");
-  const settings = await getSiteSettings();
 
   let { data: profile } = await sb.from("profiles").select("*").eq("id", user.id).maybeSingle();
 
@@ -32,14 +29,6 @@ export default async function Account() {
   const created = profile?.created_at ? new Date(profile.created_at).toLocaleDateString("zh-TW") : "—";
 
   return (
-    <>
-      <header className="topbar solid">
-        <div className="shell">
-          <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
-          <nav className="topnav"><Link href="/">探索民宿</Link></nav>
-        </div>
-      </header>
-
       <div className="account">
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h1>我的帳號</h1>
@@ -65,6 +54,5 @@ export default async function Account() {
           <SignOutButton />
         </div>
       </div>
-    </>
   );
 }

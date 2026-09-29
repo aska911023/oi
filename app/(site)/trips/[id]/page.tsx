@@ -1,8 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import SiteHeader from "@/components/site-header";
-import SiteTheme from "@/components/site-theme";
-import { getSiteSettings } from "@/lib/site-settings";
 import { createClient } from "@/lib/supabase/server";
 import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 
@@ -10,7 +7,6 @@ export const dynamic = "force-dynamic";
 
 export default async function TripDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const settings = await getSiteSettings();
   const sb = await createClient();
   const { data } = await sb.from("trips").select("*").eq("id", id).maybeSingle();
   if (!data) notFound();
@@ -22,9 +18,6 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
   const itemsOfDay = (d: number) => (trip.items || []).filter((it: TripItem) => it.day === d);
 
   return (
-    <>
-      <SiteTheme s={settings} />
-      <SiteHeader />
       <main className="shell" style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 780 }}>
         <Link href="/trips" className="lnk">← 回行程分享牆</Link>
         <div className="trip-view">
@@ -58,12 +51,5 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
           ))}
         </div>
       </main>
-      <footer className="footer">
-        <div className="shell footer-bottom" style={{ borderTop: "none" }}>
-          <span>© 2026 偶宿數位科技有限公司</span>
-          <Link href="/plan" style={{ color: "inherit" }}>自己規劃一個</Link>
-        </div>
-      </footer>
-    </>
   );
 }
