@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, priceLabel } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
+import RoomTypesEditor from "@/components/admin/room-types-editor";
 import type { Stay } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -161,6 +162,15 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>
               <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選置頂(贊助)</label>
             </div>
+
+            {form.id ? (
+              <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+                <RoomTypesEditor stayId={form.id} onChange={() => revalidateStays().catch(() => {})} />
+              </div>
+            ) : (
+              <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按「儲存」建立民宿,再回來編輯即可新增房型(價格、剩餘間數以房型為準)。</p>
+            )}
+
             <div className="editor-actions">
               <button className="btn btn-ghost" onClick={() => setForm(null)}>取消</button>
               <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "儲存中…" : "儲存"}</button>

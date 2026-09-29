@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Stay, SortMode } from "@/lib/types";
+import type { Stay, SortMode, RoomType } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
@@ -38,6 +38,18 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
   const [cat, setCat] = useState(ALL_CATEGORY_LABEL);
   const [sort, setSort] = useState<SortMode>("default");
   const [active, setActive] = useState<Stay | null>(null);
+  const [rooms, setRooms] = useState<RoomType[]>([]);
+
+  useEffect(() => {
+    if (!active) { setRooms([]); return; }
+    let alive = true;
+    (async () => {
+      const sb = createClient();
+      const { data } = await sb.from("room_types").select("*").eq("stay_id", active.id).eq("published", true).order("sort").order("price");
+      if (alive) setRooms((data as RoomType[]) || []);
+    })();
+    return () => { alive = false; };
+  }, [active]);
 
   // RPC 分頁模式狀態(usingSamples=false 時使用)
   const [rows, setRows] = useState<Stay[]>(stays);
@@ -244,6 +256,25 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
                 {active.amenities.split("、").filter(Boolean).map((a) => <span key={a} className="am-chip">{a}</span>)}
               </div>
               <p>{active.description}</p>
+              {rooms.length > 0 && (
+                <div className="room-list">
+                  <h3 className="room-list-h">房型</h3>
+                  {rooms.map((r) => (
+                    <div className="room-row" key={r.id}>
+                      <div className="room-main">
+                        <div className="room-name">{r.name}</div>
+                        {r.description && <div className="room-desc">{r.description}</div>}
+                        <div className="room-tags">
+                          <span>可住 {r.capacity} 人</span>
+                          {r.beds && <span>{r.beds}</span>}
+                          {r.rooms_left != null && <span className={r.rooms_left <= 1 ? "room-left low" : "room-left"}>剩 {r.rooms_left} 間</span>}
+                        </div>
+                      </div>
+                      <div className="room-price">{priceLabel(r.price)}<small>/晚</small></div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="notice">依每晚起價與最多入住人數提供參考;實際房價、空房與訂房請向民宿確認。</div>
               <div className="detail-actions">
                 <a

@@ -28,6 +28,23 @@ export interface Stay {
 
 export type SortMode = "default" | "low" | "high";
 
+// 民宿房型(掛在 stays 下)
+export interface RoomType {
+  id: string;
+  stay_id: string;
+  name: string;
+  price: number;
+  capacity: number;
+  rooms_total?: number | null;
+  rooms_left?: number | null;
+  beds?: string | null;
+  amenities: string;
+  image: string;
+  description: string;
+  sort: number;
+  published: boolean;
+}
+
 // 二級分類:探索景點 / 探索美食 / 停車區域
 export type PoiKind = "attraction" | "food" | "parking";
 
