@@ -48,6 +48,7 @@ create index if not exists stays_region_idx    on public.stays(region);
 create index if not exists stays_category_idx  on public.stays(category);
 create index if not exists stays_published_idx on public.stays(published, visibility);
 create index if not exists stays_owner_idx     on public.stays(owner_id);
+alter table public.stays add column if not exists rooms_left integer; -- 剩餘房數(null=不顯示)
 
 -- vendors（業者）
 create table if not exists public.vendors (
@@ -58,6 +59,13 @@ create table if not exists public.vendors (
   status        text not null default 'active' check (status in ('active','suspended')),
   created_at    timestamptz not null default now()
 );
+-- 業者完整聯絡/官方資訊(核准時由申請資料帶入)
+alter table public.vendors add column if not exists address     text;
+alter table public.vendors add column if not exists email       text;
+alter table public.vendors add column if not exists website     text;
+alter table public.vendors add column if not exists line_url    text;
+alter table public.vendors add column if not exists fb_url      text;
+alter table public.vendors add column if not exists license_url text;
 
 -- vendor_applications（業者申請 → admin 審核）
 create table if not exists public.vendor_applications (
@@ -70,6 +78,14 @@ create table if not exists public.vendor_applications (
   reviewed_at   timestamptz,
   reviewed_by   uuid references public.profiles(id) on delete set null
 );
+-- 業者註冊資訊(店名已有 business_name):地址/電話/email/官網/LINE/FB/營業執照
+alter table public.vendor_applications add column if not exists address     text;
+alter table public.vendor_applications add column if not exists phone       text;
+alter table public.vendor_applications add column if not exists email       text;
+alter table public.vendor_applications add column if not exists website     text;
+alter table public.vendor_applications add column if not exists line_url    text;
+alter table public.vendor_applications add column if not exists fb_url      text;
+alter table public.vendor_applications add column if not exists license_url text;
 
 -- sponsorships（置頂版位）
 create table if not exists public.sponsorships (
@@ -248,6 +264,19 @@ drop policy if exists site_obj_update on storage.objects;
 create policy site_obj_update on storage.objects for update using (bucket_id = 'site' and public.is_admin());
 drop policy if exists site_obj_delete on storage.objects;
 create policy site_obj_delete on storage.objects for delete using (bucket_id = 'site' and public.is_admin());
+
+-- ── Storage：vendor-docs bucket（營業執照等敏感文件,私有;本人上傳、本人/admin 讀） ──
+insert into storage.buckets (id, name, public) values ('vendor-docs','vendor-docs',false) on conflict (id) do nothing;
+-- 路徑規則:<uid>/檔名 → 只能上傳到自己的資料夾
+drop policy if exists vdoc_insert on storage.objects;
+create policy vdoc_insert on storage.objects for insert
+  with check (bucket_id = 'vendor-docs' and auth.uid() is not null and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists vdoc_select on storage.objects;
+create policy vdoc_select on storage.objects for select
+  using (bucket_id = 'vendor-docs' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
+drop policy if exists vdoc_delete on storage.objects;
+create policy vdoc_delete on storage.objects for delete
+  using (bucket_id = 'vendor-docs' and (public.is_admin() or (storage.foldername(name))[1] = auth.uid()::text));
 
 -- ============================================================
 -- 完成。設定 admin(擇一):

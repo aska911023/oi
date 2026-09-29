@@ -11,7 +11,7 @@ type Form = Omit<Stay, "id"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
   price: 2000, guests: 2, image: "", description: "", amenities: "Wi-Fi",
-  website: "", published: false, featured: false, sample: false,
+  website: "", rooms_left: null, published: false, featured: false, sample: false,
 };
 
 export default function StaysAdmin({ initial }: { initial: Stay[] }) {
@@ -53,7 +53,9 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
       name: form.name.trim(), region: form.region, town: form.town.trim(),
       category: form.category, price: Number(form.price) || 0, guests: Number(form.guests) || 1,
       image: form.image.trim(), description: form.description.trim(), amenities: form.amenities.trim(),
-      website: form.website.trim(), published: form.published, featured: form.featured, sample: form.sample,
+      website: form.website.trim(),
+      rooms_left: form.rooms_left === null || form.rooms_left === undefined || (form.rooms_left as unknown as string) === "" ? null : Number(form.rooms_left),
+      published: form.published, featured: form.featured, sample: form.sample,
     };
     let error;
     if (form.id) {
@@ -119,7 +121,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
                 <td>{s.region} · {s.town}</td>
                 <td>{s.category}</td>
                 <td>{priceLabel(s.price)}</td>
-                <td>{s.guests} 人</td>
+                <td>{s.guests} 人{s.rooms_left != null && <span className="pill" style={{ marginLeft: 6 }}>餘 {s.rooms_left} 房</span>}</td>
                 <td><span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span></td>
                 <td>
                   <div className="row-actions">
@@ -147,6 +149,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
               <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
               <div><label>每晚起價 (NT$)</label><input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
               <div><label>最多入住人數</label><input type="number" value={form.guests} onChange={(e) => setForm({ ...form, guests: Number(e.target.value) })} /></div>
+              <div><label>剩餘房數(留空=不顯示)</label><input type="number" min={0} value={form.rooms_left ?? ""} placeholder="不顯示" onChange={(e) => setForm({ ...form, rooms_left: e.target.value === "" ? null : Number(e.target.value) })} /></div>
               <div><label>設備(以「、」分隔)</label><input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="泳池、Wi-Fi、停車位" /></div>
               <div className="wide"><label>圖片網址(https)</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>

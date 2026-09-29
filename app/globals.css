@@ -161,6 +161,8 @@ img { display: block; max-width: 100%; }
 .card:hover .photo img { transform: scale(1.05); }
 .card .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(18,40,33,.06); border-radius: 16px; }
 .tag-feat { position: absolute; top: 14px; left: 14px; font-size: 11px; font-weight: 800; padding: 5px 11px; background: var(--yellow); color: var(--ink); border-radius: 20px; letter-spacing: .5px; }
+.tag-rooms { position: absolute; top: 14px; right: 14px; font-size: 11px; font-weight: 700; padding: 5px 10px; background: rgba(255,255,255,.92); color: var(--green); border-radius: 20px; box-shadow: var(--shadow-sm); }
+.tag-rooms.low { background: var(--green); color: #fff; }
 .card-body { padding: 16px 4px 0; }
 .card-eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 7px; }
 .card-eyebrow .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); }
@@ -260,6 +262,28 @@ img { display: block; max-width: 100%; }
 .account-row dd { margin: 0; font-weight: 600; }
 .role-badge { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); }
 .account-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── 業者申請 ── */
+.apply-state { border-radius: 12px; padding: 14px 18px; font-size: 14.5px; line-height: 1.7; margin: 18px 0; }
+.apply-state.ok { background: var(--green-soft); color: var(--green); }
+.apply-state.pending { background: #fff7e6; color: #8a6d00; border: 1px solid #f2e0b0; }
+.apply-state.rejected { background: #fdecec; color: #b3261e; border: 1px solid #f3c3c0; }
+.apply-state a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.apply-form { margin-top: 20px; }
+.af-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.af-grid .wide { grid-column: 1 / -1; }
+.af-grid label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.af-grid input, .af-grid textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: inherit; background: #fff; }
+.af-grid input:focus, .af-grid textarea:focus { outline: none; border-color: var(--green); }
+.af-upload { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 560px) { .af-grid { grid-template-columns: 1fr; } }
+
+/* vendor 詳情 kv */
+.kv { margin: 4px 0 0; }
+.kv > div { display: grid; grid-template-columns: 100px 1fr; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.kv dt { color: var(--muted); font-size: 13px; }
+.kv dd { margin: 0; font-size: 14.5px; color: var(--ink); word-break: break-word; }
+.kv a { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
 
 /* ── admin console ── */
 .admin-shell { max-width: 1240px; margin: 0 auto; padding: 20px 32px 70px; }

@@ -27,6 +27,7 @@ export default function LoginPage() {
     e.preventDefault();
     setErr(""); setMsg("");
     const supabase = createClient();
+    const dest = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("next")) || "/";
 
     if (mode === "register") {
       if (!displayName.trim() || !fullName.trim() || !phone.trim() || !address.trim() || !email.trim())
@@ -46,7 +47,7 @@ export default function LoginPage() {
         // 需要 email 驗證
         return setMsg("註冊成功!請到信箱點擊驗證連結後再登入。");
       }
-      router.push("/");
+      router.push(dest);
       router.refresh();
       return;
     }
@@ -56,7 +57,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) return setErr("登入失敗:帳號或密碼錯誤。");
-    router.push("/");
+    router.push(dest);
     router.refresh();
   }
 

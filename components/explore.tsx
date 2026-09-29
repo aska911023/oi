@@ -152,6 +152,7 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
               <div className="photo">
                 <img src={s.image} alt={s.name} loading="lazy" />
                 {s.featured && <span className="tag-feat">精選置頂</span>}
+                {s.rooms_left != null && <span className={"tag-rooms" + (s.rooms_left <= 2 ? " low" : "")}>剩 {s.rooms_left} 房</span>}
               </div>
               <div className="card-body">
                 <div className="card-eyebrow">{s.region} · {s.town}<span className="dot" />{s.category}</div>
@@ -182,6 +183,7 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
               <div className="detail-meta">
                 <span>{priceLabel(active.price)} / 晚起</span>
                 <span>最多 {active.guests} 人</span>
+                {active.rooms_left != null && <span>剩餘 {active.rooms_left} 房</span>}
               </div>
               <div className="m-amenities">
                 {active.amenities.split("、").filter(Boolean).map((a) => <span key={a} className="am-chip">{a}</span>)}

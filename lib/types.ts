@@ -20,6 +20,7 @@ export interface Stay {
   description: string;
   amenities: string; // 「、」分隔
   website: string; // 導流連結,空字串代表無
+  rooms_left?: number | null; // 剩餘房數(null = 未設定,不顯示)
   published: boolean;
   sample: boolean;
   featured?: boolean; // 贊助置頂
