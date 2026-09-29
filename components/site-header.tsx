@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
+import MobileMenu from "@/components/mobile-menu";
 
 export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
   const sb = await createClient();
@@ -35,6 +36,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
             <Link href="/login" className="cta">登入 / 註冊</Link>
           )}
         </nav>
+        <MobileMenu loggedIn={!!user} name={name} isAdmin={role === "admin"} />
       </div>
     </header>
   );
