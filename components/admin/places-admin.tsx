@@ -26,6 +26,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
   const label = KIND_LABEL[kind];
 
   const filtered = useMemo(() => list.filter((p) => {
@@ -65,6 +66,18 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const addItem = (key: string, cols: { key: string }[]) => setDetail(key, [...getList(key), Object.fromEntries(cols.map((c) => [c.key, ""]))]);
   const setItem = (key: string, i: number, colKey: string, v: string) => setDetail(key, getList(key).map((it, k) => (k === i ? { ...it, [colKey]: v } : it)));
   const rmItem = (key: string, i: number) => setDetail(key, getList(key).filter((_, k) => k !== i));
+
+  async function uploadPdf(key: string, file: File) {
+    if (file.type !== "application/pdf") { alert("請選 PDF 檔"); return; }
+    if (file.size > 10 * 1024 * 1024) { alert("檔案請小於 10MB"); return; }
+    setPdfBusy(key);
+    const sb = createClient();
+    const path = `menu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.pdf`;
+    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, contentType: "application/pdf" });
+    setPdfBusy(null);
+    if (error) { alert("上傳失敗:" + error.message); return; }
+    setDetail(key, sb.storage.from("site").getPublicUrl(path).data.publicUrl);
+  }
 
   async function save() {
     if (!form) return;
@@ -172,6 +185,20 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
                     <input value={String(d[f.key] ?? "")} onChange={(e) => setDetail(f.key, e.target.value)} /></div>
                 ))}
               </div>
+              {fields.filter((f) => f.type === "pdf").map((f) => (
+                <div key={f.key} className="dlist">
+                  <label>{f.label}</label>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+                      {pdfBusy === f.key ? "上傳中…" : d[f.key] ? "更換 PDF" : "選 PDF 上傳"}
+                      <input type="file" accept="application/pdf" style={{ display: "none" }} disabled={pdfBusy !== null}
+                        onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadPdf(f.key, file); }} />
+                    </label>
+                    {d[f.key] ? <a className="lnk" href={String(d[f.key])} target="_blank" rel="noopener noreferrer">檢視目前檔案</a> : <span style={{ fontSize: 13, color: "var(--muted)" }}>尚未上傳</span>}
+                    {d[f.key] ? <button className="lnk danger" onClick={() => setDetail(f.key, "")}>移除</button> : null}
+                  </div>
+                </div>
+              ))}
               {fields.filter((f) => f.type === "list").map((f) => f.type === "list" && (
                 <div key={f.key} className="dlist">
                   <label>{f.label}</label>

@@ -9,6 +9,7 @@ export const KIND_TABLE: Record<PoiKind, string> = {
 
 export type DetailField =
   | { key: string; label: string; type: "text" }
+  | { key: string; label: string; type: "pdf" }
   | { key: string; label: string; type: "list"; cols: { key: string; label: string }[] };
 
 export const DETAILS: Record<PoiKind, DetailField[]> = {
@@ -23,7 +24,7 @@ export const DETAILS: Record<PoiKind, DetailField[]> = {
     { key: "hours", label: "營業時間", type: "text" },
     { key: "closed", label: "公休", type: "text" },
     { key: "booking_phone", label: "訂位電話", type: "text" },
-    { key: "menu", label: "菜單", type: "list", cols: [{ key: "name", label: "品項" }, { key: "price", label: "價格" }] },
+    { key: "menu_pdf", label: "菜單(PDF)", type: "pdf" },
     { key: "events", label: "活動 / 優惠", type: "list", cols: [{ key: "title", label: "標題" }, { key: "note", label: "說明" }] },
   ],
   parking: [

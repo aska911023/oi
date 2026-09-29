@@ -180,8 +180,9 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
               {/* 分類專屬資訊 */}
               {(() => {
                 const scalars = DETAILS[kindState].filter((f) => f.type === "text" && dText(f.key));
+                const pdfs = DETAILS[kindState].filter((f) => f.type === "pdf" && dText(f.key));
                 const lists = DETAILS[kindState].filter((f) => f.type === "list" && dList(f.key).length > 0);
-                if (!scalars.length && !lists.length) return null;
+                if (!scalars.length && !pdfs.length && !lists.length) return null;
                 return (
                   <div className="place-details">
                     {scalars.length > 0 && (
@@ -189,6 +190,9 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
                         {scalars.map((f) => <div key={f.key}><dt>{f.label}</dt><dd>{dText(f.key)}</dd></div>)}
                       </dl>
                     )}
+                    {pdfs.map((f) => (
+                      <a key={f.key} className="btn btn-ghost" style={{ marginTop: 4 }} href={dText(f.key)} target="_blank" rel="noopener noreferrer">{f.label} {I.out}</a>
+                    ))}
                     {lists.map((f) => f.type === "list" && (
                       <div className="pd-list" key={f.key}>
                         <h3 className="room-list-h">{f.label}</h3>

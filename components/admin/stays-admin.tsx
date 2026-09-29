@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GEOGRAPHIC_AREAS, CATEGORIES, priceLabel } from "@/lib/data";
+import { GEOGRAPHIC_AREAS, CATEGORIES } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
 import type { Stay } from "@/lib/types";
@@ -12,7 +12,7 @@ const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 type Form = Omit<Stay, "id"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
-  price: 2000, guests: 2, image: "", description: "", amenities: "Wi-Fi",
+  price: 0, guests: 1, image: "", description: "", amenities: "",
   website: "", rooms_left: null, published: false, featured: false, sample: false,
 };
 
@@ -113,18 +113,16 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
       <div className="atable-wrap">
         <table className="atable">
           <thead>
-            <tr><th></th><th>名稱</th><th>地區</th><th>風格</th><th>每晚起價</th><th>人數</th><th>狀態</th><th>操作</th></tr>
+            <tr><th></th><th>名稱</th><th>地區</th><th>風格</th><th>狀態</th><th>操作</th></tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={8} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
             {filtered.map((s) => (
               <tr key={s.id}>
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
                 <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
                 <td>{s.region} · {s.town}</td>
                 <td>{s.category}</td>
-                <td>{priceLabel(s.price)}</td>
-                <td>{s.guests} 人{s.rooms_left != null && <span className="pill" style={{ marginLeft: 6 }}>餘 {s.rooms_left} 房</span>}</td>
                 <td><span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span></td>
                 <td>
                   <div className="row-actions">
@@ -150,10 +148,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
               <div><label>縣市</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
               <div><label>鄉鎮市區 *</label><input value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} placeholder="例:恆春鎮" /></div>
               <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
-              <div><label>每晚起價 (NT$)</label><input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
-              <div><label>最多入住人數</label><input type="number" value={form.guests} onChange={(e) => setForm({ ...form, guests: Number(e.target.value) })} /></div>
-              <div><label>剩餘房數(留空=不顯示)</label><input type="number" min={0} value={form.rooms_left ?? ""} placeholder="不顯示" onChange={(e) => setForm({ ...form, rooms_left: e.target.value === "" ? null : Number(e.target.value) })} /></div>
-              <div><label>設備(以「、」分隔)</label><input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="泳池、Wi-Fi、停車位" /></div>
+              <div className="wide"><label>公共設施(以「、」分隔)</label><input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="泳池、Wi-Fi、停車位、電梯" /></div>
               <div className="wide"><label>圖片網址(https)</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
