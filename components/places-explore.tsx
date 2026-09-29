@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Poi, PoiKind } from "@/lib/types";
 import { POI_KINDS } from "@/lib/types";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
+
+const PAGE = 24;
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -20,25 +23,44 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ pois, kind }: { pois: Poi[]; kind: PoiKind }) {
+export default function PlacesExplore({ pois, total = 0, regions, kind }: { pois: Poi[]; total?: number; regions?: string[]; kind: PoiKind }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [active, setActive] = useState<Poi | null>(null);
   const copy = KIND_COPY[kind];
 
-  const regionsWithData = useMemo(() => {
-    const set = new Set(pois.map((p) => p.region));
-    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => set.has(r));
-  }, [pois]);
+  const [rows, setRows] = useState<Poi[]>(pois);
+  const [rpcTotal, setRpcTotal] = useState(total);
+  const [loading, setLoading] = useState(false);
+  const firstRun = useRef(true);
 
-  const results = useMemo(() => pois.filter((p) => {
-    if (region !== "all" && p.region !== region) return false;
-    if (kw.trim()) {
-      const hay = (p.name + p.region + p.town + p.address + p.description).toLowerCase();
-      if (!hay.includes(kw.trim().toLowerCase())) return false;
-    }
-    return true;
-  }), [pois, kw, region]);
+  // 切換分類時重置(景點↔美食↔停車是不同路由,通常會重掛,但保險)
+  useEffect(() => { setRows(pois); setRpcTotal(total); firstRun.current = true; }, [pois, total]);
+
+  const regionsWithData = useMemo(() => {
+    const src = regions && regions.length ? regions : Array.from(new Set(rows.map((p) => p.region)));
+    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
+  }, [regions, rows]);
+
+  async function fetchPage(off: number, append: boolean) {
+    setLoading(true);
+    const sb = createClient();
+    const { data } = await sb.rpc("search_pois", { p_kind: kind, kw: kw.trim(), p_region: region === "all" ? null : region, lim: PAGE, off });
+    const newRows = (data?.rows || []) as Poi[];
+    setRpcTotal(data?.total ?? 0);
+    setRows((prev) => (append ? [...prev, ...newRows] : newRows));
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    const t = setTimeout(() => { fetchPage(0, false); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kw, region]);
+
+  const results = rows;
+  const canLoadMore = rows.length < rpcTotal;
 
   const mapHref = (p: Poi) =>
     p.lat != null && p.lng != null
@@ -91,7 +113,7 @@ export default function PlacesExplore({ pois, kind }: { pois: Poi[]; kind: PoiKi
 
       <div className="shell">
         <div className="sec-head">
-          <div className="st"><h2 className="serif">{copy.title}</h2><span className="count">{results.length} 筆</span></div>
+          <div className="st"><h2 className="serif">{copy.title}</h2><span className="count">{rpcTotal} 筆</span></div>
         </div>
 
         <div className="cards">
@@ -111,6 +133,13 @@ export default function PlacesExplore({ pois, kind }: { pois: Poi[]; kind: PoiKi
           ))}
         </div>
 
+        {canLoadMore && (
+          <div style={{ textAlign: "center", marginTop: 30 }}>
+            <button className="btn btn-ghost" onClick={() => fetchPage(rows.length, true)} disabled={loading}>
+              {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
+            </button>
+          </div>
+        )}
         <p className="sample-note">資訊由偶宿彙整,實際營業時間、費用與空位請以現場或官方公告為準。</p>
       </div>
 

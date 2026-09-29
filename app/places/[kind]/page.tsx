@@ -5,7 +5,7 @@ import SiteTheme from "@/components/site-theme";
 import PlacesExplore from "@/components/places-explore";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getPublishedPois } from "@/lib/pois";
+import { getPoisInitial } from "@/lib/pois";
 import { POI_KINDS, type PoiKind } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +16,14 @@ export default async function PlacesPage({ params }: { params: Promise<{ kind: s
   if (!meta) notFound();
 
   const settings = await getSiteSettings();
-  const pois = await getPublishedPois(meta.kind as PoiKind);
+  const { pois, total, regions } = await getPoisInitial(meta.kind as PoiKind);
 
   return (
     <>
       <SiteTheme s={settings} />
       <SiteHeader />
       <main>
-        <PlacesExplore pois={pois} kind={meta.kind as PoiKind} />
+        <PlacesExplore pois={pois} total={total} regions={regions} kind={meta.kind as PoiKind} />
       </main>
 
       <footer className="footer">

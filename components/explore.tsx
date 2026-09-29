@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Stay, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
+
+const PAGE = 24;
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -27,7 +30,7 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ stays, blocks, searchHint, heroLayout, heroSplitRatio }: { stays: Stay[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
+export default function Explore({ stays, total = 0, usingSamples = true, regions, blocks, searchHint, heroLayout, heroSplitRatio }: { stays: Stay[]; total?: number; usingSamples?: boolean; regions?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -36,14 +39,25 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
   const [sort, setSort] = useState<SortMode>("default");
   const [active, setActive] = useState<Stay | null>(null);
 
+  // RPC 分頁模式狀態(usingSamples=false 時使用)
+  const [rows, setRows] = useState<Stay[]>(stays);
+  const [rpcTotal, setRpcTotal] = useState(total);
+  const [loading, setLoading] = useState(false);
+  const firstRun = useRef(true);
+
   const base = useMemo(() => stays.filter((s) => s.published), [stays]);
 
   const regionsWithData = useMemo(() => {
+    if (!usingSamples) {
+      const src = regions && regions.length ? regions : Array.from(new Set(rows.map((s) => s.region)));
+      return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
+    }
     const set = new Set(base.map((s) => s.region));
     return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => set.has(r));
-  }, [base]);
+  }, [base, usingSamples, regions, rows]);
 
-  const results = useMemo(() => {
+  // 範例模式:純前端篩選(資料少)
+  const sampleResults = useMemo(() => {
     const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
     const g = guests.trim() ? parseInt(guests) : null;
     let r = base.filter((s) => {
@@ -65,6 +79,39 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
     });
     return r;
   }, [base, cat, region, priceRange, guests, kw, sort]);
+
+  const rpcArgs = (off: number) => {
+    const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
+    return {
+      kw: kw.trim(), p_region: region === "all" ? null : region,
+      p_price_min: pr.min ? pr.min : null, p_price_max: pr.max ?? null,
+      p_guests: guests.trim() ? parseInt(guests) : null,
+      p_category: cat === ALL_CATEGORY_LABEL ? null : cat, p_sort: sort, lim: PAGE, off,
+    };
+  };
+
+  async function fetchPage(off: number, append: boolean) {
+    setLoading(true);
+    const sb = createClient();
+    const { data } = await sb.rpc("search_stays", rpcArgs(off));
+    const newRows = (data?.rows || []) as Stay[];
+    setRpcTotal(data?.total ?? 0);
+    setRows((prev) => (append ? [...prev, ...newRows] : newRows));
+    setLoading(false);
+  }
+
+  // RPC 模式:篩選變動 → debounce 重查第一頁
+  useEffect(() => {
+    if (usingSamples) return;
+    if (firstRun.current) { firstRun.current = false; return; }
+    const t = setTimeout(() => { fetchPage(0, false); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kw, region, guests, priceRange, cat, sort, usingSamples]);
+
+  const results = usingSamples ? sampleResults : rows;
+  const shownCount = usingSamples ? sampleResults.length : rpcTotal;
+  const canLoadMore = !usingSamples && rows.length < rpcTotal;
 
   return (
     <>
@@ -132,7 +179,7 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
         <div className="sec-head">
           <div className="st">
             <h2 className="serif">{cat === ALL_CATEGORY_LABEL ? "精選民宿" : cat}</h2>
-            <span className="count">{results.length} 間</span>
+            <span className="count">{shownCount} 間</span>
           </div>
           <div className="sort">
             <span>排序</span>
@@ -166,6 +213,14 @@ export default function Explore({ stays, blocks, searchHint, heroLayout, heroSpl
             </button>
           ))}
         </div>
+
+        {canLoadMore && (
+          <div style={{ textAlign: "center", marginTop: 30 }}>
+            <button className="btn btn-ghost" onClick={() => fetchPage(rows.length, true)} disabled={loading}>
+              {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
+            </button>
+          </div>
+        )}
 
         <p className="sample-note">標示「精選置頂」為贊助曝光;範例民宿與照片僅供體驗,實際房價與空房請向民宿確認。</p>
       </div>

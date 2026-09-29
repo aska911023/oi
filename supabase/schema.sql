@@ -343,6 +343,71 @@ create policy trips_upd on public.trips for update using (owner_id = auth.uid() 
 drop policy if exists trips_del on public.trips;
 create policy trips_del on public.trips for delete using (owner_id = auth.uid() or public.is_admin());
 
+-- ── 分頁搜尋 RPC(只回當頁 + 總數;invoker 走 RLS。資料一多也只抓 24 筆) ──
+create or replace function public.search_stays(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_sort text default 'default',
+  lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select * from public.stays s
+    where s.published and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or s.price >= p_price_min)
+      and (p_price_max is null or s.price <= p_price_max)
+      and (p_guests is null or s.guests >= p_guests)
+      and (coalesce(kw,'') = '' or
+           (coalesce(s.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (
+    select * from base order by featured desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      created_at desc
+    limit greatest(lim,0) offset greatest(off,0)
+  )
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_stays(text,text,int,int,int,text,text,int,int) to anon, authenticated;
+
+create or replace function public.search_pois(
+  p_kind text, kw text default '', p_region text default null, lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select * from public.pois p
+    where p.published and p.kind = p_kind
+      and (p_region is null or p.region = p_region)
+      and (coalesce(kw,'') = '' or
+           (coalesce(p.name,'')||' '||coalesce(p.region,'')||' '||coalesce(p.town,'')||' '||coalesce(p.address,'')||' '||coalesce(p.description,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by featured desc nulls last, created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_pois(text,text,text,int,int) to anon, authenticated;
+
+create or replace function public.search_trips(
+  kw text default '', p_days_min int default null, p_days_max int default null,
+  p_budget_max int default null, p_head_min int default null, p_head_max int default null,
+  p_transport text default null, p_region text default null, lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select * from public.trips t
+    where t.is_public
+      and (p_days_min is null or t.days >= p_days_min)
+      and (p_days_max is null or t.days <= p_days_max)
+      and (p_budget_max is null or (t.budget is not null and t.budget <= p_budget_max))
+      and (p_head_min is null or t.headcount >= p_head_min)
+      and (p_head_max is null or t.headcount <= p_head_max)
+      and (p_transport is null or t.transport = p_transport)
+      and (p_region is null or t.region = p_region)
+      and (coalesce(kw,'') = '' or (coalesce(t.title,'')||' '||coalesce(t.summary,'')||' '||coalesce(t.region,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

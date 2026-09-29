@@ -3,14 +3,14 @@ import { Logo } from "@/components/logo";
 import SiteHeader from "@/components/site-header";
 import Explore from "@/components/explore";
 import SiteTheme from "@/components/site-theme";
-import { getPublishedStays } from "@/lib/stays";
+import { getStaysInitial } from "@/lib/stays";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  // 有 Supabase 且有資料 → 讀已上架民宿;否則用範例(fallback)。
-  const { stays } = await getPublishedStays();
+  // 第一頁(RPC 分頁)+ 總數 + 地區;DB 無資料 → 範例 fallback。
+  const { stays, total, usingSamples, regions } = await getStaysInitial();
   const settings = await getSiteSettings();
 
   return (
@@ -19,7 +19,7 @@ export default async function Home() {
       <SiteHeader />
 
       <main>
-        <Explore stays={stays} blocks={settings.blocks} searchHint={settings.search_hint} heroLayout={settings.hero_layout} heroSplitRatio={settings.hero_split_ratio} />
+        <Explore stays={stays} total={total} usingSamples={usingSamples} regions={regions} blocks={settings.blocks} searchHint={settings.search_hint} heroLayout={settings.hero_layout} heroSplitRatio={settings.hero_split_ratio} />
       </main>
 
       <footer className="footer">

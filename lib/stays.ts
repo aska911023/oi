@@ -8,6 +8,26 @@ export function hasSupabase() {
   );
 }
 
+const PAGE = 24;
+const distinctRegions = (arr: Stay[]) => Array.from(new Set(arr.map((s) => s.region)));
+
+// 前台首頁:第一頁(RPC 分頁)+ 總數 + 地區清單。DB 無資料 → 範例 fallback。
+export async function getStaysInitial(): Promise<{ stays: Stay[]; total: number; usingSamples: boolean; regions: string[] }> {
+  if (!hasSupabase()) return { stays: SAMPLE_STAYS, total: SAMPLE_STAYS.length, usingSamples: true, regions: distinctRegions(SAMPLE_STAYS) };
+  try {
+    const { createClient } = await import("./supabase/server");
+    const sb = await createClient();
+    const { data } = await sb.rpc("search_stays", { lim: PAGE, off: 0 });
+    const total: number = data?.total ?? 0;
+    if (!total) return { stays: SAMPLE_STAYS, total: SAMPLE_STAYS.length, usingSamples: true, regions: distinctRegions(SAMPLE_STAYS) };
+    const { data: rg } = await sb.from("stays").select("region").eq("published", true).eq("visibility", "published");
+    const regions = Array.from(new Set((rg || []).map((r: { region: string }) => r.region)));
+    return { stays: (data.rows || []) as Stay[], total, usingSamples: false, regions };
+  } catch {
+    return { stays: SAMPLE_STAYS, total: SAMPLE_STAYS.length, usingSamples: true, regions: distinctRegions(SAMPLE_STAYS) };
+  }
+}
+
 // 前台:取得已上架民宿。無 Supabase 或資料庫尚無資料 → 用範例(對齊 JSON 的 fallback 規則)。
 export async function getPublishedStays(): Promise<{ stays: Stay[]; usingSamples: boolean }> {
   if (!hasSupabase()) return { stays: SAMPLE_STAYS, usingSamples: true };

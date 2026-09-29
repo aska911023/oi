@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
+const PAGE = 24;
+const dayRange = (b: string): [number | null, number | null] => b === "1-2" ? [1, 2] : b === "3-4" ? [3, 4] : b === "5+" ? [5, null] : [null, null];
+const headRange = (b: string): [number | null, number | null] => b === "1-2" ? [1, 2] : b === "3-4" ? [3, 4] : b === "5+" ? [5, null] : [null, null];
 const DAY_BUCKETS = [
   { v: "all", label: "不限天數" },
   { v: "1-2", label: "1–2 天" },
@@ -25,7 +29,7 @@ const HEAD_BUCKETS = [
   { v: "5+", label: "5 人以上" },
 ];
 
-export default function TripsExplore({ trips }: { trips: Trip[] }) {
+export default function TripsExplore({ initialTrips, initialTotal }: { initialTrips: Trip[]; initialTotal: number }) {
   const [kw, setKw] = useState("");
   const [dayB, setDayB] = useState("all");
   const [budgetB, setBudgetB] = useState("all");
@@ -33,21 +37,42 @@ export default function TripsExplore({ trips }: { trips: Trip[] }) {
   const [transport, setTransport] = useState("all");
   const [region, setRegion] = useState("all");
 
-  const inBucket = (n: number, b: string) =>
-    b === "all" || (b === "1-2" && n <= 2) || (b === "3-4" && n >= 3 && n <= 4) || (b === "5+" && n >= 5);
+  const [rows, setRows] = useState<Trip[]>(initialTrips);
+  const [rpcTotal, setRpcTotal] = useState(initialTotal);
+  const [loading, setLoading] = useState(false);
+  const firstRun = useRef(true);
 
-  const results = useMemo(() => trips.filter((t) => {
-    if (!inBucket(t.days, dayB)) return false;
-    if (!inBucket(t.headcount, headB)) return false;
-    if (budgetB !== "all") { if (t.budget == null || t.budget > Number(budgetB)) return false; }
-    if (transport !== "all" && t.transport !== transport) return false;
-    if (region !== "all" && t.region !== region) return false;
-    if (kw.trim()) {
-      const hay = (t.title + (t.summary || "") + (t.region || "")).toLowerCase();
-      if (!hay.includes(kw.trim().toLowerCase())) return false;
-    }
-    return true;
-  }), [trips, dayB, headB, budgetB, transport, region, kw]);
+  function args(off: number) {
+    const [dMin, dMax] = dayRange(dayB);
+    const [hMin, hMax] = headRange(headB);
+    return {
+      kw: kw.trim(), p_days_min: dMin, p_days_max: dMax,
+      p_budget_max: budgetB === "all" ? null : Number(budgetB),
+      p_head_min: hMin, p_head_max: hMax,
+      p_transport: transport === "all" ? null : transport,
+      p_region: region === "all" ? null : region, lim: PAGE, off,
+    };
+  }
+
+  async function fetchPage(off: number, append: boolean) {
+    setLoading(true);
+    const sb = createClient();
+    const { data } = await sb.rpc("search_trips", args(off));
+    const newRows = (data?.rows || []) as Trip[];
+    setRpcTotal(data?.total ?? 0);
+    setRows((prev) => (append ? [...prev, ...newRows] : newRows));
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (firstRun.current) { firstRun.current = false; return; }
+    const t = setTimeout(() => { fetchPage(0, false); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kw, dayB, budgetB, headB, transport, region]);
+
+  const results = rows;
+  const canLoadMore = rows.length < rpcTotal;
 
   return (
     <>
@@ -60,7 +85,7 @@ export default function TripsExplore({ trips }: { trips: Trip[] }) {
         <select value={region} onChange={(e) => setRegion(e.target.value)}><option value="all">不限地區</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select>
       </div>
 
-      <div className="sec-head"><div className="st"><h2 className="serif">公開行程</h2><span className="count">{results.length} 筆</span></div></div>
+      <div className="sec-head"><div className="st"><h2 className="serif">公開行程</h2><span className="count">{rpcTotal} 筆</span></div></div>
 
       <div className="trips-grid">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
@@ -81,6 +106,13 @@ export default function TripsExplore({ trips }: { trips: Trip[] }) {
           </Link>
         ))}
       </div>
+      {canLoadMore && (
+        <div style={{ textAlign: "center", marginTop: 30 }}>
+          <button className="btn btn-ghost" onClick={() => fetchPage(rows.length, true)} disabled={loading}>
+            {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
+          </button>
+        </div>
+      )}
     </>
   );
 }
