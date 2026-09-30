@@ -16,7 +16,7 @@ const EMPTY: Form = {
   website: "", rooms_left: null, published: false, featured: false, sample: false,
 };
 
-export default function StaysAdmin({ initial }: { initial: Stay[] }) {
+export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; ownerId?: string }) {
   const [list, setList] = useState<Stay[]>(initial);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
@@ -42,7 +42,9 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
 
   async function refresh() {
     const sb = createClient();
-    const { data } = await sb.from("stays").select("*").order("created_at", { ascending: false });
+    let query = sb.from("stays").select("*").order("created_at", { ascending: false });
+    if (ownerId) query = query.eq("owner_id", ownerId);
+    const { data } = await query;
     setList((data as Stay[]) || []);
     revalidateStays().catch(() => {}); // 讓前台讀取快取即時失效
   }
@@ -59,6 +61,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
       website: form.website.trim(),
       rooms_left: form.rooms_left === null || form.rooms_left === undefined || (form.rooms_left as unknown as string) === "" ? null : Number(form.rooms_left),
       published: form.published, featured: form.featured, sample: form.sample,
+      owner_id: ownerId ?? undefined,
     };
     let error;
     if (form.id) {
@@ -128,7 +131,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
-                    <button className="lnk" onClick={() => toggleFeatured(s)}>{s.featured ? "取消置頂" : "置頂"}</button>
+                    {!ownerId && <button className="lnk" onClick={() => toggleFeatured(s)}>{s.featured ? "取消置頂" : "置頂"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>
@@ -155,7 +158,7 @@ export default function StaysAdmin({ initial }: { initial: Stay[] }) {
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>
-              <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選置頂(贊助)</label>
+              {!ownerId && <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選置頂(贊助)</label>}
             </div>
 
             {form.id ? (

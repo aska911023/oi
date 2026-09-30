@@ -14,7 +14,7 @@ const EMPTY: Form = {
   website: "", line_url: "", lat: null, lng: null, published: false, featured: false,
 };
 
-export default function RentalsAdmin({ initial }: { initial: RentalShop[] }) {
+export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop[]; ownerId?: string }) {
   const [list, setList] = useState<RentalShop[]>(initial);
   const [q, setQ] = useState("");
   const [form, setForm] = useState<Form | null>(null);
@@ -33,7 +33,9 @@ export default function RentalsAdmin({ initial }: { initial: RentalShop[] }) {
 
   async function refresh() {
     const sb = createClient();
-    const { data } = await sb.from("rental_shops").select("*").order("created_at", { ascending: false });
+    let query = sb.from("rental_shops").select("*").order("created_at", { ascending: false });
+    if (ownerId) query = query.eq("owner_id", ownerId);
+    const { data } = await query;
     setList((data as RentalShop[]) || []);
     revalidateRentals().catch(() => {});
   }
@@ -61,6 +63,7 @@ export default function RentalsAdmin({ initial }: { initial: RentalShop[] }) {
       phone: form.phone || null, image: form.image.trim(), description: form.description.trim(),
       website: form.website.trim(), line_url: form.line_url || null,
       lat: form.lat ?? null, lng: form.lng ?? null, published: form.published, featured: form.featured,
+      owner_id: ownerId ?? undefined,
     };
     let error, newId = form.id;
     if (form.id) ({ error } = await sb.from("rental_shops").update(payload).eq("id", form.id));
@@ -151,7 +154,7 @@ export default function RentalsAdmin({ initial }: { initial: RentalShop[] }) {
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>
-              <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選</label>
+              {!ownerId && <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選</label>}
             </div>
 
             {form.id ? (
