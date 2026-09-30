@@ -592,6 +592,10 @@ img { display: block; max-width: 100%; }
 .rt-num input { width: 66px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px 8px; font: inherit; background: #fff; }
 .btn.btn-sm { padding: 7px 13px; font-size: 13px; }
 
+/* 設施勾選格 */
+.fac-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.fac-grid .chip { cursor: pointer; font-size: 13px; }
+
 /* 後台 details 清單編輯(菜單/活動) */
 .details-form { margin-top: 6px; }
 .dlist { margin-top: 12px; }

@@ -20,6 +20,16 @@ export const GEOGRAPHIC_AREAS: { name: string; regions: string[] }[] = [
   { name: "離島", regions: ["澎湖", "金門", "連江"] },
 ];
 
+// 民宿設施 / 服務標籤(勾選用;儲存為 amenities「、」分隔字串,前台照舊拆開顯示)
+export const AMENITY_OPTIONS: string[] = [
+  "包棟", "附早餐", "公用客廳", "公用冰箱", "咖啡機", "飲水機", "熱水壺", "電梯",
+  "提供WiFi", "冷氣", "數位頻道", "遊戲機", "自助洗衣", "浴巾/盥洗用品",
+  "寵物友善", "禁止吸菸", "兒童遊戲區", "寄放行李",
+  "戶外庭園", "戶外戲水池", "烤肉場地", "借用廚房", "麻將出借",
+  "方便停車", "停車場", "充電樁", "機場接送",
+  "代訂烤肉食材", "代訂票券", "代訂船票", "租車資訊",
+];
+
 export const PRICE_RANGES = [
   { value: "all", label: "不限金額", min: 0, max: null as number | null },
   { value: "under3000", label: "NT$ 3,000 以下", min: 0, max: 3000 },

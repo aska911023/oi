@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GEOGRAPHIC_AREAS, CATEGORIES } from "@/lib/data";
+import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
 import type { Stay } from "@/lib/types";
@@ -151,7 +151,16 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
               <div><label>縣市</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
               <div><label>鄉鎮市區 *</label><input value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} placeholder="例:恆春鎮" /></div>
               <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
-              <div className="wide"><label>公共設施(以「、」分隔)</label><input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="泳池、Wi-Fi、停車位、電梯" /></div>
+              <div className="wide"><label>設施 / 服務(可複選)</label>
+                <div className="fac-grid">
+                  {AMENITY_OPTIONS.map((a) => {
+                    const set = new Set((form.amenities || "").split("、").map((s) => s.trim()).filter(Boolean));
+                    const on = set.has(a);
+                    return <button type="button" key={a} className={"chip" + (on ? " on" : "")}
+                      onClick={() => { on ? set.delete(a) : set.add(a); setForm({ ...form, amenities: [...set].join("、") }); }}>{a}</button>;
+                  })}
+                </div>
+              </div>
               <div className="wide"><label>圖片網址(https)</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
