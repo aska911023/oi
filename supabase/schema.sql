@@ -614,6 +614,19 @@ create or replace function public.search_rentals(
 $$;
 grant execute on function public.search_rentals(text,text,int,int,int) to anon, authenticated;
 
+-- ── stations(高鐵 + 台鐵車站,參考資料) ──
+create table if not exists public.stations (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('hsr','tra')),
+  name text not null, region text not null default '',
+  lat double precision, lng double precision, sort integer not null default 0
+);
+alter table public.stations enable row level security;
+drop policy if exists stations_sel on public.stations;
+create policy stations_sel on public.stations for select using (true);
+drop policy if exists stations_admin on public.stations;
+create policy stations_admin on public.stations for all using (public.is_admin()) with check (public.is_admin());
+
 -- ── pois 已退役(景點/美食/停車改用 attractions/restaurants/parking_lots 三張獨立表) ──
 drop function if exists public.search_pois(text,text,text,int,int);
 drop table if exists public.pois cascade;

@@ -123,7 +123,9 @@ export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
 ];
 
 // ⑤ 行程規劃 / ⑥ 分享平台
-export type TripItemType = "stay" | "attraction" | "food" | "parking" | "rental" | "note";
+export interface Station { id: string; kind: "hsr" | "tra"; name: string; region: string; }
+
+export type TripItemType = "stay" | "attraction" | "food" | "parking" | "rental" | "station" | "note";
 
 export interface TripItem {
   id: string;
@@ -155,5 +157,5 @@ export interface Trip {
 export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;
 
 export const TRIP_ITEM_LABEL: Record<TripItemType, string> = {
-  stay: "住宿", attraction: "景點", food: "美食", parking: "停車", rental: "租車", note: "自訂",
+  stay: "住宿", attraction: "景點", food: "美食", parking: "停車", rental: "租車", station: "車站", note: "自訂",
 };
