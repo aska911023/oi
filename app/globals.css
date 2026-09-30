@@ -630,6 +630,25 @@ img { display: block; max-width: 100%; }
 .shop-h .count { font-family: var(--sans); font-size: 13px; color: var(--muted); font-weight: 600; }
 .room-thumb { width: 74px; height: 58px; object-fit: cover; border-radius: 10px; flex: none; }
 
+/* 評價 */
+.btn.on-saved { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+.review-form { margin-bottom: 18px; }
+.review-form textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: inherit; margin-top: 8px; background: #fff; }
+.review-form textarea:focus { outline: none; border-color: var(--green); }
+.stars-input { display: flex; gap: 2px; }
+.stars-input .star { background: none; border: 0; cursor: pointer; font-size: 26px; line-height: 1; color: var(--border-strong); padding: 0 2px; }
+.stars-input .star.on { color: #f4b400; }
+.review-list { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+.review-row { border-top: 1px solid var(--border); padding-top: 12px; }
+.review-top { display: flex; align-items: center; gap: 10px; }
+.review-stars { color: #f4b400; font-size: 14px; letter-spacing: 1px; }
+.review-stars .review-off { color: var(--border-strong); }
+.review-name { font-size: 13px; color: var(--text-2); font-weight: 600; }
+.review-comment { margin: 6px 0 0; font-size: 14.5px; color: var(--text); line-height: 1.7; }
+.nearby-group { margin-bottom: 14px; }
+.nearby-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 14px; font-weight: 700; color: var(--ink); }
+.nearby-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
 /* 前台詳情:房型列表 */
 .room-list { margin: 16px 0; border-top: 1px solid var(--border); padding-top: 14px; }
 .room-list-h { font-family: var(--serif); font-size: 17px; margin: 0 0 10px; color: var(--ink); }

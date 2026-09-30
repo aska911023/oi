@@ -737,6 +737,30 @@ create or replace function public.search_rentals(
 $$;
 grant execute on function public.search_rentals(text,text,int,int,int) to anon, authenticated;
 
+-- ── reviews(民宿評價,一人一店一則) ──
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  stay_id uuid not null references public.stays(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  rating int not null check (rating between 1 and 5),
+  comment text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (stay_id, user_id)
+);
+create index if not exists reviews_stay_idx on public.reviews(stay_id);
+drop trigger if exists trg_reviews_touch on public.reviews;
+create trigger trg_reviews_touch before update on public.reviews for each row execute function public.touch_updated_at();
+alter table public.reviews enable row level security;
+drop policy if exists reviews_sel on public.reviews;
+create policy reviews_sel on public.reviews for select using (true);
+drop policy if exists reviews_ins on public.reviews;
+create policy reviews_ins on public.reviews for insert with check (user_id = auth.uid());
+drop policy if exists reviews_upd on public.reviews;
+create policy reviews_upd on public.reviews for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists reviews_del on public.reviews;
+create policy reviews_del on public.reviews for delete using (user_id = auth.uid() or public.is_admin());
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

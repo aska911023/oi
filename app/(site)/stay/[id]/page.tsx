@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { priceLabel } from "@/lib/data";
 import SaveButton from "@/components/save-button";
+import ReviewForm from "@/components/review-form";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,25 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
   const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", id).eq("published", true).order("sort").order("price");
   const rooms = (roomsData as RoomType[]) || [];
   const amenities = (s.amenities || "").split("、").map((a) => a.trim()).filter(Boolean);
+
+  // 評價
+  const { data: revData } = await sb.from("reviews").select("rating, comment, created_at, profiles(display_name)").eq("stay_id", id).order("created_at", { ascending: false });
+  const reviews = (revData || []) as unknown as { rating: number; comment: string; created_at: string; profiles: { display_name: string } | null }[];
+  const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
+
+  // 附近推薦(同縣市)
+  const [na, nf, np, nr] = await Promise.all([
+    sb.from("attractions").select("id,name,region,town,image").eq("published", true).eq("region", s.region).limit(4),
+    sb.from("restaurants").select("id,name,region,town,image").eq("published", true).eq("region", s.region).limit(4),
+    sb.from("parking_lots").select("id,name,region,town,image").eq("published", true).eq("region", s.region).limit(4),
+    sb.from("rental_shops").select("id,name,region,town,image").eq("published", true).eq("approved", true).eq("region", s.region).limit(4),
+  ]);
+  const nearby: { label: string; href: string; items: { id: string; name: string; town?: string }[] }[] = [
+    { label: "附近景點", href: "/places/attraction", items: (na.data || []) as { id: string; name: string; town?: string }[] },
+    { label: "附近美食", href: "/places/food", items: (nf.data || []) as { id: string; name: string; town?: string }[] },
+    { label: "附近停車", href: "/places/parking", items: (np.data || []) as { id: string; name: string; town?: string }[] },
+    { label: "附近租車", href: "/rentals", items: (nr.data || []) as { id: string; name: string; town?: string }[] },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
@@ -75,6 +95,40 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
         </div>
+
+        {/* 評價 */}
+        <div className="shop-block">
+          <h2 className="serif shop-h">評價 {reviews.length > 0 && <span className="count">★ {avg.toFixed(1)} · {reviews.length} 則</span>}</h2>
+          <ReviewForm stayId={s.id} />
+          {reviews.length > 0 && (
+            <div className="review-list">
+              {reviews.map((r, i) => (
+                <div className="review-row" key={i}>
+                  <div className="review-top">
+                    <span className="review-stars">{"★".repeat(r.rating)}<span className="review-off">{"★".repeat(5 - r.rating)}</span></span>
+                    <span className="review-name">{r.profiles?.display_name || "旅人"}</span>
+                  </div>
+                  {r.comment && <p className="review-comment">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 附近推薦 */}
+        {nearby.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">附近推薦</h2>
+            {nearby.map((g) => (
+              <div className="nearby-group" key={g.label}>
+                <div className="nearby-head"><span>{g.label}</span><Link className="lnk" href={g.href}>更多 →</Link></div>
+                <div className="nearby-chips">
+                  {g.items.map((it) => <Link key={it.id} href={g.href} className="am-chip">{it.name}</Link>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>
       </div>
