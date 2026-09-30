@@ -63,15 +63,17 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       published: form.published, featured: form.featured, sample: form.sample,
       owner_id: ownerId ?? undefined,
     };
-    let error;
+    let error, newId = form.id;
     if (form.id) {
       ({ error } = await sb.from("stays").update(payload).eq("id", form.id));
     } else {
-      ({ error } = await sb.from("stays").insert(payload));
+      const { data, error: e } = await sb.from("stays").insert(payload).select("id").single();
+      error = e; if (data) newId = data.id;
     }
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
-    setForm(null);
+    // 新建後留在編輯狀態,讓下方「房型管理」立刻出現
+    setForm((f) => (f ? { ...f, id: newId } : f));
     await refresh();
   }
 
@@ -175,7 +177,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                 <RoomTypesEditor stayId={form.id} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
-              <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按「儲存」建立民宿,再回來編輯即可新增房型(價格、剩餘間數以房型為準)。</p>
+              <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>
             )}
 
             <div className="editor-actions">

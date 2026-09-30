@@ -60,6 +60,13 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   }
   function removeItem(id: string) { setItems((p) => p.filter((it) => it.id !== id)); }
 
+  function copyDayTo(from: number, to: number) {
+    if (from === to) return;
+    const clones = items.filter((it) => it.day === from).map((it) => ({ ...it, id: genId(), day: to }));
+    if (!clones.length) return;
+    setItems((p) => [...p, ...clones]);
+  }
+
   const [imgBusy, setImgBusy] = useState<string | null>(null);
   async function uploadItemImage(id: string, file: File) {
     if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
@@ -185,7 +192,18 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
         <div className="plan-days">
           {dayList.map((d) => (
             <div className="day-card" key={d}>
-              <div className="day-head"><b>Day {d}</b><button className="btn btn-ghost btn-sm" onClick={() => { setPickDay(d); setPickTab("stay"); setPickQ(""); setCustomName(""); }}>＋ 加入</button></div>
+              <div className="day-head">
+                <b>Day {d}</b>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  {days > 1 && itemsOfDay(d).length > 0 && (
+                    <select className="day-copy" value="" onChange={(e) => { const to = Number(e.target.value); if (to) copyDayTo(d, to); e.currentTarget.value = ""; }}>
+                      <option value="">複製到…</option>
+                      {dayList.filter((x) => x !== d).map((x) => <option key={x} value={x}>Day {x}</option>)}
+                    </select>
+                  )}
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setPickDay(d); setPickTab("stay"); setPickQ(""); setCustomName(""); }}>＋ 加入</button>
+                </div>
+              </div>
               {itemsOfDay(d).length === 0 && <div className="day-empty">還沒有安排,點「加入」把住宿 / 景點 / 美食 / 停車排進來。</div>}
               <div className="day-items">
                 {itemsOfDay(d).map((it) => (
