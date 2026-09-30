@@ -509,6 +509,10 @@ img { display: block; max-width: 100%; }
 .day-empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
 .day-items { display: flex; flex-direction: column; gap: 10px; }
 .trip-item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--page); }
+.ti-grip { flex: none; cursor: grab; color: var(--muted); font-size: 15px; line-height: 1; user-select: none; padding: 0 2px; }
+.ti-grip:active { cursor: grabbing; }
+.trip-item { cursor: default; }
+.trip-item[draggable="true"]:hover .ti-grip { color: var(--green); }
 .ti-time { width: 96px; flex: none; border: 1px solid var(--border-strong); border-radius: 8px; padding: 7px 8px; font: inherit; background: #fff; }
 .ti-type { flex: none; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px; background: var(--green-soft); color: var(--green); }
 .ti-type.ti-stay { background: #e3f0ec; color: #17635a; }

@@ -171,6 +171,7 @@ export interface Trip {
   owner_id?: string | null;
   title: string;
   days: number;
+  nights?: number;
   headcount: number;
   budget?: number | null;
   transport?: string | null;

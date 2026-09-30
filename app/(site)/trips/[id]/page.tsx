@@ -23,7 +23,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
         <div className="trip-view">
           <h1 className="serif">{trip.title}</h1>
           <p className="trip-view-meta">
-            {trip.days} 天 · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
+            {trip.days} 天{trip.nights ? ` ${trip.nights} 夜` : ""} · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
             {trip.budget != null ? ` · 每人 NT$${trip.budget.toLocaleString()}` : ""}{trip.region ? ` · ${trip.region}` : ""}
           </p>
           {trip.summary && <p className="trip-view-sum">{trip.summary}</p>}

@@ -93,7 +93,7 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
           <Link key={t.id} href={`/trips/${t.id}`} className="trip-card">
             <div className="trip-card-top">
               <h3>{t.title}</h3>
-              <span className="trip-days">{t.days} 天</span>
+              <span className="trip-days">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}</span>
             </div>
             {t.summary && <p className="trip-sum">{t.summary}</p>}
             <div className="trip-tags">

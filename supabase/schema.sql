@@ -761,6 +761,8 @@ create policy reviews_upd on public.reviews for update using (user_id = auth.uid
 drop policy if exists reviews_del on public.reviews;
 create policy reviews_del on public.reviews for delete using (user_id = auth.uid() or public.is_admin());
 
+alter table public.trips add column if not exists nights int not null default 1;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

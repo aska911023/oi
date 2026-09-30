@@ -27,6 +27,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   const [tripId, setTripId] = useState<string | null>(initial && initialOwned ? initial.id : null);
   const [title, setTitle] = useState(initial ? (initialOwned ? initial.title : initial.title + "(複製)") : "我的行程");
   const [days, setDays] = useState(initial?.days || 2);
+  const [nights, setNights] = useState(initial?.nights ?? Math.max(0, (initial?.days || 2) - 1));
   const [headcount, setHeadcount] = useState(initial?.headcount || 2);
   const [budget, setBudget] = useState<string>(initial?.budget != null ? String(initial.budget) : "");
   const [transport, setTransport] = useState<string>(initial?.transport || "開車");
@@ -71,6 +72,27 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   // 單一項目複製到別天(保留白天/晚上分段)
   function copyItemTo(item: TripItem, toDay: number) {
     setItems((p) => [...p, { ...item, id: genId(), day: toDay, slot: item.slot || defaultSlot(item.type) }]);
+  }
+
+  // 拖拉換順序(拖到某項就插到它前面,並跟隨它的天/時段)
+  const dragId = useRef<string | null>(null);
+  function dropOn(targetId: string) {
+    const from = dragId.current;
+    dragId.current = null;
+    if (!from || from === targetId) return;
+    setItems((p) => {
+      const fi = p.findIndex((x) => x.id === from);
+      const ti = p.findIndex((x) => x.id === targetId);
+      if (fi < 0 || ti < 0) return p;
+      const target = p[ti];
+      const arr = [...p];
+      const [moved] = arr.splice(fi, 1);
+      moved.day = target.day;
+      moved.slot = target.slot || defaultSlot(target.type);
+      const ni = arr.findIndex((x) => x.id === targetId);
+      arr.splice(ni, 0, moved);
+      return arr;
+    });
   }
 
   const [imgBusy, setImgBusy] = useState<string | null>(null);
@@ -118,7 +140,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   }
 
   function download() {
-    const data = { title, days, headcount, budget: budget ? Number(budget) : null, transport, region, summary, items };
+    const data = { title, days, nights, headcount, budget: budget ? Number(budget) : null, transport, region, summary, items };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -137,6 +159,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
         const d = JSON.parse(String(reader.result));
         setTitle(d.title || "我的行程");
         setDays(Math.min(30, Math.max(1, Number(d.days) || 2)));
+        setNights(Math.max(0, Number(d.nights) ?? 1));
         setHeadcount(Number(d.headcount) || 2);
         setBudget(d.budget != null ? String(d.budget) : "");
         setTransport(d.transport || "開車");
@@ -160,7 +183,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
     const { data: { user } } = await sb.auth.getUser();
     if (!user) { setSaving(false); alert("登入狀態失效,請重新登入。"); return; }
     const payload = {
-      owner_id: user.id, title, days, headcount,
+      owner_id: user.id, title, days, nights, headcount,
       budget: budget ? Number(budget) : null, transport, region: region || null, summary: summary || null, items,
       is_public: isPublic,
     };
@@ -185,7 +208,8 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
         <div className="panel plan-basic">
           <div className="pb-grid">
             <div className="wide"><label>行程名稱</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例:墾丁三天兩夜" /></div>
-            <div><label>天數</label><input type="number" min={1} max={30} value={days} onChange={(e) => setDays(Math.min(30, Math.max(1, Number(e.target.value) || 1)))} /></div>
+            <div><label>天數</label><input type="number" min={1} max={30} value={days} onChange={(e) => { const dv = Math.min(30, Math.max(1, Number(e.target.value) || 1)); setDays(dv); if (nights > dv) setNights(dv); }} /></div>
+            <div><label>夜數(最後一天不住宿)</label><input type="number" min={0} max={days} value={nights} onChange={(e) => setNights(Math.min(days, Math.max(0, Number(e.target.value) || 0)))} /></div>
             <div><label>人數</label><input type="number" min={1} max={99} value={headcount} onChange={(e) => setHeadcount(Math.max(1, Number(e.target.value) || 1))} /></div>
             <div><label>每人預算(選填)</label><input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="NT$" /></div>
             <div><label>交通方式</label><select value={transport} onChange={(e) => setTransport(e.target.value)}>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select></div>
@@ -199,7 +223,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
           {dayList.map((d) => (
             <div className="day-card" key={d}>
               <div className="day-head"><b>Day {d}</b></div>
-              {(["day", "night"] as const).map((slot) => (
+              {(["day", "night"] as const).map((slot) => (slot === "night" && d > nights) ? null : (
                 <div className="day-slot" key={slot}>
                   <div className="slot-head">
                     <span className="slot-title">{slot === "day" ? "☀ 白天 · 景點 / 美食 / 停車 / 租車" : "🌙 晚上 · 住宿"}</span>
@@ -208,7 +232,11 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                   {slotItems(d, slot).length === 0 && <div className="day-empty">{slot === "day" ? "排入景點、美食、停車、租車、車站…" : "排入這天要住的民宿"}</div>}
                   <div className="day-items">
                     {slotItems(d, slot).map((it) => (
-                      <div className="trip-item" key={it.id}>
+                      <div className="trip-item" key={it.id} draggable
+                        onDragStart={() => { dragId.current = it.id; }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={() => dropOn(it.id)}>
+                        <span className="ti-grip" title="拖拉換順序">⠿</span>
                         <input className="ti-time" type="time" value={it.time || ""} onChange={(e) => updateItem(it.id, { time: e.target.value })} />
                         <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
                         <div className="ti-main">
