@@ -19,15 +19,6 @@ const I = {
   arrow: <svg width="17" height="17" viewBox="0 0 24 24" {...S}><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
 };
 
-const CAT_ICON: Record<string, React.ReactNode> = {
-  全部: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>,
-  海景度假: <svg viewBox="0 0 24 24" {...S}><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0" /><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0" /></svg>,
-  山林小屋: <svg viewBox="0 0 24 24" {...S}><path d="M3 20l6-11 4 6 2-3 6 8z" /></svg>,
-  設計旅宿: <svg viewBox="0 0 24 24" {...S}><rect x="3" y="10" width="18" height="7" rx="2" /><path d="M5 10V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M6 20v-3M18 20v-3" /></svg>,
-  親子友善: <svg viewBox="0 0 24 24" {...S}><circle cx="12" cy="12" r="9" /><path d="M8.5 14s1.3 2 3.5 2 3.5-2 3.5-2M9 9.5h.01M15 9.5h.01" /></svg>,
-  寵物友善: <svg viewBox="0 0 24 24" {...S}><circle cx="5.5" cy="12" r="1.8" /><circle cx="9.5" cy="8" r="1.8" /><circle cx="14.5" cy="8" r="1.8" /><circle cx="18.5" cy="12" r="1.8" /><path d="M8.5 16.5a3.5 3.5 0 0 1 7 0 2.6 2.6 0 0 1-2.6 2.6h-1.8a2.6 2.6 0 0 1-2.6-2.6z" /></svg>,
-  包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
-};
 
 export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
@@ -114,12 +105,10 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
             </div>
             <div className="filter-row">
               <span className="filter-cap">{I.grid} 住宿風格</span>
-              <div className="chips">
-                <button className={"chip style-chip " + (cat === ALL_CATEGORY_LABEL ? "on" : "")} onClick={() => setCat(ALL_CATEGORY_LABEL)}>{CAT_ICON["全部"]}{ALL_CATEGORY_LABEL}</button>
-                {CATEGORIES.map((c) => (
-                  <button key={c} className={"chip style-chip " + (cat === c ? "on" : "")} onClick={() => setCat(c)}>{CAT_ICON[c]}{c}</button>
-                ))}
-              </div>
+              <select className="region-select" value={cat} onChange={(e) => setCat(e.target.value)} aria-label="住宿風格">
+                <option value={ALL_CATEGORY_LABEL}>{ALL_CATEGORY_LABEL}</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
         </div>
