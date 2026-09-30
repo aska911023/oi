@@ -64,6 +64,7 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
       website: form.website.trim(), line_url: form.line_url || null,
       lat: form.lat ?? null, lng: form.lng ?? null, published: form.published, featured: form.featured,
       owner_id: ownerId ?? undefined,
+      approved: ownerId ? undefined : true,
     };
     let error, newId = form.id;
     if (form.id) ({ error } = await sb.from("rental_shops").update(payload).eq("id", form.id));
@@ -77,6 +78,11 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
   async function togglePublish(s: RentalShop) {
     const sb = createClient();
     await sb.from("rental_shops").update({ published: !s.published }).eq("id", s.id);
+    await refresh();
+  }
+  async function toggleApprove(s: RentalShop) {
+    const sb = createClient();
+    await sb.from("rental_shops").update({ approved: !s.approved }).eq("id", s.id);
     await refresh();
   }
   async function remove(s: RentalShop) {
@@ -111,11 +117,16 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
                 <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>精選</span>}</td>
                 <td>{s.region}{s.town ? " · " + s.town : ""}</td>
                 <td>{s.phone || "—"}</td>
-                <td><span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span></td>
+                <td>
+                  {s.approved === false
+                    ? <span className="pill pending">待審核</span>
+                    : <span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span>}
+                </td>
                 <td>
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                    {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>

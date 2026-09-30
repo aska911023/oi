@@ -13,7 +13,8 @@ type Form = Omit<Stay, "id"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
   price: 0, guests: 1, image: "", description: "", amenities: "",
-  website: "", rooms_left: null, published: false, featured: false, sample: false,
+  website: "", rooms_left: null, address: "", lat: null, lng: null,
+  published: false, featured: false, sample: false,
 };
 
 export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; ownerId?: string }) {
@@ -60,8 +61,12 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       image: form.image.trim(), description: form.description.trim(), amenities: form.amenities.trim(),
       website: form.website.trim(),
       rooms_left: form.rooms_left === null || form.rooms_left === undefined || (form.rooms_left as unknown as string) === "" ? null : Number(form.rooms_left),
+      address: (form.address || "").trim(),
+      lat: form.lat === null || form.lat === undefined || (form.lat as unknown as string) === "" ? null : Number(form.lat),
+      lng: form.lng === null || form.lng === undefined || (form.lng as unknown as string) === "" ? null : Number(form.lng),
       published: form.published, featured: form.featured, sample: form.sample,
       owner_id: ownerId ?? undefined,
+      approved: ownerId ? undefined : true, // admin 建立自動核准;業者建立維持待審
     };
     let error, newId = form.id;
     if (form.id) {
@@ -80,6 +85,11 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
   async function togglePublish(s: Stay) {
     const sb = createClient();
     await sb.from("stays").update({ published: !s.published }).eq("id", s.id);
+    await refresh();
+  }
+  async function toggleApprove(s: Stay) {
+    const sb = createClient();
+    await sb.from("stays").update({ approved: !s.approved }).eq("id", s.id);
     await refresh();
   }
   async function remove(s: Stay) {
@@ -123,11 +133,16 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                 <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
                 <td>{s.region} · {s.town}</td>
                 <td>{s.category}</td>
-                <td><span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span></td>
+                <td>
+                  {s.approved === false
+                    ? <span className="pill pending">待審核</span>
+                    : <span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span>}
+                </td>
                 <td>
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                    {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>
@@ -147,6 +162,9 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
               <div><label>縣市</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
               <div><label>鄉鎮市區 *</label><input value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} placeholder="例:恆春鎮" /></div>
               <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+              <div className="wide"><label>地址(Google 地圖 / 導航用)</label><input value={form.address || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="例:屏東縣恆春鎮…" /></div>
+              <div><label>緯度 lat(選填)</label><input value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value === "" ? null : Number(e.target.value) })} placeholder="22.00" /></div>
+              <div><label>經度 lng(選填)</label><input value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value === "" ? null : Number(e.target.value) })} placeholder="120.74" /></div>
               <div className="wide"><label>設施 / 服務(可複選)</label>
                 <div className="fac-grid">
                   {AMENITY_OPTIONS.map((a) => {

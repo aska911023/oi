@@ -28,11 +28,19 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
         <h1 className="serif shop-title">{s.name}</h1>
         {s.description && <p className="shop-desc">{s.description}</p>}
 
-        {s.website && (
-          <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
-            <a className="btn btn-primary" href={s.website} target="_blank" rel="noopener noreferrer">前往預訂 / 民宿官網 {OUT}</a>
-          </div>
+        {s.address && (
+          <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 14, color: "var(--text-2)", marginTop: 10 }}>📍 {s.address}</div>
         )}
+
+        <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
+          {s.website && <a className="btn btn-primary" href={s.website} target="_blank" rel="noopener noreferrer">前往預訂 / 民宿官網 {OUT}</a>}
+          {(s.address || (s.lat != null && s.lng != null)) && (
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
+              href={s.lat != null && s.lng != null
+                ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</a>
+          )}
+        </div>
 
         {amenities.length > 0 && (
           <div className="shop-block">
