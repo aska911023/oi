@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { priceLabel } from "@/lib/data";
+import SaveButton from "@/components/save-button";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
                 ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`
                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</a>
           )}
+          <SaveButton stayId={s.id} />
         </div>
 
         {amenities.length > 0 && (
