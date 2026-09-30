@@ -90,6 +90,7 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
   const detail = active ? (active.details || {}) as Record<string, unknown> : {};
   const dText = (k: string) => (typeof detail[k] === "string" ? (detail[k] as string) : "");
   const dList = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as Record<string, string>[]) : []);
+  const dTags = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as string[]).filter((x) => typeof x === "string") : []);
 
   return (
     <>
@@ -181,12 +182,18 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
 
               {/* 分類專屬資訊 */}
               {(() => {
+                const tagFields = DETAILS[kindState].filter((f) => f.type === "tags" && dTags(f.key).length > 0);
                 const scalars = DETAILS[kindState].filter((f) => f.type === "text" && dText(f.key));
                 const pdfs = DETAILS[kindState].filter((f) => f.type === "pdf" && dText(f.key));
                 const lists = DETAILS[kindState].filter((f) => f.type === "list" && dList(f.key).length > 0);
-                if (!scalars.length && !pdfs.length && !lists.length) return null;
+                if (!tagFields.length && !scalars.length && !pdfs.length && !lists.length) return null;
                 return (
                   <div className="place-details">
+                    {tagFields.map((f) => (
+                      <div className="m-amenities" key={f.key} style={{ marginBottom: 10 }}>
+                        {dTags(f.key).map((t) => <span key={t} className="am-chip">{t}</span>)}
+                      </div>
+                    ))}
                     {scalars.length > 0 && (
                       <dl className="pd-scalars">
                         {scalars.map((f) => <div key={f.key}><dt>{f.label}</dt><dd>{dText(f.key)}</dd></div>)}

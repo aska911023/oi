@@ -179,6 +179,19 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
             {/* 分類專屬 details */}
             <div className="details-form">
               <div className="rt-head" style={{ marginTop: 6 }}><b>{label}資訊</b></div>
+              {fields.filter((f) => f.type === "tags").map((f) => f.type === "tags" && (
+                <div key={f.key} className="dlist">
+                  <label>{f.label}(可複選)</label>
+                  <div className="fac-grid">
+                    {f.options.map((opt) => {
+                      const set = new Set(getList(f.key) as unknown as string[]);
+                      const on = set.has(opt);
+                      return <button type="button" key={opt} className={"chip" + (on ? " on" : "")}
+                        onClick={() => { on ? set.delete(opt) : set.add(opt); setDetail(f.key, [...set]); }}>{opt}</button>;
+                    })}
+                  </div>
+                </div>
+              ))}
               <div className="form-grid">
                 {fields.filter((f) => f.type === "text").map((f) => (
                   <div key={f.key}><label>{f.label}</label>
