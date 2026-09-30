@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
@@ -19,7 +19,7 @@ const I = {
   car: <svg width="16" height="16" viewBox="0 0 24 24" {...S}><path d="M5 11l2-5h10l2 5M4 11h16v5H4zM7 16v2M17 16v2" /><circle cx="7.5" cy="13.5" r="1" /><circle cx="16.5" cy="13.5" r="1" /></svg>,
 };
 
-export default function RentalsExplore({ shops, total = 0, regions }: { shops: RentalShop[]; total?: number; regions?: string[] }) {
+export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop[]; total?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [rows, setRows] = useState<RentalShop[]>(shops);
@@ -28,11 +28,6 @@ export default function RentalsExplore({ shops, total = 0, regions }: { shops: R
   const firstRun = useRef(true);
   const [active, setActive] = useState<RentalShop | null>(null);
   const [plans, setPlans] = useState<RentalPlan[]>([]);
-
-  const regionsWithData = useMemo(() => {
-    const src = regions && regions.length ? regions : Array.from(new Set(rows.map((s) => s.region)));
-    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
-  }, [regions, rows]);
 
   async function load(kwv: string, regionv: string, off: number, append: boolean) {
     setLoading(true);
@@ -89,17 +84,15 @@ export default function RentalsExplore({ shops, total = 0, regions }: { shops: R
             </div>
           </div>
 
-          {regionsWithData.length > 0 && (
-            <div className="disc-filters">
-              <div className="filter-row">
-                <span className="filter-cap">{I.pin} 地區</span>
-                <div className="chips">
-                  <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部</button>
-                  {regionsWithData.map((r) => <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>)}
-                </div>
-              </div>
+          <div className="disc-filters">
+            <div className="filter-row">
+              <span className="filter-cap">{I.pin} 地區</span>
+              <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} aria-label="縣市">
+                <option value="all">全部地區</option>
+                {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
+              </select>
             </div>
-          )}
+          </div>
         </div>
       </section>
 

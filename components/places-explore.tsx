@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Place, PoiKind } from "@/lib/types";
 import { POI_KINDS } from "@/lib/types";
@@ -26,7 +26,7 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ places, total = 0, regions, kind }: { places: Place[]; total?: number; regions?: string[]; kind: PoiKind }) {
+export default function PlacesExplore({ places, total = 0, kind }: { places: Place[]; total?: number; kind: PoiKind }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [active, setActive] = useState<Place | null>(null);
@@ -41,10 +41,6 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
   // 直接進入某個路由(SSR)時,以 props 重置
   useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion("all"); firstRun.current = true; }, [places, total, kind]);
 
-  const regionsWithData = useMemo(() => {
-    const src = kindState === kind && regions && regions.length ? regions : Array.from(new Set(rows.map((p) => p.region)));
-    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
-  }, [regions, rows, kindState, kind]);
 
   async function load(k: PoiKind, kwv: string, regionv: string, off: number, append: boolean) {
     setLoading(true);
@@ -120,19 +116,15 @@ export default function PlacesExplore({ places, total = 0, regions, kind }: { pl
             </div>
           </div>
 
-          {regionsWithData.length > 0 && (
-            <div className="disc-filters">
-              <div className="filter-row">
-                <span className="filter-cap">{I.pin} 地區</span>
-                <div className="chips">
-                  <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部</button>
-                  {regionsWithData.map((r) => (
-                    <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
-                  ))}
-                </div>
-              </div>
+          <div className="disc-filters">
+            <div className="filter-row">
+              <span className="filter-cap">{I.pin} 地區</span>
+              <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} aria-label="縣市">
+                <option value="all">全部地區</option>
+                {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
+              </select>
             </div>
-          )}
+          </div>
         </div>
       </section>
 

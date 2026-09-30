@@ -4,10 +4,10 @@ import { getRentalsInitial } from "@/lib/rentals";
 export const dynamic = "force-dynamic";
 
 export default async function RentalsPage() {
-  const { shops, total, regions } = await getRentalsInitial();
+  const { shops, total } = await getRentalsInitial();
   return (
     <main>
-      <RentalsExplore shops={shops} total={total} regions={regions} />
+      <RentalsExplore shops={shops} total={total} />
     </main>
   );
 }

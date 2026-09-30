@@ -598,6 +598,8 @@ img { display: block; max-width: 100%; }
 .rt-toggle.feat.on { border-color: var(--accent); color: var(--ink); background: var(--accent); }
 
 /* 設施勾選格 */
+.region-select { border: 1px solid var(--border-strong); border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 14px; background: #fff; color: var(--text); min-width: 160px; }
+.region-select:focus { outline: none; border-color: var(--green); }
 .fac-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .fac-grid .chip { cursor: pointer; font-size: 13px; }
 

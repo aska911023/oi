@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
@@ -29,7 +29,7 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ rooms, total = 0, regions, blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; regions?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
+export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -41,11 +41,6 @@ export default function Explore({ rooms, total = 0, regions, blocks, searchHint,
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
   const firstRun = useRef(true);
-
-  const regionsWithData = useMemo(() => {
-    const src = regions && regions.length ? regions : Array.from(new Set(rows.map((r) => r.region)));
-    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
-  }, [regions, rows]);
 
   function rpcArgs(off: number) {
     const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
@@ -110,17 +105,13 @@ export default function Explore({ rooms, total = 0, regions, blocks, searchHint,
           <p className="search-hint">{searchHint || "顯示各房型每晚房價與可住人數;實際房價與空房請向民宿確認。"}</p>
 
           <div className="disc-filters">
-            {regionsWithData.length > 0 && (
-              <div className="filter-row">
-                <span className="filter-cap">{I.pin} 目的地</span>
-                <div className="chips">
-                  <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部地區</button>
-                  {regionsWithData.map((r) => (
-                    <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="filter-row">
+              <span className="filter-cap">{I.pin} 目的地</span>
+              <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} aria-label="縣市">
+                <option value="all">全部地區</option>
+                {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
+              </select>
+            </div>
             <div className="filter-row">
               <span className="filter-cap">{I.grid} 住宿風格</span>
               <div className="chips">
