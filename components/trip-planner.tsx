@@ -107,20 +107,6 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
     if (error) { alert("上傳失敗:" + error.message); return; }
     updateItem(id, { image: sb.storage.from("site").getPublicUrl(path).data.publicUrl });
   }
-  function moveItem(id: string, dir: -1 | 1) {
-    setItems((p) => {
-      const arr = [...p];
-      const idx = arr.findIndex((it) => it.id === id);
-      if (idx < 0) return p;
-      const day = arr[idx].day;
-      // 找同一天的相鄰項
-      let j = idx + dir;
-      while (j >= 0 && j < arr.length && arr[j].day !== day) j += dir;
-      if (j < 0 || j >= arr.length || arr[j].day !== day) return p;
-      [arr[idx], arr[j]] = [arr[j], arr[idx]];
-      return arr;
-    });
-  }
 
   const pickResults = useMemo(() => {
     const tab = PICK_TABS.find((t) => t.type === pickTab);
@@ -259,8 +245,6 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                               {dayList.filter((x) => x !== d).map((x) => <option key={x} value={x}>Day {x}</option>)}
                             </select>
                           )}
-                          <button className="lnk" onClick={() => moveItem(it.id, -1)}>↑</button>
-                          <button className="lnk" onClick={() => moveItem(it.id, 1)}>↓</button>
                           <button className="lnk danger" onClick={() => removeItem(it.id)}>刪</button>
                         </div>
                       </div>
