@@ -44,27 +44,33 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
 
   // picker
   const [pickDay, setPickDay] = useState<number | null>(null);
-  const [pickTab, setPickTab] = useState<TripItemType>("stay");
+  const [pickSlot, setPickSlot] = useState<"day" | "night">("day");
+  const [pickTab, setPickTab] = useState<TripItemType>("attraction");
   const [pickQ, setPickQ] = useState("");
   const [customName, setCustomName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const dayList = Array.from({ length: days }, (_, i) => i + 1);
+  const defaultSlot = (t: TripItemType): "day" | "night" => (t === "stay" ? "night" : "day");
   const itemsOfDay = (d: number) => items.filter((it) => it.day === d);
+  const slotItems = (d: number, slot: "day" | "night") => items.filter((it) => it.day === d && (it.slot || defaultSlot(it.type)) === slot);
 
-  function addItem(day: number, type: TripItemType, name: string, refId?: string) {
-    setItems((p) => [...p, { id: genId(), day, type, name, refId, time: "", note: "" }]);
+  function openPicker(day: number, slot: "day" | "night") {
+    setPickDay(day); setPickSlot(slot); setPickQ(""); setCustomName("");
+    setPickTab(slot === "night" ? "stay" : "attraction");
+  }
+
+  function addItem(day: number, type: TripItemType, name: string, refId: string | undefined, slot: "day" | "night") {
+    setItems((p) => [...p, { id: genId(), day, type, name, refId, time: "", note: "", slot }]);
   }
   function updateItem(id: string, patch: Partial<TripItem>) {
     setItems((p) => p.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   }
   function removeItem(id: string) { setItems((p) => p.filter((it) => it.id !== id)); }
 
-  function copyDayTo(from: number, to: number) {
-    if (from === to) return;
-    const clones = items.filter((it) => it.day === from).map((it) => ({ ...it, id: genId(), day: to }));
-    if (!clones.length) return;
-    setItems((p) => [...p, ...clones]);
+  // 單一項目複製到別天(保留白天/晚上分段)
+  function copyItemTo(item: TripItem, toDay: number) {
+    setItems((p) => [...p, { ...item, id: genId(), day: toDay, slot: item.slot || defaultSlot(item.type) }]);
   }
 
   const [imgBusy, setImgBusy] = useState<string | null>(null);
@@ -103,11 +109,11 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   }, [pickTab, pickQ, pools]);
 
   const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId);
-  function togglePoolItem(day: number, type: TripItemType, name: string, refId: string) {
+  function togglePoolItem(day: number, type: TripItemType, name: string, refId: string, slot: "day" | "night") {
     setItems((p) => {
       const found = p.find((it) => it.day === day && it.refId === refId);
       if (found) return p.filter((it) => it.id !== found.id);
-      return [...p, { id: genId(), day, type, name, refId, time: "", note: "" }];
+      return [...p, { id: genId(), day, type, name, refId, time: "", note: "", slot }];
     });
   }
 
@@ -192,45 +198,48 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
         <div className="plan-days">
           {dayList.map((d) => (
             <div className="day-card" key={d}>
-              <div className="day-head">
-                <b>Day {d}</b>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  {days > 1 && itemsOfDay(d).length > 0 && (
-                    <select className="day-copy" value="" onChange={(e) => { const to = Number(e.target.value); if (to) copyDayTo(d, to); e.currentTarget.value = ""; }}>
-                      <option value="">複製到…</option>
-                      {dayList.filter((x) => x !== d).map((x) => <option key={x} value={x}>Day {x}</option>)}
-                    </select>
-                  )}
-                  <button className="btn btn-ghost btn-sm" onClick={() => { setPickDay(d); setPickTab("stay"); setPickQ(""); setCustomName(""); }}>＋ 加入</button>
-                </div>
-              </div>
-              {itemsOfDay(d).length === 0 && <div className="day-empty">還沒有安排,點「加入」把住宿 / 景點 / 美食 / 停車排進來。</div>}
-              <div className="day-items">
-                {itemsOfDay(d).map((it) => (
-                  <div className="trip-item" key={it.id}>
-                    <input className="ti-time" type="time" value={it.time || ""} onChange={(e) => updateItem(it.id, { time: e.target.value })} />
-                    <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
-                    <div className="ti-main">
-                      <div className="ti-name">{it.name}</div>
-                      <input className="ti-note" value={it.note || ""} onChange={(e) => updateItem(it.id, { note: e.target.value })} placeholder="備註(選填)" />
-                      <div className="ti-photo">
-                        {it.image && <img src={it.image} alt="" />}
-                        <label className="lnk" style={{ cursor: "pointer" }}>
-                          {imgBusy === it.id ? "上傳中…" : it.image ? "換照片" : "＋ 照片"}
-                          <input type="file" accept="image/*" style={{ display: "none" }} disabled={imgBusy !== null}
-                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadItemImage(it.id, f); e.target.value = ""; }} />
-                        </label>
-                        {it.image && <button className="lnk danger" onClick={() => updateItem(it.id, { image: "" })}>移除</button>}
-                      </div>
-                    </div>
-                    <div className="ti-actions">
-                      <button className="lnk" onClick={() => moveItem(it.id, -1)}>↑</button>
-                      <button className="lnk" onClick={() => moveItem(it.id, 1)}>↓</button>
-                      <button className="lnk danger" onClick={() => removeItem(it.id)}>刪</button>
-                    </div>
+              <div className="day-head"><b>Day {d}</b></div>
+              {(["day", "night"] as const).map((slot) => (
+                <div className="day-slot" key={slot}>
+                  <div className="slot-head">
+                    <span className="slot-title">{slot === "day" ? "☀ 白天 · 景點 / 美食 / 停車 / 租車" : "🌙 晚上 · 住宿"}</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => openPicker(d, slot)}>＋ 加入{slot === "night" ? "住宿" : ""}</button>
                   </div>
-                ))}
-              </div>
+                  {slotItems(d, slot).length === 0 && <div className="day-empty">{slot === "day" ? "排入景點、美食、停車、租車、車站…" : "排入這天要住的民宿"}</div>}
+                  <div className="day-items">
+                    {slotItems(d, slot).map((it) => (
+                      <div className="trip-item" key={it.id}>
+                        <input className="ti-time" type="time" value={it.time || ""} onChange={(e) => updateItem(it.id, { time: e.target.value })} />
+                        <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
+                        <div className="ti-main">
+                          <div className="ti-name">{it.name}</div>
+                          <input className="ti-note" value={it.note || ""} onChange={(e) => updateItem(it.id, { note: e.target.value })} placeholder="備註(選填)" />
+                          <div className="ti-photo">
+                            {it.image && <img src={it.image} alt="" />}
+                            <label className="lnk" style={{ cursor: "pointer" }}>
+                              {imgBusy === it.id ? "上傳中…" : it.image ? "換照片" : "＋ 照片"}
+                              <input type="file" accept="image/*" style={{ display: "none" }} disabled={imgBusy !== null}
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadItemImage(it.id, f); e.target.value = ""; }} />
+                            </label>
+                            {it.image && <button className="lnk danger" onClick={() => updateItem(it.id, { image: "" })}>移除</button>}
+                          </div>
+                        </div>
+                        <div className="ti-actions">
+                          {days > 1 && (
+                            <select className="ti-copy" value="" onChange={(e) => { const to = Number(e.target.value); if (to) copyItemTo(it, to); e.currentTarget.value = ""; }} title="複製這一項到別天">
+                              <option value="">複製到…</option>
+                              {dayList.filter((x) => x !== d).map((x) => <option key={x} value={x}>Day {x}</option>)}
+                            </select>
+                          )}
+                          <button className="lnk" onClick={() => moveItem(it.id, -1)}>↑</button>
+                          <button className="lnk" onClick={() => moveItem(it.id, 1)}>↓</button>
+                          <button className="lnk danger" onClick={() => removeItem(it.id)}>刪</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -283,10 +292,10 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
         <>
           <div className="overlay no-print" onClick={() => setPickDay(null)} />
           <div className="editor no-print" role="dialog" aria-modal="true">
-            <h2>Day {pickDay} · 加入項目</h2>
-            <p className="pick-tip">可以連續點選加入多個(再點一下取消);「自訂」用來手動加清單裡沒有的項目。加完按「完成」。</p>
+            <h2>Day {pickDay} · 加入{pickSlot === "night" ? "住宿(晚上)" : "白天行程"}</h2>
+            <p className="pick-tip">可以連續點選加入多個(再點一下取消)。加完按「完成」。</p>
             <div className="seg" style={{ marginBottom: 12 }}>
-              {PICK_TABS.map((t) => <button key={t.type} className={pickTab === t.type ? "on" : ""} onClick={() => setPickTab(t.type)}>{t.label}</button>)}
+              {PICK_TABS.filter((t) => (pickSlot === "night" ? t.type === "stay" : t.type !== "stay")).map((t) => <button key={t.type} className={pickTab === t.type ? "on" : ""} onClick={() => setPickTab(t.type)}>{t.label}</button>)}
               <button className={pickTab === "note" ? "on" : ""} onClick={() => setPickTab("note")}>自訂</button>
             </div>
 
@@ -294,8 +303,8 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
               <div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <input value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="自訂項目,例:海邊看日落、休息站、加油"
-                    onKeyDown={(e) => { if (e.key === "Enter" && customName.trim()) { addItem(pickDay, "note", customName.trim()); setCustomName(""); } }} style={{ flex: 1 }} />
-                  <button className="btn btn-primary" onClick={() => { if (customName.trim()) { addItem(pickDay, "note", customName.trim()); setCustomName(""); } }}>加入</button>
+                    onKeyDown={(e) => { if (e.key === "Enter" && customName.trim()) { addItem(pickDay, "note", customName.trim(), undefined, pickSlot); setCustomName(""); } }} style={{ flex: 1 }} />
+                  <button className="btn btn-primary" onClick={() => { if (customName.trim()) { addItem(pickDay, "note", customName.trim(), undefined, pickSlot); setCustomName(""); } }}>加入</button>
                 </div>
                 <p className="pick-tip" style={{ marginTop: 8 }}>輸入後按「加入」或 Enter,可一直加。</p>
               </div>
@@ -307,7 +316,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                   {pickResults.map((x) => {
                     const added = isAdded(pickDay, x.id);
                     return (
-                      <button key={x.id} className={"pick-row" + (added ? " added" : "")} onClick={() => togglePoolItem(pickDay, pickTab, x.name, x.id)}>
+                      <button key={x.id} className={"pick-row" + (added ? " added" : "")} onClick={() => togglePoolItem(pickDay, pickTab, x.name, x.id, pickSlot)}>
                         <span className="pick-check">{added ? "✓" : "＋"}</span>
                         <span className="pick-nm">{x.name}</span>
                         <small>{x.region}{x.town ? " · " + x.town : ""}</small>
@@ -318,7 +327,6 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
               </>
             )}
             <div className="editor-actions">
-              <span style={{ marginRight: "auto", fontSize: 13, color: "var(--text-2)" }}>Day {pickDay} 已排 {itemsOfDay(pickDay).length} 項</span>
               <button className="btn btn-primary" onClick={() => setPickDay(null)}>完成</button>
             </div>
           </div>

@@ -163,6 +163,7 @@ export interface TripItem {
   name: string;
   note?: string;
   image?: string; // 自行放的照片
+  slot?: "day" | "night"; // 白天(景點/美食…)或 晚上(住宿)
 }
 
 export interface Trip {

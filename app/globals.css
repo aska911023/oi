@@ -131,8 +131,8 @@ img { display: block; max-width: 100%; }
 @media (max-width: 760px) { .disc-search { padding: 12px; } .ds-field { border-left: 0; padding: 8px 6px; flex-basis: 100%; } .ds-go { width: 100%; margin: 4px 0 0; } }
 .search-hint { font-size: 12.5px; color: var(--muted); margin: 12px 4px 0; }
 
-.disc-filters { margin: 26px 0 0; }
-.disc-filters .filter-row { display: flex; align-items: center; gap: 16px; padding: 9px 0; flex-wrap: wrap; }
+.disc-filters { margin: 22px 0 0; display: flex; gap: 30px; flex-wrap: wrap; align-items: center; }
+.disc-filters .filter-row { display: flex; align-items: center; gap: 14px; padding: 4px 0; }
 .disc-filters .filter-cap { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); font-weight: 600; flex: 0 0 84px; }
 .disc-filters .filter-cap svg { color: var(--muted); width: 15px; height: 15px; }
 .style-chip { display: inline-flex; align-items: center; gap: 7px; }
@@ -501,6 +501,11 @@ img { display: block; max-width: 100%; }
 .day-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .day-head b { font-family: var(--serif); font-size: 19px; color: var(--green); }
 .day-copy { border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; background: #fff; color: var(--text-2); }
+.day-slot { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.day-slot:first-of-type { border-top: 0; padding-top: 4px; }
+.slot-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.slot-title { font-size: 13.5px; font-weight: 700; color: var(--text-2); }
+.ti-copy { border: 1px solid var(--border-strong); border-radius: 8px; padding: 4px 6px; font: inherit; font-size: 12px; background: #fff; color: var(--text-2); max-width: 92px; }
 .day-empty { color: var(--muted); font-size: 13.5px; padding: 8px 0; }
 .day-items { display: flex; flex-direction: column; gap: 10px; }
 .trip-item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--page); }
