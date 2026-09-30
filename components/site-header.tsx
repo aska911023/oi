@@ -22,7 +22,6 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
       <div className="shell">
         <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
         <nav className="topnav">
-          <Link href="/">探索民宿</Link>
           <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
