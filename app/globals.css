@@ -516,6 +516,10 @@ img { display: block; max-width: 100%; }
 .ti-note { width: 100%; border: 0; border-bottom: 1px dashed var(--border-strong); background: transparent; font-size: 13px; padding: 3px 0; margin-top: 3px; color: var(--text-2); }
 .ti-note:focus { outline: none; border-color: var(--green); }
 .ti-actions { display: flex; gap: 6px; flex: none; }
+.ti-photo { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ti-photo img { width: 48px; height: 36px; object-fit: cover; border-radius: 6px; }
+.tv-img { display: block; margin-top: 8px; max-width: 260px; width: 100%; border-radius: 10px; }
+.trip-print .tp-img { display: block; margin: 6px 0; max-width: 220px; border-radius: 6px; }
 @media (max-width: 560px) {
   .trip-item { flex-wrap: wrap; }
   .ti-main { flex-basis: 100%; order: 3; }

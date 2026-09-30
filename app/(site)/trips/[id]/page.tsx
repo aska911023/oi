@@ -43,6 +43,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
                       <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
                       <span className="tv-name">{it.name}</span>
                       {it.note && <span className="tv-note">— {it.note}</span>}
+                      {it.image && <img className="tv-img" src={it.image} alt="" />}
                     </li>
                   ))}
                 </ul>

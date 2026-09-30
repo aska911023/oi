@@ -133,6 +133,7 @@ export interface TripItem {
   refId?: string; // 對應 stays/pois id(自訂項為空)
   name: string;
   note?: string;
+  image?: string; // 自行放的照片
 }
 
 export interface Trip {

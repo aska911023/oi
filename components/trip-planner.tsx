@@ -58,6 +58,19 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
     setItems((p) => p.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   }
   function removeItem(id: string) { setItems((p) => p.filter((it) => it.id !== id)); }
+
+  const [imgBusy, setImgBusy] = useState<string | null>(null);
+  async function uploadItemImage(id: string, file: File) {
+    if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
+    setImgBusy(id);
+    const sb = createClient();
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `trip-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
+    setImgBusy(null);
+    if (error) { alert("上傳失敗:" + error.message); return; }
+    updateItem(id, { image: sb.storage.from("site").getPublicUrl(path).data.publicUrl });
+  }
   function moveItem(id: string, dir: -1 | 1) {
     setItems((p) => {
       const arr = [...p];
@@ -181,6 +194,15 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                     <div className="ti-main">
                       <div className="ti-name">{it.name}</div>
                       <input className="ti-note" value={it.note || ""} onChange={(e) => updateItem(it.id, { note: e.target.value })} placeholder="備註(選填)" />
+                      <div className="ti-photo">
+                        {it.image && <img src={it.image} alt="" />}
+                        <label className="lnk" style={{ cursor: "pointer" }}>
+                          {imgBusy === it.id ? "上傳中…" : it.image ? "換照片" : "＋ 照片"}
+                          <input type="file" accept="image/*" style={{ display: "none" }} disabled={imgBusy !== null}
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadItemImage(it.id, f); e.target.value = ""; }} />
+                        </label>
+                        {it.image && <button className="lnk danger" onClick={() => updateItem(it.id, { image: "" })}>移除</button>}
+                      </div>
                     </div>
                     <div className="ti-actions">
                       <button className="lnk" onClick={() => moveItem(it.id, -1)}>↑</button>
@@ -225,7 +247,10 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
             {itemsOfDay(d).length === 0 ? <p className="tp-empty">(未安排)</p> : (
               <ul>
                 {itemsOfDay(d).map((it) => (
-                  <li key={it.id}><span className="tp-time">{it.time || "—"}</span> [{TRIP_ITEM_LABEL[it.type]}] {it.name}{it.note ? ` — ${it.note}` : ""}</li>
+                  <li key={it.id}>
+                    <span className="tp-time">{it.time || "—"}</span> [{TRIP_ITEM_LABEL[it.type]}] {it.name}{it.note ? ` — ${it.note}` : ""}
+                    {it.image && <img className="tp-img" src={it.image} alt="" />}
+                  </li>
                 ))}
               </ul>
             )}
