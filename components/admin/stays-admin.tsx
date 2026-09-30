@@ -82,11 +82,6 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
     await sb.from("stays").update({ published: !s.published }).eq("id", s.id);
     await refresh();
   }
-  async function toggleFeatured(s: Stay) {
-    const sb = createClient();
-    await sb.from("stays").update({ featured: !s.featured }).eq("id", s.id);
-    await refresh();
-  }
   async function remove(s: Stay) {
     if (!confirm(`確定刪除「${s.name}」?此動作無法復原。`)) return;
     const sb = createClient();
@@ -133,7 +128,6 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
-                    {!ownerId && <button className="lnk" onClick={() => toggleFeatured(s)}>{s.featured ? "取消置頂" : "置頂"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>
@@ -168,13 +162,13 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
-              <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>
-              {!ownerId && <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選置頂(贊助)</label>}
+              <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 店家上架(前台可見)</label>
+              <span style={{ fontSize: 12.5, color: "var(--muted)" }}>置頂改在下方各「房型」設定</span>
             </div>
 
             {form.id ? (
               <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <RoomTypesEditor stayId={form.id} onChange={() => revalidateStays().catch(() => {})} />
+                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
               <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>

@@ -8,10 +8,10 @@ type Row = Partial<RoomType> & { _new?: boolean; _dirty?: boolean };
 
 const blank = (stayId: string): Row => ({
   stay_id: stayId, name: "", price: 2000, capacity: 2, rooms_total: null, rooms_left: null,
-  beds: "", amenities: "", image: "", description: "", sort: 0, published: true, _new: true, _dirty: true,
+  beds: "", amenities: "", image: "", description: "", sort: 0, published: true, featured: false, _new: true, _dirty: true,
 });
 
-export default function RoomTypesEditor({ stayId, onChange }: { stayId: string; onChange?: () => void }) {
+export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false }: { stayId: string; onChange?: () => void; allowFeatured?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -49,7 +49,7 @@ export default function RoomTypesEditor({ stayId, onChange }: { stayId: string; 
         stay_id: stayId, name: row.name.trim(), price: Number(row.price) || 0, capacity: Number(row.capacity) || 1,
         rooms_total: row.rooms_total ?? null, rooms_left: row.rooms_left ?? null, beds: row.beds || null,
         amenities: row.amenities || "", image: row.image || "", description: row.description || "",
-        sort: Number(row.sort) || 0, published: row.published ?? true,
+        sort: Number(row.sort) || 0, published: row.published ?? true, featured: row.featured ?? false,
       };
       if (row.id) await sb.from("room_types").update(payload).eq("id", row.id);
       else await sb.from("room_types").insert(payload);
@@ -78,6 +78,8 @@ export default function RoomTypesEditor({ stayId, onChange }: { stayId: string; 
             <span className="rt-num">NT$<input type="number" min={0} value={r.price ?? 0} onChange={(e) => patch(i, { price: Number(e.target.value) })} />/晚</span>
             <span className="rt-num">可住<input type="number" min={1} value={r.capacity ?? 2} onChange={(e) => patch(i, { capacity: Number(e.target.value) })} />人</span>
             <span className="rt-num">剩<input type="number" min={0} value={r.rooms_left ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_left: e.target.value === "" ? null : Number(e.target.value) })} />間</span>
+            <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
+            {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => patch(i, { featured: !r.featured })}>{r.featured ? "★置頂" : "置頂"}</button>}
             <button className="lnk danger" onClick={() => removeRow(i)}>刪</button>
           </div>
         ))}

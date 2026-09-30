@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Stay, SortMode, RoomType } from "@/lib/types";
+import Link from "next/link";
+import type { RoomCard, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
@@ -16,8 +17,6 @@ const I = {
   pin: <svg width="15" height="15" viewBox="0 0 24 24" {...S}><path d="M12 21s7-6.3 7-12a7 7 0 1 0-14 0c0 5.7 7 12 7 12z" /><circle cx="12" cy="9" r="2.4" /></svg>,
   grid: <svg width="15" height="15" viewBox="0 0 24 24" {...S}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
   arrow: <svg width="17" height="17" viewBox="0 0 24 24" {...S}><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
-  out: <svg width="16" height="16" viewBox="0 0 24 24" {...S}><path d="M7 17L17 7M9 7h8v8" /></svg>,
-  heart: <svg width="16" height="16" viewBox="0 0 24 24" {...S}><path d="M12 21C6 16.5 3 13 3 9.2A4.2 4.2 0 0 1 12 6a4.2 4.2 0 0 1 9 3.2C21 13 18 16.5 12 21z" /></svg>,
 };
 
 const CAT_ICON: Record<string, React.ReactNode> = {
@@ -30,69 +29,25 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   包棟民宿: <svg viewBox="0 0 24 24" {...S}><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM9 21v-6h6v6" /></svg>,
 };
 
-export default function Explore({ stays, total = 0, usingSamples = true, regions, blocks, searchHint, heroLayout, heroSplitRatio }: { stays: Stay[]; total?: number; usingSamples?: boolean; regions?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
+export default function Explore({ rooms, total = 0, regions, blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; regions?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
   const [priceRange, setPriceRange] = useState("all");
   const [cat, setCat] = useState(ALL_CATEGORY_LABEL);
   const [sort, setSort] = useState<SortMode>("default");
-  const [active, setActive] = useState<Stay | null>(null);
-  const [rooms, setRooms] = useState<RoomType[]>([]);
 
-  useEffect(() => {
-    if (!active) { setRooms([]); return; }
-    let alive = true;
-    (async () => {
-      const sb = createClient();
-      const { data } = await sb.from("room_types").select("*").eq("stay_id", active.id).eq("published", true).order("sort").order("price");
-      if (alive) setRooms((data as RoomType[]) || []);
-    })();
-    return () => { alive = false; };
-  }, [active]);
-
-  // RPC 分頁模式狀態(usingSamples=false 時使用)
-  const [rows, setRows] = useState<Stay[]>(stays);
+  const [rows, setRows] = useState<RoomCard[]>(rooms);
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
   const firstRun = useRef(true);
 
-  const base = useMemo(() => stays.filter((s) => s.published), [stays]);
-
   const regionsWithData = useMemo(() => {
-    if (!usingSamples) {
-      const src = regions && regions.length ? regions : Array.from(new Set(rows.map((s) => s.region)));
-      return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
-    }
-    const set = new Set(base.map((s) => s.region));
-    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => set.has(r));
-  }, [base, usingSamples, regions, rows]);
+    const src = regions && regions.length ? regions : Array.from(new Set(rows.map((r) => r.region)));
+    return GEOGRAPHIC_AREAS.flatMap((a) => a.regions).filter((r) => src.includes(r));
+  }, [regions, rows]);
 
-  // 範例模式:純前端篩選(資料少)
-  const sampleResults = useMemo(() => {
-    const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
-    const g = guests.trim() ? parseInt(guests) : null;
-    let r = base.filter((s) => {
-      if (cat !== ALL_CATEGORY_LABEL && s.category !== cat) return false;
-      if (region !== "all" && s.region !== region) return false;
-      if (pr.min != null && s.price < pr.min) return false;
-      if (pr.max != null && s.price > pr.max) return false;
-      if (g && s.guests < g) return false;
-      if (kw.trim()) {
-        const hay = (s.name + s.region + s.town + s.amenities).toLowerCase();
-        if (!hay.includes(kw.trim().toLowerCase())) return false;
-      }
-      return true;
-    });
-    r = [...r].sort((a, b) => {
-      if (sort === "low") return a.price - b.price;
-      if (sort === "high") return b.price - a.price;
-      return Number(b.featured ?? false) - Number(a.featured ?? false);
-    });
-    return r;
-  }, [base, cat, region, priceRange, guests, kw, sort]);
-
-  const rpcArgs = (off: number) => {
+  function rpcArgs(off: number) {
     const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
     return {
       kw: kw.trim(), p_region: region === "all" ? null : region,
@@ -100,34 +55,27 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
       p_guests: guests.trim() ? parseInt(guests) : null,
       p_category: cat === ALL_CATEGORY_LABEL ? null : cat, p_sort: sort, lim: PAGE, off,
     };
-  };
-
+  }
   async function fetchPage(off: number, append: boolean) {
     setLoading(true);
     const sb = createClient();
-    const { data } = await sb.rpc("search_stays", rpcArgs(off));
-    const newRows = (data?.rows || []) as Stay[];
+    const { data } = await sb.rpc("search_rooms", rpcArgs(off));
+    const newRows = (data?.rows || []) as RoomCard[];
     setRpcTotal(data?.total ?? 0);
     setRows((prev) => (append ? [...prev, ...newRows] : newRows));
     setLoading(false);
   }
-
-  // RPC 模式:篩選變動 → debounce 重查第一頁
   useEffect(() => {
-    if (usingSamples) return;
     if (firstRun.current) { firstRun.current = false; return; }
-    const t = setTimeout(() => { fetchPage(0, false); }, 300);
+    const t = setTimeout(() => fetchPage(0, false), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region, guests, priceRange, cat, sort, usingSamples]);
+  }, [kw, region, guests, priceRange, cat, sort]);
 
-  const results = usingSamples ? sampleResults : rows;
-  const shownCount = usingSamples ? sampleResults.length : rpcTotal;
-  const canLoadMore = !usingSamples && rows.length < rpcTotal;
+  const canLoadMore = rows.length < rpcTotal;
 
   return (
     <>
-      {/* discovery hero(白底綠字) */}
       <section className="disc">
         <div className="shell">
           <BlocksRender blocks={blocks && blocks.length ? blocks : DEFAULT_BLOCKS} layout={heroLayout} ratio={heroSplitRatio} />
@@ -139,13 +87,13 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
               <span className="ds-icon">{I.search}</span>
               <div className="ds-body">
                 <span className="ds-cap">想去哪裡住一晚?</span>
-                <input value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋地點、民宿名稱或特色" />
+                <input value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋地點、民宿名稱或房型" />
               </div>
             </div>
             <div className="ds-field">
               <div className="ds-body">
-                <span className="ds-cap">每晚起價</span>
-                <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} aria-label="每晚起價">
+                <span className="ds-cap">每晚房價</span>
+                <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} aria-label="每晚房價">
                   {PRICE_RANGES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
                 </select>
               </div>
@@ -157,9 +105,9 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
                 <input type="number" min={1} value={guests} onChange={(e) => setGuests(e.target.value)} placeholder="不限" aria-label="入住人數" />
               </div>
             </div>
-            <button className="btn btn-primary ds-go">找民宿 {I.arrow}</button>
+            <button className="btn btn-primary ds-go">找房型 {I.arrow}</button>
           </div>
-          <p className="search-hint">{searchHint || "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。"}</p>
+          <p className="search-hint">{searchHint || "顯示各房型每晚房價與可住人數;實際房價與空房請向民宿確認。"}</p>
 
           <div className="disc-filters">
             {regionsWithData.length > 0 && (
@@ -187,11 +135,10 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
       </section>
 
       <div className="shell">
-        {/* section head */}
         <div className="sec-head">
           <div className="st">
-            <h2 className="serif">{cat === ALL_CATEGORY_LABEL ? "精選民宿" : cat}</h2>
-            <span className="count">{shownCount} 間</span>
+            <h2 className="serif">{cat === ALL_CATEGORY_LABEL ? "精選房型" : cat}</h2>
+            <span className="count">{rpcTotal} 間房型</span>
           </div>
           <div className="sort">
             <span>排序</span>
@@ -203,26 +150,25 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
           </div>
         </div>
 
-        {/* cards */}
         <div className="cards">
-          {results.length === 0 && <div className="empty">找不到符合條件的民宿,換個關鍵字或風格試試。</div>}
-          {results.map((s) => (
-            <button key={s.id} className="card" onClick={() => setActive(s)}>
+          {rows.length === 0 && <div className="empty">找不到符合條件的房型,換個關鍵字或風格試試。</div>}
+          {rows.map((r) => (
+            <Link key={r.id} href={`/stay/${r.stay_id}`} className="card">
               <div className="photo">
-                <img src={s.image} alt={s.name} loading="lazy" />
-                {s.featured && <span className="tag-feat">精選置頂</span>}
-                {s.rooms_left != null && <span className={"tag-rooms" + (s.rooms_left <= 2 ? " low" : "")}>剩 {s.rooms_left} 房</span>}
+                <img src={r.image} alt={r.stay_name} loading="lazy" />
+                {r.featured && <span className="tag-feat">精選置頂</span>}
+                {r.rooms_left != null && <span className={"tag-rooms" + (r.rooms_left <= 2 ? " low" : "")}>剩 {r.rooms_left} 間</span>}
               </div>
               <div className="card-body">
-                <div className="card-eyebrow">{s.region} · {s.town}<span className="dot" />{s.category}</div>
-                <h3>{s.name}</h3>
-                <div className="card-desc">{s.description}</div>
+                <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
+                <h3>{r.stay_name}</h3>
+                <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
                 <div className="card-bottom">
-                  <strong>{priceLabel(s.price)} <small>/ 晚起</small></strong>
-                  <span className="capacity">{I.users} {s.guests} 人</span>
+                  <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
+                  <span className="capacity">{I.users} {r.capacity} 人</span>
                 </div>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
 
@@ -234,65 +180,8 @@ export default function Explore({ stays, total = 0, usingSamples = true, regions
           </div>
         )}
 
-        <p className="sample-note">標示「精選置頂」為贊助曝光;範例民宿與照片僅供體驗,實際房價與空房請向民宿確認。</p>
+        <p className="sample-note">標示「精選置頂」為贊助曝光;點房型可看該民宿(店家)的完整資訊與所有房型。實際房價與空房請向民宿確認。</p>
       </div>
-
-      {/* detail modal */}
-      {active && (
-        <>
-          <div className="overlay" onClick={() => setActive(null)} />
-          <div className="detail" role="dialog" aria-modal="true">
-            <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
-            <img className="detail-img" src={active.image} alt={active.name} />
-            <div className="detail-body">
-              <div className="card-eyebrow">{active.region} · {active.town}<span className="dot" />{active.category}</div>
-              <h2>{active.name}</h2>
-              <div className="detail-meta">
-                <span>{priceLabel(active.price)} / 晚起</span>
-                <span>最多 {active.guests} 人</span>
-                {active.rooms_left != null && <span>剩餘 {active.rooms_left} 房</span>}
-              </div>
-              <div className="m-amenities">
-                {active.amenities.split("、").filter(Boolean).map((a) => <span key={a} className="am-chip">{a}</span>)}
-              </div>
-              <p>{active.description}</p>
-              {rooms.length > 0 && (
-                <div className="room-list">
-                  <h3 className="room-list-h">房型</h3>
-                  {rooms.map((r) => (
-                    <div className="room-row" key={r.id}>
-                      <div className="room-main">
-                        <div className="room-name">{r.name}</div>
-                        {r.description && <div className="room-desc">{r.description}</div>}
-                        <div className="room-tags">
-                          <span>可住 {r.capacity} 人</span>
-                          {r.beds && <span>{r.beds}</span>}
-                          {r.rooms_left != null && <span className={r.rooms_left <= 1 ? "room-left low" : "room-left"}>剩 {r.rooms_left} 間</span>}
-                        </div>
-                      </div>
-                      <div className="room-price">{priceLabel(r.price)}<small>/晚</small></div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="notice">依每晚起價與最多入住人數提供參考;實際房價、空房與訂房請向民宿確認。</div>
-              <div className="detail-actions">
-                <a
-                  className="btn btn-primary"
-                  href={active.website || undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => { if (!active.website) e.preventDefault(); }}
-                  style={{ flex: 1, minWidth: 190, opacity: active.website ? 1 : 0.55 }}
-                >
-                  {active.website ? "前往預訂 / 民宿官網" : "尚未提供官網"} {I.out}
-                </a>
-                <button className="btn btn-ghost">{I.heart} 收藏</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </>
   );
 }

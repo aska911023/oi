@@ -63,6 +63,27 @@ export interface RentalPlan {
   published: boolean;
 }
 
+// 前台商品卡:一個房型 + 它所屬民宿(店家)的資訊
+export interface RoomCard {
+  id: string;
+  room_name: string;
+  price: number;
+  capacity: number;
+  rooms_left?: number | null;
+  beds?: string | null;
+  room_desc?: string | null;
+  image: string;
+  featured?: boolean;
+  stay_id: string;
+  stay_name: string;
+  region: string;
+  town: string;
+  category: string;
+  amenities: string;
+  website: string;
+  stay_desc?: string | null;
+}
+
 // 民宿房型(掛在 stays 下)
 export interface RoomType {
   id: string;
@@ -78,6 +99,7 @@ export interface RoomType {
   description: string;
   sort: number;
   published: boolean;
+  featured?: boolean;
 }
 
 // 二級分類:探索景點 / 探索美食 / 停車區域
