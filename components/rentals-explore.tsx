@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { priceLabel } from "@/lib/data";
-import type { RentalShop, RentalPlan } from "@/lib/types";
+import { POI_KINDS, type RentalShop, type RentalPlan } from "@/lib/types";
+
+const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
 
 const PAGE = 24;
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -70,6 +73,10 @@ export default function RentalsExplore({ shops, total = 0, regions }: { shops: R
     <>
       <section className="disc">
         <div className="shell">
+          <div className="places-tabs">
+            {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`} className="chip">{TAB_LABEL[k.kind]}</Link>)}
+            <span className="chip on">租車</span>
+          </div>
           <div className="places-head">
             <h1 className="serif">租車</h1>
             <p>在地租車店與方案一次看——選好車、排進行程,到當地直接取車。</p>

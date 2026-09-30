@@ -23,10 +23,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
         <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
         <nav className="topnav">
           <Link href="/">探索民宿</Link>
-          <Link href="/places/attraction">景點</Link>
-          <Link href="/places/food">美食</Link>
-          <Link href="/places/parking">停車</Link>
-          <Link href="/rentals">租車</Link>
+          <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
           {user ? (

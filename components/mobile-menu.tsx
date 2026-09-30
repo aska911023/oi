@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { POI_KINDS } from "@/lib/types";
 
 export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: boolean; name: string; isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
@@ -29,7 +28,7 @@ export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: bool
         </div>
         <nav className="m-links">
           <Link href="/" onClick={close}>探索民宿</Link>
-          {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`} onClick={close}>{k.label}</Link>)}
+          <Link href="/places/attraction" onClick={close}>探索景點</Link>
           <Link href="/rentals" onClick={close}>租車</Link>
           <Link href="/plan" onClick={close}>規劃行程</Link>
           <Link href="/trips" onClick={close}>行程分享</Link>
