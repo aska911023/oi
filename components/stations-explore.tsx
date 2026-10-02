@@ -37,11 +37,11 @@ export default function StationsExplore({ stations }: { stations: Station[] }) {
           <div className="disc-filters">
             <div className="filter-row">
               <span className="filter-cap">系統</span>
-              <div className="chips">
-                <button className={"chip " + (kind === "all" ? "on" : "")} onClick={() => setKind("all")}>全部</button>
-                <button className={"chip " + (kind === "hsr" ? "on" : "")} onClick={() => setKind("hsr")}>高鐵</button>
-                <button className={"chip " + (kind === "tra" ? "on" : "")} onClick={() => setKind("tra")}>台鐵</button>
-              </div>
+              <select className="region-select" value={kind} onChange={(e) => setKind(e.target.value as "all" | "hsr" | "tra")} aria-label="系統">
+                <option value="all">高鐵 + 台鐵</option>
+                <option value="hsr">只看高鐵</option>
+                <option value="tra">只看台鐵</option>
+              </select>
             </div>
             <div className="filter-row">
               <span className="filter-cap">縣市</span>
