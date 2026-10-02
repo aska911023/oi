@@ -46,6 +46,7 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   // picker
   const [pickDay, setPickDay] = useState<number | null>(null);
   const [pickSlot, setPickSlot] = useState<"day" | "night">("day");
+  const [stationSys, setStationSys] = useState<"hsr" | "tra">("hsr");
   const [pickTab, setPickTab] = useState<TripItemType>("attraction");
   const [pickQ, setPickQ] = useState("");
   const [customName, setCustomName] = useState("");
@@ -111,10 +112,11 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   const pickResults = useMemo(() => {
     const tab = PICK_TABS.find((t) => t.type === pickTab);
     if (!tab) return []; // 「自訂」沒有清單
-    const pool = pools[tab.key];
+    let pool = pools[tab.key];
+    if (pickTab === "station") pool = pool.filter((x) => x.name.startsWith(stationSys === "hsr" ? "高鐵" : "台鐵"));
     const q = pickQ.trim().toLowerCase();
     return pool.filter((x) => !q || (x.name + x.region + x.town).toLowerCase().includes(q)).slice(0, 60);
-  }, [pickTab, pickQ, pools]);
+  }, [pickTab, pickQ, pools, stationSys]);
 
   const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId);
   function togglePoolItem(day: number, type: TripItemType, name: string, refId: string, slot: "day" | "night") {
@@ -322,6 +324,12 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
               </div>
             ) : (
               <>
+                {pickTab === "station" && (
+                  <div className="seg" style={{ marginBottom: 10 }}>
+                    <button className={stationSys === "hsr" ? "on" : ""} onClick={() => setStationSys("hsr")}>高鐵</button>
+                    <button className={stationSys === "tra" ? "on" : ""} onClick={() => setStationSys("tra")}>台鐵</button>
+                  </div>
+                )}
                 <input className="admin-search" value={pickQ} onChange={(e) => setPickQ(e.target.value)} placeholder="搜尋名稱、地區…" style={{ width: "100%", marginBottom: 10 }} />
                 <div className="pick-list">
                   {pickResults.length === 0 && <div className="day-empty">找不到,或這個分類還沒有資料。可切到「自訂」手動加。</div>}
