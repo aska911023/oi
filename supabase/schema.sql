@@ -780,7 +780,7 @@ create or replace function public.search_trips(
   kw text default '', p_days_min int default null, p_days_max int default null,
   p_budget_max int default null, p_head_min int default null, p_head_max int default null,
   p_transport text default null, p_region text default null, lim int default 24, off int default 0
-) returns jsonb language sql stable as $$
+) returns jsonb language sql stable security definer set search_path = public as $$
   with base as (
     select t.*, (select p.display_name from public.profiles p where p.id = t.owner_id) as owner_name
     from public.trips t
