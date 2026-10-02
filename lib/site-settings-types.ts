@@ -31,6 +31,9 @@ export interface SiteSettings {
   hero_split_ratio: number; // 左文欄佔比 %(20–80),兩邊一致
   logo_image: string;
   logo_size: number;
+  contact_email: string;
+  contact_line: string;
+  contact_phone: string;
   blocks: Block[];
 }
 
@@ -50,6 +53,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   search_hint: "依每晚起價與最多入住人數篩選;實際房價與空房請向民宿確認。",
   hero_layout: "split",
   hero_split_ratio: 50,
+  contact_email: "",
+  contact_line: "",
+  contact_phone: "",
   logo_image: "",
   logo_size: 42,
   blocks: DEFAULT_BLOCKS,

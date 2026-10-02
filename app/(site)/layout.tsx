@@ -33,7 +33,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <Link href="/trips">行程分享</Link>
           </div>
           <div className="footer-col">
-            <h4>業者 / 關於</h4>
+            <h4>關於</h4>
+            <Link href="/about">品牌故事</Link>
+            <Link href="/contact">聯絡我們</Link>
             <Link href="/apply">業者上架</Link>
             <Link href="/terms">服務條款</Link>
             <Link href="/privacy">隱私權政策</Link>

@@ -887,6 +887,10 @@ create or replace function public.search_rooms(
 $$;
 grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
 
+alter table public.site_settings add column if not exists contact_email text;
+alter table public.site_settings add column if not exists contact_line text;
+alter table public.site_settings add column if not exists contact_phone text;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
