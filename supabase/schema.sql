@@ -898,6 +898,75 @@ alter table public.site_settings add column if not exists footer_tagline text;
 alter table public.site_settings add column if not exists about_body text;
 alter table public.site_settings add column if not exists contact_intro text;
 
+-- ── 行程社群:按讚 / 留言 + search_trips 帶讚數留言數 ──
+-- 行程按讚
+create table if not exists public.trip_likes (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  trip_id uuid not null references public.trips(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, trip_id)
+);
+alter table public.trip_likes enable row level security;
+drop policy if exists trip_likes_sel on public.trip_likes;
+create policy trip_likes_sel on public.trip_likes for select using (true);
+drop policy if exists trip_likes_own on public.trip_likes;
+create policy trip_likes_own on public.trip_likes for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- 行程留言
+create table if not exists public.trip_comments (
+  id uuid primary key default gen_random_uuid(),
+  trip_id uuid not null references public.trips(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists trip_comments_trip_idx on public.trip_comments(trip_id, created_at);
+alter table public.trip_comments enable row level security;
+drop policy if exists trip_comments_sel on public.trip_comments;
+create policy trip_comments_sel on public.trip_comments for select using (true);
+drop policy if exists trip_comments_ins on public.trip_comments;
+create policy trip_comments_ins on public.trip_comments for insert with check (user_id = auth.uid());
+drop policy if exists trip_comments_del on public.trip_comments;
+create policy trip_comments_del on public.trip_comments for delete using (user_id = auth.uid() or public.is_admin());
+
+-- 留言者名稱(定義者:繞 RLS 只取 display_name)
+create or replace function public.trip_comments_list(p_trip uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', c.id, 'body', c.body, 'created_at', c.created_at,
+    'name', (select display_name from public.profiles p where p.id = c.user_id)
+  ) order by c.created_at desc), '[]'::jsonb)
+  from public.trip_comments c where c.trip_id = p_trip;
+$$;
+grant execute on function public.trip_comments_list(uuid) to anon, authenticated;
+
+-- search_trips 帶讚數/留言數
+create or replace function public.search_trips(
+  kw text default '', p_days_min int default null, p_days_max int default null,
+  p_budget_max int default null, p_head_min int default null, p_head_max int default null,
+  p_transport text default null, p_region text default null, lim int default 24, off int default 0
+) returns jsonb language sql stable security definer set search_path = public as $$
+  with base as (
+    select t.*,
+      (select p.display_name from public.profiles p where p.id = t.owner_id) as owner_name,
+      (select count(*) from public.trip_likes l where l.trip_id = t.id) as like_count,
+      (select count(*) from public.trip_comments c where c.trip_id = t.id) as comment_count
+    from public.trips t
+    where t.is_public
+      and (p_days_min is null or t.days >= p_days_min)
+      and (p_days_max is null or t.days <= p_days_max)
+      and (p_budget_max is null or (t.budget is not null and t.budget <= p_budget_max))
+      and (p_head_min is null or t.headcount >= p_head_min)
+      and (p_head_max is null or t.headcount <= p_head_max)
+      and (p_transport is null or t.transport = p_transport)
+      and (p_region is null or t.region = p_region)
+      and (coalesce(kw,'') = '' or (coalesce(t.title,'')||' '||coalesce(t.summary,'')||' '||coalesce(t.region,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

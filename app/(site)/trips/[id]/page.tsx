@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import TripLikeButton from "@/components/trip-like-button";
+import ShareLinkButton from "@/components/share-link-button";
+import TripComments from "@/components/trip-comments";
 import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +17,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
 
   const { data: { user } } = await sb.auth.getUser();
   const isOwner = !!user && trip.owner_id === user.id;
+  const { count: likeCount } = await sb.from("trip_likes").select("*", { count: "exact", head: true }).eq("trip_id", id);
   const dayList = Array.from({ length: trip.days }, (_, i) => i + 1);
   const itemsOfDay = (d: number) => (trip.items || []).filter((it: TripItem) => it.day === d);
 
@@ -28,8 +32,10 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
           </p>
           {trip.summary && <p className="trip-view-sum">{trip.summary}</p>}
 
-          <div className="trip-view-actions">
+          <div className="trip-view-actions" style={{ alignItems: "center", gap: 10 }}>
             <Link href={`/plan?load=${trip.id}`} className="btn btn-primary">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
+            <TripLikeButton tripId={trip.id} count={likeCount || 0} />
+            <ShareLinkButton path={`/trips/${trip.id}`} />
           </div>
 
           {dayList.map((d) => (
@@ -50,6 +56,8 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
               )}
             </div>
           ))}
+
+          <TripComments tripId={trip.id} />
         </div>
       </main>
   );

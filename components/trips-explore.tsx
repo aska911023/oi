@@ -6,6 +6,8 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import HeroCarousel from "@/components/hero-carousel";
 import SaveTripButton from "@/components/save-trip-button";
+import TripLikeButton from "@/components/trip-like-button";
+import ShareLinkButton from "@/components/share-link-button";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -111,6 +113,11 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
                 {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
                 {t.region && <span>{t.region}</span>}
                 <span>{t.items?.length || 0} 個停靠點</span>
+              </div>
+              <div className="trip-social">
+                <TripLikeButton tripId={t.id} count={t.like_count || 0} />
+                <span className="trip-cc">💬 {t.comment_count || 0}</span>
+                <ShareLinkButton path={`/trips/${t.id}`} label="" />
               </div>
             </Link>
           );
