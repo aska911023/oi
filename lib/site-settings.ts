@@ -39,7 +39,7 @@ export const getSiteSettings = unstable_cache(async function getSiteSettings(): 
       if (typeof d.color_accent === "string" && d.color_accent) s.color_accent = d.color_accent;
       if (typeof d.bg_color === "string" && d.bg_color) s.bg_color = d.bg_color;
       if (typeof d.search_hint === "string" && d.search_hint) s.search_hint = d.search_hint;
-      if (d.hero_layout === "stack" || d.hero_layout === "split") s.hero_layout = d.hero_layout;
+      if (d.hero_layout === "stack" || d.hero_layout === "split" || d.hero_layout === "banner") s.hero_layout = d.hero_layout;
       if (typeof d.hero_split_ratio === "number" && d.hero_split_ratio >= 20 && d.hero_split_ratio <= 80) s.hero_split_ratio = d.hero_split_ratio;
       if (typeof d.logo_image === "string") s.logo_image = d.logo_image;
       if (typeof d.logo_size === "number" && d.logo_size > 0) s.logo_size = d.logo_size;
@@ -49,6 +49,8 @@ export const getSiteSettings = unstable_cache(async function getSiteSettings(): 
       if (typeof d.footer_about === "string" && d.footer_about) s.footer_about = d.footer_about;
       if (typeof d.footer_copyright === "string" && d.footer_copyright) s.footer_copyright = d.footer_copyright;
       if (typeof d.footer_tagline === "string" && d.footer_tagline) s.footer_tagline = d.footer_tagline;
+      if (typeof d.about_body === "string" && d.about_body) s.about_body = d.about_body;
+      if (typeof d.contact_intro === "string" && d.contact_intro) s.contact_intro = d.contact_intro;
       if (Array.isArray(d.blocks) && d.blocks.length) {
         const parsed = d.blocks.map(sanitizeBlock).filter(Boolean) as Block[];
         if (parsed.length) s.blocks = parsed;

@@ -20,7 +20,7 @@ export interface Block {
   nowrap?: boolean;
 }
 
-export type HeroLayout = "stack" | "split";
+export type HeroLayout = "stack" | "split" | "banner";
 
 export interface SiteSettings {
   color_primary: string;
@@ -37,6 +37,8 @@ export interface SiteSettings {
   footer_about: string;
   footer_copyright: string;
   footer_tagline: string;
+  about_body: string;
+  contact_intro: string;
   blocks: Block[];
 }
 
@@ -62,6 +64,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   footer_about: "偶爾出走,找到喜歡的一宿。\n以地區、風格與預算,探索全台民宿。",
   footer_copyright: "© 2026 偶宿數位科技有限公司 · 台灣民宿搜尋平台",
   footer_tagline: "一段旅行,一處喜歡的日常。",
+  about_body: "偶宿 O!(O! Stay)相信,旅行最美的部分,常常發生在「住下來」之後——慢下來的早晨、民宿主人隨口的推薦、轉角遇見的小店。\n\n我們把全台的民宿,連同周邊的景點、美食、停車與租車,整理在同一個地方;並提供行程規劃工具,讓你把想去的地方排進每一天,和旅伴一起討論、分享。\n\n我們不經手訂房、不抽佣金——而是把你導回民宿的官方管道(官網 / LINE),讓好客人回到店家手上。\n\n「偶爾出走,找一處喜歡的一宿。」偶宿,是偶爾給自己的一段留白。",
+  contact_intro: "有任何問題、合作提案,或想把你的民宿 / 店家上架,歡迎透過以下方式與我們聯絡:",
   logo_image: "",
   logo_size: 42,
   blocks: DEFAULT_BLOCKS,

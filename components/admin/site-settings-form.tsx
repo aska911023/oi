@@ -100,7 +100,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
       search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size,
       contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone,
-      footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline, blocks: s.blocks, updated_at: new Date().toISOString(),
+      footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline,
+      about_body: s.about_body, contact_intro: s.contact_intro, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -190,6 +191,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           <div className="align-seg">
             <button className={s.hero_layout === "stack" ? "on" : ""} onClick={() => set("hero_layout", "stack")}>直式堆疊</button>
             <button className={s.hero_layout === "split" ? "on" : ""} onClick={() => set("hero_layout", "split")}>左文右圖</button>
+            <button className={s.hero_layout === "banner" ? "on" : ""} onClick={() => set("hero_layout", "banner")}>橫幅(整張圖+字)</button>
           </div>
           <span style={{ fontSize: 12, color: "var(--muted)" }}>「左文右圖」= 文字排左、圖片/輪播排右(手機自動堆疊)</span>
         </div>
@@ -305,6 +307,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           <div className="field" style={{ margin: 0 }}><label>官方 LINE 連結</label><input value={s.contact_line} onChange={(e) => set("contact_line", e.target.value)} placeholder="https://line.me/…" /></div>
           <div className="field" style={{ margin: 0 }}><label>聯絡電話</label><input value={s.contact_phone} onChange={(e) => set("contact_phone", e.target.value)} /></div>
         </div>
+        <div className="field"><label>品牌故事頁內容(可換行,空一行分段)</label><textarea rows={5} value={s.about_body} onChange={(e) => set("about_body", e.target.value)} /></div>
+        <div className="field"><label>聯絡我們頁 — 開頭說明</label><textarea rows={2} value={s.contact_intro} onChange={(e) => set("contact_intro", e.target.value)} /></div>
         <div className="field"><label>頁尾 — 品牌簡介(可換行)</label><textarea rows={2} value={s.footer_about} onChange={(e) => set("footer_about", e.target.value)} /></div>
         <div className="frow">
           <div className="field" style={{ margin: 0 }}><label>頁尾 — 版權文字</label><input value={s.footer_copyright} onChange={(e) => set("footer_copyright", e.target.value)} /></div>

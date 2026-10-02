@@ -50,6 +50,18 @@ function renderBlock(b: Block) {
 }
 
 export default function BlocksRender({ blocks, layout = "stack", ratio = 50 }: { blocks: Block[]; layout?: HeroLayout; ratio?: number }) {
+  if (layout === "banner") {
+    const isMedia = (b: Block) => b.type === "image" || b.type === "carousel";
+    const media = blocks.filter(isMedia);
+    const rest = blocks.filter((b) => !isMedia(b));
+    return (
+      <div className="blocks-banner">
+        <div className="bb-media">{media.map(renderBlock)}</div>
+        <div className="bb-scrim" />
+        <div className="bb-overlay">{rest.map(renderBlock)}</div>
+      </div>
+    );
+  }
   if (layout === "split") {
     const isMedia = (b: Block) => b.type === "image" || b.type === "carousel";
     const media = blocks.filter(isMedia);

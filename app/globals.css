@@ -436,6 +436,16 @@ img { display: block; max-width: 100%; }
 .blk-split .bs-img img { width: 100%; border-radius: 16px; box-shadow: var(--shadow-sm); display: block; }
 .blk-split .bs-text p { margin: 0; line-height: 1.8; }
 @media (max-width: 640px) { .blk-split { grid-template-columns: 1fr; gap: 16px; } }
+/* 橫幅 hero(整張圖 + 文字疊上) */
+.blocks-banner { position: relative; border-radius: 20px; overflow: hidden; margin: 18px 0 8px; min-height: 300px; display: flex; }
+.blocks-banner .bb-media { position: absolute; inset: 0; }
+.blocks-banner .bb-media img, .blocks-banner .bb-media .disc-img { width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.blocks-banner .bb-media .blk-carousel { max-width: 100% !important; height: 100%; }
+.blocks-banner .bb-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,30,26,.6), rgba(10,30,26,.15)); }
+.blocks-banner .bb-overlay { position: relative; z-index: 2; align-self: center; padding: 40px clamp(24px, 5vw, 64px); max-width: 680px; display: flex; flex-direction: column; gap: 10px; }
+.blocks-banner .bb-overlay .blk-heading, .blocks-banner .bb-overlay .blk-text { color: #fff !important; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
+@media (max-width: 600px) { .blocks-banner { min-height: 240px; } }
+
 .blocks-split { display: grid; grid-template-columns: var(--split-cols, 1fr 1fr); gap: 40px; align-items: center; padding: 30px 0 8px; }
 .bs-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .bs-right { width: 100%; min-width: 0; }
