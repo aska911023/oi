@@ -19,7 +19,10 @@ export default async function MyTripsPage() {
           <h1 className="serif">我的行程</h1>
           <p>管理你儲存的行程,可編輯、公開分享或刪除。</p>
         </div>
-        <Link href="/plan" className="btn btn-primary">＋ 規劃新行程</Link>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link href="/account" className="btn btn-ghost">我的帳號</Link>
+          <Link href="/plan" className="btn btn-primary">＋ 規劃新行程</Link>
+        </div>
       </div>
       <MyTrips initial={(data as Trip[]) || []} />
     </main>

@@ -28,7 +28,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           {user ? (
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
-              <Link href="/account" className="cta">歡迎,{name}</Link>
+              <Link href="/me/trips" className="cta">歡迎,{name}</Link>
             </>
           ) : (
             <Link href="/login" className="cta">登入 / 註冊</Link>
