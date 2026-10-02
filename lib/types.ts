@@ -181,6 +181,7 @@ export interface Trip {
   is_public: boolean;
   share_slug?: string | null;
   created_at?: string;
+  owner_name?: string | null; // 發布者暱稱(search_trips 帶回)
 }
 
 export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;

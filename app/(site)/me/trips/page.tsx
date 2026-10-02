@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import MyTrips from "@/components/my-trips";
 import SignOutButton from "@/components/signout-button";
+import SaveTripButton from "@/components/save-trip-button";
 import { createClient } from "@/lib/supabase/server";
 import type { Trip } from "@/lib/types";
 
@@ -14,17 +15,19 @@ export default async function MyTripsPage() {
   const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
   const role = profile?.role || "user";
   const { data } = await sb.from("trips").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false });
+  const { data: savedData } = await sb.from("saved_trips").select("trip_id, trips(*)").eq("user_id", user.id).order("created_at", { ascending: false });
+  const savedTrips = ((savedData || []) as unknown as { trips: Trip | null }[]).map((r) => r.trips).filter(Boolean) as Trip[];
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 820 }}>
       <div className="plan-head">
         <h1 className="serif">我的行程</h1>
-        <p>管理你儲存的行程,可編輯、公開分享或刪除。</p>
+        <p>管理你儲存的行程,可編輯、公開分享或刪除;也能收藏別人的行程當參考。</p>
       </div>
 
       <div className="account-actions" style={{ marginBottom: 26 }}>
         <Link href="/plan" className="btn btn-primary">＋ 規劃新行程</Link>
-        <Link href="/me/saved" className="btn btn-ghost">我的收藏</Link>
+        <Link href="/me/saved" className="btn btn-ghost">我的收藏(民宿)</Link>
         <Link href="/account" className="btn btn-ghost">我的帳號</Link>
         <Link href="/" className="btn btn-ghost">繼續探索民宿</Link>
         {role === "user" && <Link href="/apply" className="btn btn-ghost">申請成為業者</Link>}
@@ -32,7 +35,29 @@ export default async function MyTripsPage() {
         {role === "admin" && <Link href="/admin" className="btn btn-ghost">管理後台</Link>}
       </div>
 
+      <h2 className="serif shop-h">我發起的</h2>
       <MyTrips initial={(data as Trip[]) || []} />
+
+      <h2 className="serif shop-h" style={{ marginTop: 34 }}>我收藏的</h2>
+      {savedTrips.length === 0 ? (
+        <div className="empty">還沒有收藏的行程。到<Link href="/trips" style={{ color: "var(--green)", textDecoration: "underline" }}>行程分享牆</Link>按 ♡ 收藏喜歡的行程。</div>
+      ) : (
+        <div className="mytrips">
+          {savedTrips.map((t) => (
+            <div className="mytrip-row" key={t.id}>
+              <div className="mytrip-main">
+                <div className="mytrip-title">{t.title}</div>
+                <div className="mytrip-meta">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""} · {t.headcount} 人{t.region ? ` · ${t.region}` : ""} · {t.items?.length || 0} 個停靠點</div>
+              </div>
+              <div className="mytrip-actions">
+                <Link className="lnk" href={`/trips/${t.id}`}>檢視</Link>
+                <Link className="lnk" href={`/plan?load=${t.id}`}>複製規劃</Link>
+                <SaveTripButton tripId={t.id} compact />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 30 }}>
         <SignOutButton />

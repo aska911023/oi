@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
+import HeroCarousel from "@/components/hero-carousel";
+import SaveTripButton from "@/components/save-trip-button";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -89,22 +91,30 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
 
       <div className="trips-grid">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
-        {results.map((t) => (
-          <Link key={t.id} href={`/trips/${t.id}`} className="trip-card">
-            <div className="trip-card-top">
-              <h3>{t.title}</h3>
-              <span className="trip-days">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}</span>
-            </div>
-            {t.summary && <p className="trip-sum">{t.summary}</p>}
-            <div className="trip-tags">
-              <span>{t.headcount} 人</span>
-              {t.transport && <span>{t.transport}</span>}
-              {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
-              {t.region && <span>{t.region}</span>}
-              <span>{t.items?.length || 0} 個點</span>
-            </div>
-          </Link>
-        ))}
+        {results.map((t) => {
+          const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
+          return (
+            <Link key={t.id} href={`/trips/${t.id}`} className="trip-card">
+              {photos.length > 0 && <div className="trip-photos"><HeroCarousel images={photos} height={160} /></div>}
+              <div className="trip-card-top">
+                <h3>{t.title}</h3>
+                <div className="trip-top-right">
+                  <span className="trip-days">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}</span>
+                  <SaveTripButton tripId={t.id} compact />
+                </div>
+              </div>
+              <div className="trip-by">by {t.owner_name || "旅人"}</div>
+              {t.summary && <p className="trip-sum">{t.summary}</p>}
+              <div className="trip-tags">
+                <span>{t.headcount} 人</span>
+                {t.transport && <span>{t.transport}</span>}
+                {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
+                {t.region && <span>{t.region}</span>}
+                <span>{t.items?.length || 0} 個停靠點</span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
       {canLoadMore && (
         <div style={{ textAlign: "center", marginTop: 30 }}>

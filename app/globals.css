@@ -562,6 +562,11 @@ img { display: block; max-width: 100%; }
 .trips-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (max-width: 680px) { .trips-grid { grid-template-columns: 1fr; } }
 .trip-card { display: block; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px; transition: border-color .15s, box-shadow .15s; }
+.trip-photos { margin: -18px -20px 14px; border-radius: 16px 16px 0 0; overflow: hidden; }
+.trip-top-right { display: flex; align-items: center; gap: 8px; flex: none; }
+.trip-by { font-size: 12.5px; color: var(--muted); margin: 2px 0 8px; }
+.trip-save { border: 1px solid var(--border-strong); background: #fff; color: var(--text-2); border-radius: 20px; padding: 4px 11px; font-size: 14px; font-weight: 700; cursor: pointer; line-height: 1; }
+.trip-save.on { border-color: var(--green); color: var(--green); background: var(--green-soft); }
 .trip-card:hover { border-color: var(--green); box-shadow: var(--shadow-sm); }
 .trip-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .trip-card-top h3 { font-family: var(--serif); font-size: 19px; font-weight: 700; margin: 0; color: var(--ink); }

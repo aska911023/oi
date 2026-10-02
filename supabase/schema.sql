@@ -763,6 +763,42 @@ create policy reviews_del on public.reviews for delete using (user_id = auth.uid
 
 alter table public.trips add column if not exists nights int not null default 1;
 
+-- ── 收藏行程 + search_trips 帶發布者名稱 ──
+-- 收藏別人的行程
+create table if not exists public.saved_trips (
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  trip_id    uuid not null references public.trips(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, trip_id)
+);
+alter table public.saved_trips enable row level security;
+drop policy if exists saved_trips_all on public.saved_trips;
+create policy saved_trips_all on public.saved_trips for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- search_trips 加回傳發布者名稱 owner_name
+create or replace function public.search_trips(
+  kw text default '', p_days_min int default null, p_days_max int default null,
+  p_budget_max int default null, p_head_min int default null, p_head_max int default null,
+  p_transport text default null, p_region text default null, lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select t.*, (select p.display_name from public.profiles p where p.id = t.owner_id) as owner_name
+    from public.trips t
+    where t.is_public
+      and (p_days_min is null or t.days >= p_days_min)
+      and (p_days_max is null or t.days <= p_days_max)
+      and (p_budget_max is null or (t.budget is not null and t.budget <= p_budget_max))
+      and (p_head_min is null or t.headcount >= p_head_min)
+      and (p_head_max is null or t.headcount <= p_head_max)
+      and (p_transport is null or t.transport = p_transport)
+      and (p_region is null or t.region = p_region)
+      and (coalesce(kw,'') = '' or (coalesce(t.title,'')||' '||coalesce(t.summary,'')||' '||coalesce(t.region,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
