@@ -99,7 +99,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     const { error } = await sb.from("site_settings").update({
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
       search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size,
-      contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone, blocks: s.blocks, updated_at: new Date().toISOString(),
+      contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone,
+      footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -303,6 +304,11 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           <div className="field" style={{ margin: 0 }}><label>聯絡 Email(聯絡我們頁)</label><input value={s.contact_email} onChange={(e) => set("contact_email", e.target.value)} placeholder="hello@…" /></div>
           <div className="field" style={{ margin: 0 }}><label>官方 LINE 連結</label><input value={s.contact_line} onChange={(e) => set("contact_line", e.target.value)} placeholder="https://line.me/…" /></div>
           <div className="field" style={{ margin: 0 }}><label>聯絡電話</label><input value={s.contact_phone} onChange={(e) => set("contact_phone", e.target.value)} /></div>
+        </div>
+        <div className="field"><label>頁尾 — 品牌簡介(可換行)</label><textarea rows={2} value={s.footer_about} onChange={(e) => set("footer_about", e.target.value)} /></div>
+        <div className="frow">
+          <div className="field" style={{ margin: 0 }}><label>頁尾 — 版權文字</label><input value={s.footer_copyright} onChange={(e) => set("footer_copyright", e.target.value)} /></div>
+          <div className="field" style={{ margin: 0 }}><label>頁尾 — 標語</label><input value={s.footer_tagline} onChange={(e) => set("footer_tagline", e.target.value)} /></div>
         </div>
         <div className="field"><label>網站 Logo(左上角;留空用預設 O!)</label>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>

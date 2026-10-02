@@ -19,7 +19,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <div className="shell footer-grid">
           <div className="footer-brand">
             <Logo />
-            <p>偶爾出走,找到喜歡的一宿。<br />以地區、風格與預算,探索全台民宿。</p>
+            <p style={{ whiteSpace: "pre-line" }}>{settings.footer_about}</p>
           </div>
           <div className="footer-col">
             <h4>探索</h4>
@@ -42,8 +42,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </div>
         </div>
         <div className="shell footer-bottom">
-          <span>© 2026 偶宿數位科技有限公司 · 台灣民宿搜尋平台</span>
-          <span className="tagline">一段旅行,一處喜歡的日常。</span>
+          <span>{settings.footer_copyright}</span>
+          <span className="tagline">{settings.footer_tagline}</span>
         </div>
       </footer>
     </>

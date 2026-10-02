@@ -891,6 +891,10 @@ alter table public.site_settings add column if not exists contact_email text;
 alter table public.site_settings add column if not exists contact_line text;
 alter table public.site_settings add column if not exists contact_phone text;
 
+alter table public.site_settings add column if not exists footer_about text;
+alter table public.site_settings add column if not exists footer_copyright text;
+alter table public.site_settings add column if not exists footer_tagline text;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
