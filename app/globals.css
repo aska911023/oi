@@ -308,7 +308,8 @@ img { display: block; max-width: 100%; }
 .account-row dt { color: var(--muted); margin: 0; }
 .account-row dd { margin: 0; font-weight: 600; }
 .role-badge { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); }
-.account-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.account-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.account-actions .signout-right { margin-left: auto; }
 
 /* ── 業者申請 ── */
 .apply-state { border-radius: 12px; padding: 14px 18px; font-size: 14.5px; line-height: 1.7; margin: 18px 0; }
