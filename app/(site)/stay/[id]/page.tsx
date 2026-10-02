@@ -86,6 +86,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
                     <div className="room-tags">
                       <span>可住 {r.capacity} 人</span>
                       {r.beds && <span>{r.beds}</span>}
+                      {(r.tags || []).map((t) => <span key={t}>{t}</span>)}
                       {r.rooms_left != null && <span className={r.rooms_left <= 1 ? "room-left low" : "room-left"}>剩 {r.rooms_left} 間</span>}
                     </div>
                   </div>

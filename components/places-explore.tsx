@@ -104,6 +104,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
               <button key={k.slug} type="button" onClick={() => switchKind(k.kind)} className={"chip" + (k.kind === kindState ? " on" : "")}>{TAB_LABEL[k.kind]}</button>
             ))}
             <Link href="/rentals" className="chip">租車</Link>
+            <Link href="/stations" className="chip">車站</Link>
           </div>
 
           <div className="places-head">

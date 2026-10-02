@@ -49,6 +49,7 @@ export interface RentalShop {
   approved?: boolean;
   published: boolean;
   featured?: boolean;
+  tags?: string[]; // 車種/品牌
   price_from?: number; // search_rentals 彙整:最低日租
   units_left?: number; // 方案可租數加總
 }
@@ -79,6 +80,7 @@ export interface RoomCard {
   room_desc?: string | null;
   image: string;
   featured?: boolean;
+  tags?: string[];
   stay_id: string;
   stay_name: string;
   region: string;
@@ -105,6 +107,7 @@ export interface RoomType {
   sort: number;
   published: boolean;
   featured?: boolean;
+  tags?: string[];
 }
 
 // 二級分類:探索景點 / 探索美食 / 停車區域

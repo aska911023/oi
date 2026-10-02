@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import { GEOGRAPHIC_AREAS, RENTAL_TAGS } from "@/lib/data";
 import { revalidateRentals } from "@/app/actions";
 import RentalPlansEditor from "@/components/admin/rental-plans-editor";
 import type { RentalShop } from "@/lib/types";
@@ -11,7 +11,7 @@ const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 type Form = Omit<RentalShop, "id" | "price_from" | "units_left"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", address: "", phone: "", image: "", description: "",
-  website: "", line_url: "", lat: null, lng: null, published: false, featured: false,
+  website: "", line_url: "", lat: null, lng: null, tags: [], published: false, featured: false,
 };
 
 export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop[]; ownerId?: string }) {
@@ -62,7 +62,7 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
       name: form.name.trim(), region: form.region, town: form.town.trim(), address: form.address.trim(),
       phone: form.phone || null, image: form.image.trim(), description: form.description.trim(),
       website: form.website.trim(), line_url: form.line_url || null,
-      lat: form.lat ?? null, lng: form.lng ?? null, published: form.published, featured: form.featured,
+      lat: form.lat ?? null, lng: form.lng ?? null, tags: form.tags || [], published: form.published, featured: form.featured,
       owner_id: ownerId ?? undefined,
       approved: ownerId ? undefined : true,
     };
@@ -162,6 +162,15 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
                 </div>
               </div>
               <div className="wide"><label>介紹</label><textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話介紹" /></div>
+              <div className="wide"><label>車種 / 品牌(可複選)</label>
+                <div className="fac-grid">
+                  {RENTAL_TAGS.map((t) => {
+                    const set = new Set(form.tags || []);
+                    const on = set.has(t);
+                    return <button type="button" key={t} className={"chip" + (on ? " on" : "")} onClick={() => { on ? set.delete(t) : set.add(t); setForm({ ...form, tags: [...set] }); }}>{t}</button>;
+                  })}
+                </div>
+              </div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 上架(前台可見)</label>

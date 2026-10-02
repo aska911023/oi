@@ -617,6 +617,19 @@ img { display: block; max-width: 100%; }
 .region-select:focus { outline: none; border-color: var(--green); }
 .fac-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .fac-grid .chip { cursor: pointer; font-size: 13px; }
+.rt-item { display: flex; flex-direction: column; gap: 8px; }
+.rt-tags { padding-left: 2px; }
+.rt-tags .chip { font-size: 12px; }
+
+/* 車站頁 */
+.station-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.station-chip { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: #fff; }
+.station-chip:hover { border-color: var(--green); }
+.st-badge { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; flex: none; }
+.st-badge.hsr { background: #fde8e8; color: #c0392b; }
+.st-badge.tra { background: #e4f3ea; color: #1f7a4d; }
+.station-chip .st-name { font-weight: 700; color: var(--ink); }
+.station-chip small { color: var(--muted); margin-left: auto; font-size: 12px; }
 
 /* 後台 details 清單編輯(菜單/活動) */
 .details-form { margin-top: 6px; }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import { GEOGRAPHIC_AREAS, RENTAL_TAGS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { priceLabel } from "@/lib/data";
 import { POI_KINDS, type RentalShop, type RentalPlan } from "@/lib/types";
@@ -22,17 +22,19 @@ const I = {
 export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop[]; total?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
+  const [tags, setTags] = useState<string[]>([]);
   const [rows, setRows] = useState<RentalShop[]>(shops);
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
   const firstRun = useRef(true);
   const [active, setActive] = useState<RentalShop | null>(null);
   const [plans, setPlans] = useState<RentalPlan[]>([]);
+  const toggleTag = (t: string) => setTags((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
 
-  async function load(kwv: string, regionv: string, off: number, append: boolean) {
+  async function load(kwv: string, regionv: string, tagsv: string[], off: number, append: boolean) {
     setLoading(true);
     const sb = createClient();
-    const { data } = await sb.rpc("search_rentals", { kw: kwv.trim(), p_region: regionv === "all" ? null : regionv, lim: PAGE, off });
+    const { data } = await sb.rpc("search_rentals", { kw: kwv.trim(), p_region: regionv === "all" ? null : regionv, p_tags: tagsv.length ? tagsv : null, lim: PAGE, off });
     const newRows = (data?.rows || []) as RentalShop[];
     setRpcTotal(data?.total ?? 0);
     setRows((prev) => (append ? [...prev, ...newRows] : newRows));
@@ -41,10 +43,10 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
 
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return; }
-    const t = setTimeout(() => { load(kw, region, 0, false); }, 300);
+    const t = setTimeout(() => { load(kw, region, tags, 0, false); }, 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region]);
+  }, [kw, region, tags]);
 
   useEffect(() => {
     if (!active) { setPlans([]); return; }
@@ -71,6 +73,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
           <div className="places-tabs">
             {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`} className="chip">{TAB_LABEL[k.kind]}</Link>)}
             <span className="chip on">租車</span>
+            <Link href="/stations" className="chip">車站</Link>
           </div>
           <div className="places-head">
             <h1 className="serif">租車</h1>
@@ -91,6 +94,14 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
                 <option value="all">全部地區</option>
                 {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
               </select>
+            </div>
+          </div>
+          <div className="disc-filters">
+            <div className="filter-row" style={{ alignItems: "flex-start" }}>
+              <span className="filter-cap">車種</span>
+              <div className="chips">
+                {RENTAL_TAGS.map((t) => <button key={t} className={"chip " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>)}
+              </div>
             </div>
           </div>
         </div>
@@ -122,7 +133,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
 
         {canLoadMore && (
           <div style={{ textAlign: "center", marginTop: 30 }}>
-            <button className="btn btn-ghost" onClick={() => load(kw, region, rows.length, true)} disabled={loading}>
+            <button className="btn btn-ghost" onClick={() => load(kw, region, tags, rows.length, true)} disabled={loading}>
               {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
             </button>
           </div>

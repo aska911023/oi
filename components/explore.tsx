@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
-import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, AMENITY_FILTERS, priceLabel } from "@/lib/data";
+import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
@@ -27,8 +27,10 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
   const [priceRange, setPriceRange] = useState("all");
   const [cat, setCat] = useState(ALL_CATEGORY_LABEL);
   const [amens, setAmens] = useState<string[]>([]);
+  const [roomTags, setRoomTags] = useState<string[]>([]);
   const [sort, setSort] = useState<SortMode>("default");
   const toggleAmen = (a: string) => setAmens((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
+  const toggleRoomTag = (a: string) => setRoomTags((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
   const [rows, setRows] = useState<RoomCard[]>(rooms);
   const [rpcTotal, setRpcTotal] = useState(total);
@@ -43,6 +45,7 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
       p_guests: guests.trim() ? parseInt(guests) : null,
       p_category: cat === ALL_CATEGORY_LABEL ? null : cat,
       p_amenities: amens.length ? amens : null,
+      p_room_tags: roomTags.length ? roomTags : null,
       p_sort: sort, lim: PAGE, off,
     };
   }
@@ -60,7 +63,7 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
     const t = setTimeout(() => fetchPage(0, false), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region, guests, priceRange, cat, sort, amens]);
+  }, [kw, region, guests, priceRange, cat, sort, amens, roomTags]);
 
   const canLoadMore = rows.length < rpcTotal;
 
@@ -121,6 +124,14 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
               <div className="chips">
                 {AMENITY_FILTERS.map((a) => (
                   <button key={a} className={"chip " + (amens.includes(a) ? "on" : "")} onClick={() => toggleAmen(a)}>{a}</button>
+                ))}
+              </div>
+            </div>
+            <div className="filter-row" style={{ alignItems: "flex-start" }}>
+              <span className="filter-cap">房型</span>
+              <div className="chips">
+                {ROOM_TAGS.map((a) => (
+                  <button key={a} className={"chip " + (roomTags.includes(a) ? "on" : "")} onClick={() => toggleRoomTag(a)}>{a}</button>
                 ))}
               </div>
             </div>

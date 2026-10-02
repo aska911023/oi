@@ -35,6 +35,12 @@ export const AMENITY_FILTERS: string[] = [
   "包棟", "附早餐", "寵物友善", "提供WiFi", "停車場", "充電樁", "戶外戲水池", "烤肉場地", "電梯", "機場接送",
 ];
 
+// 租車車種 / 品牌標籤(上架複選 + 前台篩選)
+export const RENTAL_TAGS: string[] = ["腳踏車", "機車", "汽車", "重機", "電動車", "Ubike", "WeMo", "GoShare", "iRent"];
+
+// 房型標籤(上架複選 + 前台篩選)
+export const ROOM_TAGS: string[] = ["有浴缸", "有陽台", "海景", "獨立衛浴", "可加床", "和室", "免治馬桶", "大床"];
+
 export const PRICE_RANGES = [
   { value: "all", label: "不限金額", min: 0, max: null as number | null },
   { value: "under3000", label: "NT$ 3,000 以下", min: 0, max: 3000 },
