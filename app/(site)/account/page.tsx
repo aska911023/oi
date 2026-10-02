@@ -47,13 +47,7 @@ export default async function Account() {
         </div>
 
         <div className="account-actions">
-          <Link href="/me/trips" className="btn btn-primary">我的行程</Link>
-          <Link href="/account" className="btn btn-ghost">我的帳號</Link>
-          <Link href="/me/saved" className="btn btn-ghost">我的收藏</Link>
-          <Link href="/" className="btn btn-ghost">繼續探索民宿</Link>
-          {role === "user" && <Link href="/apply" className="btn btn-ghost">申請成為業者</Link>}
-          {(role === "partner" || role === "admin") && <Link href="/vendor" className="btn btn-ghost">業者後台</Link>}
-          {role === "admin" && <Link href="/admin" className="btn btn-ghost">管理後台</Link>}
+          <Link href="/me/trips" className="btn btn-primary">← 回我的行程</Link>
           <span className="signout-right"><SignOutButton /></span>
         </div>
       </div>
