@@ -799,6 +799,35 @@ create or replace function public.search_trips(
 $$;
 grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
 
+-- ── search_rooms 加 p_amenities(民宿設施前台篩選) ──
+drop function if exists public.search_rooms(text,text,int,int,int,text,text,int,int);
+create or replace function public.search_rooms(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_amenities text[] default null, p_sort text default 'default',
+  lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select rt.id, rt.name as room_name, rt.price, rt.capacity, rt.rooms_left, rt.beds, rt.description as room_desc,
+           coalesce(nullif(rt.image, ''), s.image) as image, rt.featured,
+           s.id as stay_id, s.name as stay_name, s.region, s.town, s.category, s.amenities, s.website, s.description as stay_desc, rt.created_at
+    from public.room_types rt join public.stays s on s.id = rt.stay_id
+    where rt.published and s.published and s.approved and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or rt.price >= p_price_min)
+      and (p_price_max is null or rt.price <= p_price_max)
+      and (p_guests is null or rt.capacity >= p_guests)
+      and (p_amenities is null or (select bool_and(s.amenities ilike '%'||a||'%') from unnest(p_amenities) a))
+      and (coalesce(kw,'') = '' or (coalesce(s.name,'')||' '||coalesce(rt.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by featured desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last, created_at desc
+    limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

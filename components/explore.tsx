@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
-import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, priceLabel } from "@/lib/data";
+import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, AMENITY_FILTERS, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
@@ -26,7 +26,9 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
   const [guests, setGuests] = useState("");
   const [priceRange, setPriceRange] = useState("all");
   const [cat, setCat] = useState(ALL_CATEGORY_LABEL);
+  const [amens, setAmens] = useState<string[]>([]);
   const [sort, setSort] = useState<SortMode>("default");
+  const toggleAmen = (a: string) => setAmens((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
   const [rows, setRows] = useState<RoomCard[]>(rooms);
   const [rpcTotal, setRpcTotal] = useState(total);
@@ -39,7 +41,9 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
       kw: kw.trim(), p_region: region === "all" ? null : region,
       p_price_min: pr.min ? pr.min : null, p_price_max: pr.max ?? null,
       p_guests: guests.trim() ? parseInt(guests) : null,
-      p_category: cat === ALL_CATEGORY_LABEL ? null : cat, p_sort: sort, lim: PAGE, off,
+      p_category: cat === ALL_CATEGORY_LABEL ? null : cat,
+      p_amenities: amens.length ? amens : null,
+      p_sort: sort, lim: PAGE, off,
     };
   }
   async function fetchPage(off: number, append: boolean) {
@@ -56,7 +60,7 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
     const t = setTimeout(() => fetchPage(0, false), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region, guests, priceRange, cat, sort]);
+  }, [kw, region, guests, priceRange, cat, sort, amens]);
 
   const canLoadMore = rows.length < rpcTotal;
 
@@ -109,6 +113,16 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
                 <option value={ALL_CATEGORY_LABEL}>{ALL_CATEGORY_LABEL}</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
+            </div>
+          </div>
+          <div className="disc-filters">
+            <div className="filter-row" style={{ alignItems: "flex-start" }}>
+              <span className="filter-cap">設施</span>
+              <div className="chips">
+                {AMENITY_FILTERS.map((a) => (
+                  <button key={a} className={"chip " + (amens.includes(a) ? "on" : "")} onClick={() => toggleAmen(a)}>{a}</button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

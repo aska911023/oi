@@ -29,9 +29,12 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
 export default function PlacesExplore({ places, total = 0, kind }: { places: Place[]; total?: number; kind: PoiKind }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
+  const [tags, setTags] = useState<string[]>([]);
   const [active, setActive] = useState<Place | null>(null);
   const [kindState, setKindState] = useState<PoiKind>(kind);
   const copy = KIND_COPY[kindState];
+
+  const tagOptions = ((DETAILS[kindState].find((f) => f.type === "tags") as { options?: string[] } | undefined)?.options) || [];
 
   const [rows, setRows] = useState<Place[]>(places);
   const [rpcTotal, setRpcTotal] = useState(total);
@@ -39,14 +42,15 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
   const firstRun = useRef(true);
 
   // 直接進入某個路由(SSR)時,以 props 重置
-  useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion("all"); firstRun.current = true; }, [places, total, kind]);
+  useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion("all"); setTags([]); firstRun.current = true; }, [places, total, kind]);
 
 
-  async function load(k: PoiKind, kwv: string, regionv: string, off: number, append: boolean) {
+  async function load(k: PoiKind, kwv: string, regionv: string, tagsv: string[], off: number, append: boolean) {
     setLoading(true);
     const sb = createClient();
     let query = sb.from(KIND_TABLE[k]).select("*", { count: "exact" }).eq("published", true);
     if (regionv !== "all") query = query.eq("region", regionv);
+    if (tagsv.length) query = query.contains("details", { tags: tagsv }); // details.tags 需包含所選全部
     const kwv2 = safeKw(kwv);
     if (kwv2) query = query.or(`name.ilike.%${kwv2}%,region.ilike.%${kwv2}%,town.ilike.%${kwv2}%,address.ilike.%${kwv2}%`);
     const { data, count } = await query.order("featured", { ascending: false }).order("created_at", { ascending: false }).range(off, off + PAGE - 1);
@@ -60,19 +64,21 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
   function switchKind(k: PoiKind) {
     if (k === kindState) return;
     setKindState(k);
-    setKw(""); setRegion("all");
+    setKw(""); setRegion("all"); setTags([]);
     firstRun.current = true; // 避免下方 debounce 再打一次
     const slug = POI_KINDS.find((x) => x.kind === k)?.slug || k;
     window.history.replaceState(null, "", `/places/${slug}`);
-    load(k, "", "all", 0, false);
+    load(k, "", "all", [], 0, false);
   }
+
+  const toggleTag = (t: string) => setTags((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
 
   useEffect(() => {
     if (firstRun.current) { firstRun.current = false; return; }
-    const t = setTimeout(() => { load(kindState, kw, region, 0, false); }, 300);
+    const t = setTimeout(() => { load(kindState, kw, region, tags, 0, false); }, 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region]);
+  }, [kw, region, tags]);
 
   const results = rows;
   const canLoadMore = rows.length < rpcTotal;
@@ -125,6 +131,18 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
               </select>
             </div>
           </div>
+          {tagOptions.length > 0 && (
+            <div className="disc-filters">
+              <div className="filter-row" style={{ alignItems: "flex-start" }}>
+                <span className="filter-cap">類型</span>
+                <div className="chips">
+                  {tagOptions.map((t) => (
+                    <button key={t} className={"chip " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -152,7 +170,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
 
         {canLoadMore && (
           <div style={{ textAlign: "center", marginTop: 30 }}>
-            <button className="btn btn-ghost" onClick={() => load(kindState, kw, region, rows.length, true)} disabled={loading}>
+            <button className="btn btn-ghost" onClick={() => load(kindState, kw, region, tags, rows.length, true)} disabled={loading}>
               {loading ? "載入中…" : `載入更多(${rows.length}/${rpcTotal})`}
             </button>
           </div>

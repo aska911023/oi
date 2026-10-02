@@ -30,6 +30,11 @@ export const AMENITY_OPTIONS: string[] = [
   "代訂烤肉食材", "代訂票券", "代訂船票", "租車資訊",
 ];
 
+// 前台常用設施篩選(從 AMENITY_OPTIONS 挑熱門的當篩選器)
+export const AMENITY_FILTERS: string[] = [
+  "包棟", "附早餐", "寵物友善", "提供WiFi", "停車場", "充電樁", "戶外戲水池", "烤肉場地", "電梯", "機場接送",
+];
+
 export const PRICE_RANGES = [
   { value: "all", label: "不限金額", min: 0, max: null as number | null },
   { value: "under3000", label: "NT$ 3,000 以下", min: 0, max: 3000 },
