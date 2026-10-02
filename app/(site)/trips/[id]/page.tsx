@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
+import SaveTripButton from "@/components/save-trip-button";
 import TripComments from "@/components/trip-comments";
 import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 
@@ -34,8 +35,11 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
 
           <div className="trip-view-actions" style={{ alignItems: "center", gap: 10 }}>
             <Link href={`/plan?load=${trip.id}`} className="btn btn-primary">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
-            <TripLikeButton tripId={trip.id} count={likeCount || 0} />
-            <ShareLinkButton path={`/trips/${trip.id}`} />
+            <span className="trip-actions" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
+              <TripLikeButton tripId={trip.id} count={likeCount || 0} />
+              <ShareLinkButton path={`/trips/${trip.id}`} />
+              <SaveTripButton tripId={trip.id} />
+            </span>
           </div>
 
           {dayList.map((d) => (

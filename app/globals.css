@@ -575,13 +575,14 @@ img { display: block; max-width: 100%; }
 .trip-photos { margin: -18px -20px 14px; border-radius: 16px 16px 0 0; overflow: hidden; }
 .trip-top-right { display: flex; align-items: center; gap: 8px; flex: none; }
 .trip-by { font-size: 12.5px; color: var(--muted); margin: 2px 0 8px; }
-.trip-save { border: 1px solid var(--border-strong); background: #fff; color: var(--text-2); border-radius: 20px; padding: 4px 11px; font-size: 14px; font-weight: 700; cursor: pointer; line-height: 1; }
-.trip-save.on { border-color: var(--green); color: var(--green); background: var(--green-soft); }
-.trip-social { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
-.trip-like, .trip-share { border: 1px solid var(--border-strong); background: #fff; color: var(--text-2); border-radius: 20px; padding: 4px 11px; font-size: 13px; font-weight: 700; cursor: pointer; line-height: 1; }
-.trip-like.on { border-color: #d14d57; color: #d14d57; background: #fdeeec; }
-.trip-cc { font-size: 13px; color: var(--muted); }
-.trip-social .trip-share { margin-left: auto; }
+/* IG / 抖音 風格動作列 */
+.trip-actions { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.trip-act { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 5px; border-radius: 10px; cursor: pointer; color: var(--text); line-height: 0; transition: background .12s, color .12s, transform .1s; }
+.trip-act:hover { background: var(--green-soft); }
+.trip-act:active { transform: scale(.9); }
+.trip-act .trip-act-n { font-size: 13px; font-weight: 700; line-height: 1; }
+.trip-act.like.on { color: #e0245e; }
+.trip-act.bm.on { color: var(--green); }
 .trip-card:hover { border-color: var(--green); box-shadow: var(--shadow-sm); }
 .trip-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .trip-card-top h3 { font-family: var(--serif); font-size: 19px; font-weight: 700; margin: 0; color: var(--ink); }
