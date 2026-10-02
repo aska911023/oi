@@ -36,7 +36,7 @@ export default function TripLikeButton({ tripId, count = 0 }: { tripId: string; 
 
   return (
     <button className={"trip-act like" + (liked ? " on" : "")} onClick={toggle} disabled={busy} title="按讚" aria-label="按讚">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21C6 16.5 3 13 3 9.2A4.2 4.2 0 0 1 12 6a4.2 4.2 0 0 1 9 3.2C21 13 18 16.5 12 21z" /></svg>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21C6 16.5 3 13 3 9.2A4.2 4.2 0 0 1 12 6a4.2 4.2 0 0 1 9 3.2C21 13 18 16.5 12 21z" /></svg>
       {n > 0 && <span className="trip-act-n">{n}</span>}
     </button>
   );

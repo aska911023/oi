@@ -114,7 +114,7 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
               <div className="trip-actions">
                 <TripLikeButton tripId={t.id} count={t.like_count || 0} />
                 <span className="trip-act" title="留言">
-                  <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z" /></svg>
+                  <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z" /></svg>
                   {(t.comment_count || 0) > 0 && <span className="trip-act-n">{t.comment_count}</span>}
                 </span>
                 <ShareLinkButton path={`/trips/${t.id}`} />

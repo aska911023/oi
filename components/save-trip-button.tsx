@@ -37,7 +37,7 @@ export default function SaveTripButton({ tripId }: { tripId: string; compact?: b
 
   return (
     <button className={"trip-act bm" + (saved ? " on" : "")} onClick={toggle} disabled={busy} title={saved ? "已收藏" : "收藏"} aria-label="收藏">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" /></svg>
+      <svg width="23" height="23" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" /></svg>
     </button>
   );
 }
