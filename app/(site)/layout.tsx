@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
 import SiteTheme from "@/components/site-theme";
+import EntryGate from "@/components/entry-gate";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
 import { POI_KINDS } from "@/lib/types";
@@ -13,6 +14,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <>
       <SiteTheme s={settings} />
+      <EntryGate logoSrc={settings.logo_image || undefined} />
       <SiteHeader />
       {children}
       <footer className="footer">
