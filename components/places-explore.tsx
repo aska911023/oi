@@ -6,7 +6,7 @@ import type { Place, PoiKind } from "@/lib/types";
 import { POI_KINDS } from "@/lib/types";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
-import { KIND_TABLE, DETAILS, safeKw } from "@/lib/places-config";
+import { KIND_TABLE, DETAILS, safeKw, type WeekHour } from "@/lib/places-config";
 import ImageZoom from "@/components/image-zoom";
 
 const PAGE = 24;
@@ -93,6 +93,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
   const detail = active ? (active.details || {}) as Record<string, unknown> : {};
   const dText = (k: string) => (typeof detail[k] === "string" ? (detail[k] as string) : "");
   const dList = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as Record<string, string>[]) : []);
+  const dWeek = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as WeekHour[]).filter((e) => e && e.day) : []);
   const dTags = (k: string) => (Array.isArray(detail[k]) ? (detail[k] as string[]).filter((x) => typeof x === "string") : []);
 
   return (
@@ -198,7 +199,8 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
                 const scalars = DETAILS[kindState].filter((f) => f.type === "text" && dText(f.key));
                 const pdfs = DETAILS[kindState].filter((f) => f.type === "pdf" && dText(f.key));
                 const lists = DETAILS[kindState].filter((f) => f.type === "list" && dList(f.key).length > 0);
-                if (!tagFields.length && !scalars.length && !pdfs.length && !lists.length) return null;
+                const weeks = DETAILS[kindState].filter((f) => f.type === "weekhours" && dWeek(f.key).some((e) => e.closed || e.open || e.close));
+                if (!tagFields.length && !scalars.length && !pdfs.length && !lists.length && !weeks.length) return null;
                 return (
                   <div className="place-details">
                     {tagFields.map((f) => (
@@ -212,6 +214,17 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
                         {scalars.map((f) => <div key={f.key}><dt>{f.label}</dt><dd>{dText(f.key)}</dd></div>)}
                       </dl>
                     )}
+                    {weeks.map((f) => (
+                      <div className="pd-week" key={f.key}>
+                        <h3 className="room-list-h">{f.label.replace(/[((].*$/, "")}</h3>
+                        {dWeek(f.key).map((e) => (
+                          <div className="pd-week-row" key={e.day}>
+                            <span className="pd-week-day">{e.day}</span>
+                            <span className={"pd-week-time" + (e.closed ? " off" : "")}>{e.closed ? "休息" : (e.open && e.close ? `${e.open}–${e.close}` : "—")}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
                     {pdfs.map((f) => (
                       <a key={f.key} className="btn btn-ghost" style={{ marginTop: 4 }} href={dText(f.key)} target="_blank" rel="noopener noreferrer">{f.label} {I.out}</a>
                     ))}

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { revalidatePois } from "@/app/actions";
-import { KIND_TABLE, DETAILS } from "@/lib/places-config";
+import { KIND_TABLE, DETAILS, WEEKDAYS, type WeekHour } from "@/lib/places-config";
 import { type Place, type PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -66,6 +66,13 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const addItem = (key: string, cols: { key: string }[]) => setDetail(key, [...getList(key), Object.fromEntries(cols.map((c) => [c.key, ""]))]);
   const setItem = (key: string, i: number, colKey: string, v: string) => setDetail(key, getList(key).map((it, k) => (k === i ? { ...it, [colKey]: v } : it)));
   const rmItem = (key: string, i: number) => setDetail(key, getList(key).filter((_, k) => k !== i));
+  // 每週營業時間:永遠回傳 7 天(照 WEEKDAYS 順序),缺的補空
+  const getWeek = (key: string): WeekHour[] => {
+    const cur = Array.isArray(d[key]) ? (d[key] as WeekHour[]) : [];
+    return WEEKDAYS.map((day) => cur.find((x) => x.day === day) || { day, closed: false, open: "", close: "" });
+  };
+  const setWeek = (key: string, day: string, patch: Partial<WeekHour>) =>
+    setDetail(key, getWeek(key).map((e) => (e.day === day ? { ...e, ...patch } : e)));
 
   async function uploadPdf(key: string, file: File) {
     if (file.type !== "application/pdf") { alert("請選 PDF 檔"); return; }
@@ -209,6 +216,26 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
                     </label>
                     {d[f.key] ? <a className="lnk" href={String(d[f.key])} target="_blank" rel="noopener noreferrer">檢視目前檔案</a> : <span style={{ fontSize: 13, color: "var(--muted)" }}>尚未上傳</span>}
                     {d[f.key] ? <button className="lnk danger" onClick={() => setDetail(f.key, "")}>移除</button> : null}
+                  </div>
+                </div>
+              ))}
+              {fields.filter((f) => f.type === "weekhours").map((f) => (
+                <div key={f.key} className="dlist">
+                  <label>{f.label}</label>
+                  <div className="wh-editor">
+                    {getWeek(f.key).map((e) => (
+                      <div className="wh-row" key={e.day}>
+                        <span className="wh-day">{e.day}</span>
+                        <label className="wh-closed"><input type="checkbox" checked={!!e.closed} onChange={(ev) => setWeek(f.key, e.day, { closed: ev.target.checked })} /> 休息</label>
+                        {!e.closed && (
+                          <span className="wh-times">
+                            <input type="time" value={e.open || ""} onChange={(ev) => setWeek(f.key, e.day, { open: ev.target.value })} />
+                            <span>–</span>
+                            <input type="time" value={e.close || ""} onChange={(ev) => setWeek(f.key, e.day, { close: ev.target.value })} />
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
