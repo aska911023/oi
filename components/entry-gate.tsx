@@ -42,7 +42,7 @@ export default function EntryGate({ logoSrc }: { logoSrc?: string }) {
           </div>
         )}
         <h2>偶宿 O!</h2>
-        <p className="eg-sub">台灣民宿搜尋・旅遊導流平台</p>
+        <p className="eg-sub">偶爾出走 | 找到你喜歡的住宿方式。</p>
         <p className="eg-note">為確認您是真人訪客,請點擊下方按鈕進入。</p>
         <button className="btn btn-primary eg-btn" onClick={enter} autoFocus>進入網站</button>
       </div>
