@@ -24,6 +24,7 @@ export const DETAILS: Record<PoiKind, DetailField[]> = {
   food: [
     { key: "tags", label: "類型", type: "tags", options: ["網紅推薦", "合作店家", "在地小吃", "餐廳", "咖啡廳", "甜點", "伴手禮", "夜市", "早午餐", "燒烤"] },
     { key: "price_level", label: "價位 / 均消", type: "text" },
+    { key: "open_days", label: "營業日(一週哪幾天有開)", type: "tags", options: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"] },
     { key: "hours", label: "營業時間", type: "text" },
     { key: "closed", label: "公休", type: "text" },
     { key: "booking_phone", label: "訂位電話", type: "text" },
@@ -37,6 +38,7 @@ export const DETAILS: Record<PoiKind, DetailField[]> = {
     { key: "charging", label: "充電(無 / 幾支)", type: "text" },
     { key: "height_limit", label: "限高", type: "text" },
     { key: "fee", label: "收費方式", type: "text" },
+    { key: "open_days", label: "營業日(一週哪幾天有開)", type: "tags", options: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"] },
     { key: "hours", label: "營業時間", type: "text" },
   ],
 };

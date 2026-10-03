@@ -202,6 +202,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
                   <div className="place-details">
                     {tagFields.map((f) => (
                       <div className="m-amenities" key={f.key} style={{ marginBottom: 10 }}>
+                        {f.key !== "tags" && <span className="pd-tag-cap">{f.label.replace(/[((].*$/, "")}</span>}
                         {dTags(f.key).map((t) => <span key={t} className="am-chip">{t}</span>)}
                       </div>
                     ))}
