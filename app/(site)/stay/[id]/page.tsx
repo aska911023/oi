@@ -5,6 +5,7 @@ import { priceLabel } from "@/lib/data";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
+import BackLink from "@/components/back-link";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
-      <Link href="/" className="lnk">← 回探索</Link>
+      <BackLink fallback="/" label="← 回探索" />
 
       <div className="shop">
         {toImgs(s.image, s.images).length > 0 && (
@@ -95,7 +96,8 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
                 return (
                   <div className="room-row" key={r.id}>
                     {toImgs(r.image, r.images).length > 0 && (
-                      <div className="room-thumb-c"><PhotoCarousel images={toImgs(r.image, r.images)} dots={false} /></div>
+                      <div className="room-thumb-c"><PhotoCarousel images={toImgs(r.image, r.images)} dots={false} arrows={false} /></div>
+
                     )}
                     <div className="room-main">
                       <div className="room-name">{whole && <span className="room-kind">包棟</span>}{r.name}</div>

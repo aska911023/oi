@@ -429,6 +429,12 @@ img { display: block; max-width: 100%; }
 /* hero carousel */
 .hc-slide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 55%; opacity: 0; transition: opacity .8s ease; }
 .hc-slide.on { opacity: 1; }
+.hc-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.82); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,.18); opacity: 0; transition: opacity .15s, background .15s; }
+.hc-arrow.prev { left: 12px; }
+.hc-arrow.next { right: 12px; }
+.hc-arrow:hover { background: #fff; }
+.shop-hero-c:hover .hc-arrow, .card:hover .hc-arrow, .disc-img:hover .hc-arrow { opacity: 1; }
+@media (hover: none) { .hc-arrow { opacity: 1; background: rgba(255,255,255,.72); } }
 .hc-dots { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 6px; z-index: 2; }
 .hc-dots button { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.55); border: 0; padding: 0; cursor: pointer; transition: .2s; }
 .hc-dots button.on { background: #fff; width: 18px; border-radius: 5px; }
@@ -715,7 +721,7 @@ img { display: block; max-width: 100%; }
 .shop-hero-c { position: relative; width: 100%; height: clamp(220px, 40vw, 400px); border-radius: 18px; overflow: hidden; margin-top: 14px; box-shadow: var(--shadow-sm); }
 .room-thumb-c { position: relative; width: 74px; height: 58px; border-radius: 10px; overflow: hidden; flex: none; }
 .shop-title { font-size: clamp(26px, 4.5vw, 38px); font-weight: 800; color: var(--ink); margin: 6px 0 10px; letter-spacing: .5px; }
-.shop-desc { font-size: 16px; color: var(--text-2); line-height: 1.85; margin: 0; max-width: 62ch; }
+.shop-desc { font-size: 16px; color: var(--text-2); line-height: 1.85; margin: 0; max-width: 62ch; text-align: justify; text-justify: inter-character; }
 .shop-block { margin-top: 30px; }
 .shop-h { font-size: 20px; font-weight: 800; color: var(--ink); margin: 0 0 14px; display: flex; align-items: baseline; gap: 8px; }
 .shop-h .count { font-family: var(--sans); font-size: 13px; color: var(--muted); font-weight: 600; }
@@ -744,6 +750,7 @@ img { display: block; max-width: 100%; }
 .room-list { margin: 16px 0; border-top: 1px solid var(--border); padding-top: 14px; }
 .room-list-h { font-family: var(--serif); font-size: 17px; margin: 0 0 10px; color: var(--ink); }
 .room-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 11px 0; border-bottom: 1px dotted var(--border-strong); }
+.room-main { flex: 1 1 auto; min-width: 0; }
 .room-name { font-weight: 700; font-size: 15px; color: var(--ink); }
 .room-desc { font-size: 13px; color: var(--text-2); margin-top: 3px; }
 .room-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
