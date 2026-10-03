@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
-import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
+import { ALL_CATEGORY_LABEL, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -21,7 +21,7 @@ const I = {
 };
 
 
-export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
+export default function Explore({ rooms, total = 0, regions = [], categories = [], blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; regions?: string[]; categories?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [guests, setGuests] = useState("");
@@ -104,20 +104,26 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
           <p className="search-hint">{searchHint || "顯示各房型每晚房價與可住人數;實際房價與空房請向民宿確認。"}</p>
 
           <div className="disc-filters">
-            <div className="filter-row">
+            <div className="filter-row" style={{ alignItems: "flex-start" }}>
               <span className="filter-cap">{I.pin} 目的地</span>
-              <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} aria-label="縣市">
-                <option value="all">全部地區</option>
-                {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
-              </select>
+              <div className="chips">
+                <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部地區</button>
+                {regions.map((r) => (
+                  <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
+                ))}
+              </div>
             </div>
-            <div className="filter-row">
-              <span className="filter-cap">{I.grid} 住宿風格</span>
-              <select className="region-select" value={cat} onChange={(e) => setCat(e.target.value)} aria-label="住宿風格">
-                <option value={ALL_CATEGORY_LABEL}>{ALL_CATEGORY_LABEL}</option>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
+            {categories.length > 0 && (
+              <div className="filter-row" style={{ alignItems: "flex-start" }}>
+                <span className="filter-cap">{I.grid} 住宿風格</span>
+                <div className="chips">
+                  <button className={"chip " + (cat === ALL_CATEGORY_LABEL ? "on" : "")} onClick={() => setCat(ALL_CATEGORY_LABEL)}>{ALL_CATEGORY_LABEL}</button>
+                  {categories.map((c) => (
+                    <button key={c} className={"chip " + (cat === c ? "on" : "")} onClick={() => setCat(c)}>{c}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="disc-filters">
             <div className="filter-row" style={{ alignItems: "flex-start" }}>
