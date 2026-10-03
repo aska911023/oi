@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { ROOM_TAGS } from "@/lib/data";
+import { ROOM_TAGS, WHOLE_HOUSE_TAGS } from "@/lib/data";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { RoomType, RoomKind, RoomPricing } from "@/lib/types";
 
@@ -97,13 +97,16 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
     </div>
   );
 
-  const tagsRow = (r: Row, i: number) => (
-    <div className="rt-tags fac-grid">
-      {ROOM_TAGS.map((t) => {
-        const set = new Set(r.tags || []);
-        const on = set.has(t);
-        return <button type="button" key={t} className={"chip" + (on ? " on" : "")} onClick={() => { on ? set.delete(t) : set.add(t); patch(i, { tags: [...set] }); }}>{t}</button>;
-      })}
+  const tagsRow = (r: Row, i: number, options: string[] = ROOM_TAGS, caption?: string) => (
+    <div className="rt-tags">
+      {caption && <span className="rt-photos-cap">{caption}</span>}
+      <div className="fac-grid">
+        {options.map((t) => {
+          const set = new Set(r.tags || []);
+          const on = set.has(t);
+          return <button type="button" key={t} className={"chip" + (on ? " on" : "")} onClick={() => { on ? set.delete(t) : set.add(t); patch(i, { tags: [...set] }); }}>{t}</button>;
+        })}
+      </div>
     </div>
   );
 
@@ -147,7 +150,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
               {toggles(r, i)}
             </div>
             {extraRow(r, i)}
-            {tagsRow(r, i)}
+            {tagsRow(r, i, ROOM_TAGS, "房間特色")}
             {photosRow(r, i)}
           </div>
         ))}
@@ -178,6 +181,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
               <span className="rt-photos-cap">包含哪些房間 / 說明(前台會顯示)</span>
               <textarea rows={2} value={r.includes_note || ""} placeholder="例:10人包棟提供三間雙人套房及一間四人套房" onChange={(e) => patch(i, { includes_note: e.target.value })} />
             </div>
+            {tagsRow(r, i, WHOLE_HOUSE_TAGS, "包棟特色(限包棟)")}
             {photosRow(r, i)}
           </div>
         ))}

@@ -38,8 +38,10 @@ export const AMENITY_FILTERS: string[] = [
 // 租車車種 / 品牌標籤(上架複選 + 前台篩選)
 export const RENTAL_TAGS: string[] = ["腳踏車", "機車", "汽車", "重機", "電動車", "Ubike", "WeMo", "GoShare", "iRent"];
 
-// 房型標籤(上架複選 + 前台篩選)
+// 房型標籤(單間上架複選 + 前台篩選)
 export const ROOM_TAGS: string[] = ["有浴缸", "有陽台", "海景", "獨立衛浴", "可加床", "和室", "免治馬桶", "大床"];
+// 包棟專屬特色(限包棟;與單間房型標籤分開)
+export const WHOLE_HOUSE_TAGS: string[] = ["烤肉場地", "代訂烤肉食材", "借用庭園", "麻將出借", "可開伙", "獨立庭院", "附早餐"];
 
 export const PRICE_RANGES = [
   { value: "all", label: "不限金額", min: 0, max: null as number | null },

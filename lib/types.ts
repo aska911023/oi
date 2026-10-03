@@ -158,6 +158,7 @@ export interface Place {
   town: string;
   address: string;
   image: string;
+  images?: string[]; // 相簿(第一張為封面)
   description: string;
   website: string;
   lat?: number | null;

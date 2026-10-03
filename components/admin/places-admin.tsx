@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { revalidatePois } from "@/app/actions";
 import { KIND_TABLE, DETAILS, WEEKDAYS, type WeekHour } from "@/lib/places-config";
+import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import { type Place, type PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -13,7 +14,7 @@ const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "美�
 type Form = Omit<Place, "id"> & { id?: string };
 const empty = (): Form => ({
   name: "", region: REGIONS[0], town: "", address: "", description: "",
-  image: "", website: "", lat: null, lng: null, details: {}, published: true, featured: false,
+  image: "", images: [], website: "", lat: null, lng: null, details: {}, published: true, featured: false,
 });
 
 type ListItem = Record<string, string>;
@@ -25,7 +26,6 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const [q, setQ] = useState("");
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
   const label = KIND_LABEL[kind];
 
@@ -44,19 +44,6 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
     const { data } = await sb.from(table).select("*").order("created_at", { ascending: false });
     setList((data as Place[]) || []);
     revalidatePois().catch(() => {});
-  }
-
-  async function upload(file: File) {
-    if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
-    setUploading(true);
-    const sb = createClient();
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `place-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
-    setUploading(false);
-    if (error) { alert("上傳失敗:" + error.message); return; }
-    const url = sb.storage.from("site").getPublicUrl(path).data.publicUrl;
-    setForm((f) => (f ? { ...f, image: url } : f));
   }
 
   // details 操作
@@ -93,7 +80,10 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
     const sb = createClient();
     const payload = {
       name: form.name.trim(), region: form.region, town: form.town.trim(), address: form.address.trim(),
-      description: form.description.trim(), image: form.image.trim(), website: form.website.trim(),
+      description: form.description.trim(),
+      image: (form.images && form.images[0]) || form.image.trim(),
+      images: form.images || [],
+      website: form.website.trim(),
       lat: form.lat ?? null, lng: form.lng ?? null, details: form.details || {},
       published: form.published, featured: form.featured,
     };
@@ -170,15 +160,10 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
               <div className="wide"><label>地址</label><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="完整地址(地圖導航用)" /></div>
               <div><label>緯度 lat</label><input value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value === "" ? null : Number(e.target.value) })} /></div>
               <div><label>經度 lng</label><input value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value === "" ? null : Number(e.target.value) })} /></div>
-              <div className="wide"><label>圖片</label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  {form.image && <img src={form.image} alt="" style={{ height: 44, borderRadius: 8 }} />}
-                  <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
-                    {uploading ? "上傳中…" : form.image ? "更換" : "選檔上傳"}
-                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
-                  </label>
-                  <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="或貼圖片網址" style={{ flex: 1, minWidth: 160 }} />
-                </div>
+              <div className="wide"><label>相簿(可多張,第一張為封面,前台會輪播)</label>
+                <MultiImageUploader prefix="place"
+                  value={form.images && form.images.length ? form.images : (form.image ? [form.image] : [])}
+                  onChange={(imgs) => setForm((f) => (f ? { ...f, images: imgs, image: imgs[0] || "" } : f))} />
               </div>
               <div className="wide"><label>介紹</label><textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             </div>
@@ -229,9 +214,10 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
                         <label className="wh-closed"><input type="checkbox" checked={!!e.closed} onChange={(ev) => setWeek(f.key, e.day, { closed: ev.target.checked })} /> 休息</label>
                         {!e.closed && (
                           <span className="wh-times">
-                            <input type="time" value={e.open || ""} onChange={(ev) => setWeek(f.key, e.day, { open: ev.target.value })} />
+                            <input type="text" inputMode="numeric" pattern="[0-9]{1,2}:[0-9]{2}" placeholder="09:00" value={e.open || ""} onChange={(ev) => setWeek(f.key, e.day, { open: ev.target.value })} />
                             <span>–</span>
-                            <input type="time" value={e.close || ""} onChange={(ev) => setWeek(f.key, e.day, { close: ev.target.value })} />
+                            <input type="text" inputMode="numeric" pattern="[0-9]{1,2}:[0-9]{2}" placeholder="18:00" value={e.close || ""} onChange={(ev) => setWeek(f.key, e.day, { close: ev.target.value })} />
+                            <span className="wh-24">24小時制</span>
                           </span>
                         )}
                       </div>
@@ -261,7 +247,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
             </div>
             <div className="editor-actions">
               <button className="btn btn-ghost" onClick={() => setForm(null)}>取消</button>
-              <button className="btn btn-primary" onClick={save} disabled={busy || uploading}>{busy ? "儲存中…" : "儲存"}</button>
+              <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "儲存中…" : "儲存"}</button>
             </div>
           </div>
         </>

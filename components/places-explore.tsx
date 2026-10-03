@@ -8,11 +8,13 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { KIND_TABLE, DETAILS, safeKw, type WeekHour } from "@/lib/places-config";
 import ImageZoom from "@/components/image-zoom";
+import PhotoCarousel from "@/components/photo-carousel";
 import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 
 const PAGE = 24;
+const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -163,7 +165,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
             <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
               onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}>
               <div className="photo">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <div className="photo-ph">{I.map}</div>}
+                {toImgs(p.image, p.images).length ? <PhotoCarousel images={toImgs(p.image, p.images)} alt={p.name} /> : <div className="photo-ph">{I.map}</div>}
                 {p.featured && <span className="tag-feat">精選</span>}
                 <SaveBookmark type={kindState} id={p.id} floating nextPath={`/places/${kindState}`} />
               </div>
@@ -192,7 +194,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
           <div className="detail" role="dialog" aria-modal="true">
             <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
             <div className="detail-imgwrap">
-              {active.image ? <ImageZoom src={active.image} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
+              {toImgs(active.image, active.images).length ? <ImageZoom images={toImgs(active.image, active.images)} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
               <SaveBookmark type={kindState} id={active.id} floating nextPath={`/places/${kindState}`} />
             </div>
             <div className="detail-body">

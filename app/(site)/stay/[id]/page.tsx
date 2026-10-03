@@ -160,6 +160,17 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
+        {/* 充電 / 換電(導流外部地圖) */}
+        <div className="shop-block">
+          <h2 className="serif shop-h">附近充電 / 換電</h2>
+          <div className="detail-actions">
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.region + s.town + " 電動車充電站").trim())}`}>⚡ 找附近充電站</a>
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.region + s.town + " Gogoro 換電站").trim())}`}>🔋 找附近換電站(Gogoro)</a>
+          </div>
+        </div>
+
         <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>
       </div>
     </main>

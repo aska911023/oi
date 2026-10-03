@@ -23,7 +23,8 @@
   --shadow-lg: 0 30px 80px rgba(9, 36, 27, .22);
   --maxw: 1200px;
   --sans: var(--font-noto), "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --serif: var(--font-serif), "Noto Serif TC", Georgia, serif;
+  /* 全站統一字體:標題也用與內文相同的 Noto Sans TC(保留字級/字重差異) */
+  --serif: var(--sans);
 }
 
 * { box-sizing: border-box; }
@@ -259,6 +260,13 @@ img { display: block; max-width: 100%; }
 .imgzoom-zoombtns button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
 .imgzoom-zoombtns button:hover { background: rgba(255,255,255,.32); }
 .imgzoom-zoombtns span { color: #fff; font-size: 13px; min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; }
+.imgzoom:hover .hc-arrow { opacity: 1; }
+.imgzoom .hc-dots { right: auto; left: 50%; transform: translateX(-50%); }
+.imgzoom-nav { position: fixed; top: 50%; transform: translateY(-50%); z-index: 101; width: 46px; height: 46px; border-radius: 50%; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 26px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.imgzoom-nav:hover { background: rgba(255,255,255,.3); }
+.imgzoom-nav.prev { left: 18px; }
+.imgzoom-nav.next { right: 18px; }
+.wh-24 { font-size: 11.5px; color: var(--muted); }
 .imgzoom-close { position: fixed; top: 18px; right: 20px; z-index: 101; width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(255,255,255,.14); color: #fff; font-size: 20px; cursor: pointer; display: grid; place-items: center; }
 .imgzoom-close:hover { background: rgba(255,255,255,.26); }
 .detail-body { padding: 32px; }
