@@ -9,11 +9,12 @@ import { TRANSPORTS, TRIP_ITEM_LABEL, type Trip, type TripItem, type TripItemTyp
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const genId = () => "t" + Math.random().toString(36).slice(2, 9);
 
-interface PoolItem { id: string; name: string; region: string; town: string; }
-type Pools = { stays: PoolItem[]; attractions: PoolItem[]; foods: PoolItem[]; parkings: PoolItem[]; rentals: PoolItem[]; stations: PoolItem[] };
+interface PoolItem { id: string; name: string; region: string; town: string; stayId?: string; }
+type Pools = { stays: PoolItem[]; rooms: PoolItem[]; attractions: PoolItem[]; foods: PoolItem[]; parkings: PoolItem[]; rentals: PoolItem[]; stations: PoolItem[] };
 
+// 住宿改成用「房型」清單(key: rooms);其餘不變
 const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
-  { type: "stay", label: "住宿", key: "stays" },
+  { type: "stay", label: "住宿", key: "rooms" },
   { type: "attraction", label: "景點", key: "attractions" },
   { type: "food", label: "美食", key: "foods" },
   { type: "parking", label: "停車", key: "parkings" },
@@ -21,8 +22,8 @@ const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
   { type: "station", label: "車站", key: "stations" },
 ];
 
-export default function TripPlanner({ stays, attractions, foods, parkings, rentals, stations, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
-  const pools: Pools = useMemo(() => ({ stays, attractions, foods, parkings, rentals, stations }), [stays, attractions, foods, parkings, rentals, stations]);
+export default function TripPlanner({ stays, rooms, attractions, foods, parkings, rentals, stations, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
+  const pools: Pools = useMemo(() => ({ stays, rooms, attractions, foods, parkings, rentals, stations }), [stays, rooms, attractions, foods, parkings, rentals, stations]);
 
   const [tripId, setTripId] = useState<string | null>(initial && initialOwned ? initial.id : null);
   const [title, setTitle] = useState(initial ? (initialOwned ? initial.title : initial.title + "(複製)") : "我的行程");
@@ -137,17 +138,20 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
     if (!tab) return []; // 「自訂」沒有清單
     let pool = pools[tab.key];
     if (pickTab === "station") pool = pool.filter((x) => x.name.startsWith(stationSys === "hsr" ? "高鐵" : "台鐵"));
-    if (savedOnly) pool = pool.filter((x) => savedSet.has(`${pickTab}:${x.id}`));
+    if (savedOnly) { const kind = pickTab === "stay" ? "room" : pickTab; pool = pool.filter((x) => savedSet.has(`${kind}:${x.id}`)); }
     const q = pickQ.trim().toLowerCase();
     return pool.filter((x) => !q || (x.name + x.region + x.town).toLowerCase().includes(q)).slice(0, 60);
   }, [pickTab, pickQ, pools, stationSys, savedOnly, savedSet]);
 
-  const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId);
-  function togglePoolItem(day: number, type: TripItemType, name: string, refId: string, slot: "day" | "night") {
+  const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId && !it.roomId);
+  const isAddedRoom = (day: number, roomId: string) => items.some((it) => it.day === day && it.roomId === roomId);
+  function togglePoolItem(day: number, type: TripItemType, name: string, refId: string, slot: "day" | "night", roomId?: string) {
     setItems((p) => {
-      const found = p.find((it) => it.day === day && it.refId === refId);
+      const found = roomId
+        ? p.find((it) => it.day === day && it.roomId === roomId)
+        : p.find((it) => it.day === day && it.refId === refId && !it.roomId);
       if (found) return p.filter((it) => it.id !== found.id);
-      return [...p, { id: genId(), day, type, name, refId, time: "", note: "", slot }];
+      return [...p, { id: genId(), day, type, name, refId, roomId, time: "", note: "", slot }];
     });
   }
 
@@ -365,9 +369,12 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                 <div className="pick-list">
                   {pickResults.length === 0 && <div className="day-empty">{savedOnly ? "這個分類還沒有收藏。逛探索頁點圖片上的書籤收藏,再回來安排。" : "找不到,或這個分類還沒有資料。可切到「自訂」手動加。"}</div>}
                   {pickResults.map((x) => {
-                    const added = isAdded(pickDay, x.id);
+                    const isRoom = pickTab === "stay";
+                    const refId = isRoom ? (x.stayId || x.id) : x.id;
+                    const roomId = isRoom ? x.id : undefined;
+                    const added = isRoom ? isAddedRoom(pickDay, x.id) : isAdded(pickDay, x.id);
                     return (
-                      <button key={x.id} className={"pick-row" + (added ? " added" : "")} onClick={() => togglePoolItem(pickDay, pickTab, x.name, x.id, pickSlot)}>
+                      <button key={x.id} className={"pick-row" + (added ? " added" : "")} onClick={() => togglePoolItem(pickDay, pickTab, x.name, refId, pickSlot, roomId)}>
                         <span className="pick-check">{added ? "✓" : "＋"}</span>
                         <span className="pick-nm">{x.name}</span>
                         <small>{x.region}{x.town ? " · " + x.town : ""}</small>

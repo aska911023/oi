@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { priceLabel } from "@/lib/data";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
+import RoomList from "@/components/room-list";
 import BackLink from "@/components/back-link";
 import type { Stay, RoomType } from "@/lib/types";
 
@@ -88,41 +88,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
           {rooms.length === 0 ? (
             <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p>
           ) : (
-            <div className="room-list" style={{ borderTop: "none", paddingTop: 0 }}>
-              {rooms.map((r) => {
-                const whole = r.kind === "whole";
-                const pr = r.pricing || {};
-                const periods = ([["平日", pr.weekday], ["旺季平日", pr.peak_weekday], ["小假日", pr.minor_holiday], ["假日", pr.holiday], ["定價", pr.rack]] as [string, number | null | undefined][]).filter(([, v]) => v != null) as [string, number][];
-                return (
-                  <div className="room-row" key={r.id}>
-                    {toImgs(r.image, r.images).length > 0 && (
-                      <div className="room-thumb-c"><PhotoCarousel images={toImgs(r.image, r.images)} dots={false} arrows={false} /></div>
-
-                    )}
-                    <div className="room-main">
-                      <div className="room-name">{whole && <span className="room-kind">包棟</span>}{r.name}</div>
-                      {r.description && <div className="room-desc">{r.description}</div>}
-                      {whole && r.includes_note && <div className="room-desc">🛏 {r.includes_note}</div>}
-                      <div className="room-tags">
-                        <span>可住 {r.capacity} 人</span>
-                        {r.beds && <span>{r.beds}</span>}
-                        {(r.tags || []).map((t) => <span key={t}>{t}</span>)}
-                        {r.rooms_left != null && <span className={r.rooms_left <= 1 ? "room-left low" : "room-left"}>剩 {r.rooms_left} {whole ? "組" : "間"}</span>}
-                      </div>
-                      {whole && periods.length > 0 && (
-                        <div className="room-price-table">
-                          {periods.map(([lab, v]) => <div key={lab} className="rpt-cell"><span>{lab}</span><b>{priceLabel(v)}</b></div>)}
-                        </div>
-                      )}
-                      {(pr.extra_weekday != null || pr.extra_holiday != null) && (
-                        <div className="room-extra">加人{pr.extra_weekday != null ? ` 平日 ${priceLabel(pr.extra_weekday)}/人` : ""}{pr.extra_holiday != null ? `${pr.extra_weekday != null ? " ·" : ""} 假日 ${priceLabel(pr.extra_holiday)}/人` : ""}</div>
-                      )}
-                    </div>
-                    <div className="room-price">{priceLabel(r.price)}<small>/{whole ? "晚起" : "晚"}</small></div>
-                  </div>
-                );
-              })}
-            </div>
+            <RoomList rooms={rooms} />
           )}
         </div>
 
@@ -160,14 +126,16 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* 充電 / 換電(導流外部地圖) */}
+        {/* 充電 / 換電 / 加油(導流外部地圖) */}
         <div className="shop-block">
-          <h2 className="serif shop-h">附近充電 / 換電</h2>
+          <h2 className="serif shop-h">附近充電 / 換電 / 加油</h2>
           <div className="detail-actions">
             <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.region + s.town + " 電動車充電站").trim())}`}>⚡ 找附近充電站</a>
             <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.region + s.town + " Gogoro 換電站").trim())}`}>🔋 找附近換電站(Gogoro)</a>
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.region + s.town + " 加油站").trim())}`}>⛽ 找附近加油站</a>
           </div>
         </div>
 

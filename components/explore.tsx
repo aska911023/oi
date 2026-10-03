@@ -183,7 +183,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                   </div>
                 </div>
               </Link>
-              <SaveBookmark type="stay" id={r.stay_id} floating nextPath={`/stay/${r.stay_id}`} />
+              <SaveBookmark type="room" id={r.id} floating nextPath={`/stay/${r.stay_id}`} />
             </div>
           ))}
         </div>

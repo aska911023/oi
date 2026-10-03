@@ -21,6 +21,20 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
 
+  // 住宿改用「房型」清單(民宿名 · 房型名),規劃時可直接選房型
+  type RoomRow = { id: string; name: string; stays: { id: string; name: string; region: string; town: string } | { id: string; name: string; region: string; town: string }[] | null };
+  const { data: roomRows } = await sb.from("room_types")
+    .select("id, name, sort, stays!inner(id, name, region, town, published, visibility, approved)")
+    .eq("published", true)
+    .eq("stays.published", true)
+    .eq("stays.visibility", "published")
+    .eq("stays.approved", true)
+    .order("sort");
+  const rooms = ((roomRows || []) as RoomRow[]).map((r) => {
+    const s = Array.isArray(r.stays) ? r.stays[0] : r.stays;
+    return { id: r.id, stayId: s?.id || "", name: `${s?.name || "民宿"} · ${r.name}`, region: s?.region || "", town: s?.town || "" };
+  }).filter((x) => x.stayId);
+
   let initial = null;
   let initialOwned = false;
   if (load) {
@@ -39,6 +53,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       </div>
       <TripPlanner
         stays={stays.map((s) => ({ id: s.id, name: s.name, region: s.region, town: s.town }))}
+        rooms={rooms}
         attractions={attractions.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         foods={foods.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         parkings={parkings.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}

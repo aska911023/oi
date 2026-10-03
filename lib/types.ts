@@ -184,7 +184,8 @@ export interface TripItem {
   day: number; // 第幾天(1-based)
   time?: string; // "09:30"
   type: TripItemType;
-  refId?: string; // 對應 stays/pois id(自訂項為空)
+  refId?: string; // 對應 stays/pois id(住宿=民宿 id,連結用;自訂項為空)
+  roomId?: string; // 住宿選到的房型 id(收藏比對/去重用)
   name: string;
   note?: string;
   image?: string; // 自行放的照片

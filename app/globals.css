@@ -814,6 +814,14 @@ img { display: block; max-width: 100%; }
 .rpt-cell span { font-size: 11px; color: var(--muted); }
 .rpt-cell b { font-size: 13.5px; color: var(--ink); }
 .room-extra { font-size: 12.5px; color: var(--text-2); margin-top: 6px; }
+/* 房型列:可點看更多 + 剩N間放價格下方 */
+.room-row.clickable { cursor: pointer; padding: 11px 10px; margin: 0 -10px; border-radius: 12px; transition: background .12s; }
+.room-row.clickable:hover { background: var(--green-soft); }
+.room-more { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 8px; white-space: nowrap; }
+.room-row.clickable:hover .room-more { color: var(--green); }
+.room-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+.room-stock { font-size: 12px; font-weight: 700; color: var(--green); border: 1px solid var(--green); border-radius: 14px; padding: 2px 10px; white-space: nowrap; }
+.room-stock.low { background: var(--green); color: #fff; }
 
 /* 列印用行程表(螢幕隱藏,列印顯示) */
 .trip-print { display: none; }
