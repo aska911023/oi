@@ -61,8 +61,10 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
       if (!row.name?.trim()) continue;
       const kind: RoomKind = row.kind === "whole" ? "whole" : "single";
       const pricing = row.pricing || {};
-      // 包棟以「平日」為前台起價;單間用自己的價格
-      const price = kind === "whole" ? (Number(pricing.weekday) || Number(row.price) || 0) : (Number(row.price) || 0);
+      // 包棟起價 = 有填的各時期價格中最低者(沒填則沿用原價);單間用自己的價格
+      const periodVals = [pricing.weekday, pricing.peak_weekday, pricing.minor_holiday, pricing.holiday, pricing.rack]
+        .map((v) => Number(v)).filter((v) => Number.isFinite(v) && v > 0);
+      const price = kind === "whole" ? (periodVals.length ? Math.min(...periodVals) : (Number(row.price) || 0)) : (Number(row.price) || 0);
       const payload = {
         stay_id: stayId, kind, name: row.name.trim(), price, capacity: Number(row.capacity) || 1,
         rooms_total: row.rooms_total ?? null, rooms_left: row.rooms_left ?? null, beds: row.beds || null,
@@ -176,7 +178,6 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
               <span className="rt-photos-cap">包含哪些房間 / 說明(前台會顯示)</span>
               <textarea rows={2} value={r.includes_note || ""} placeholder="例:10人包棟提供三間雙人套房及一間四人套房" onChange={(e) => patch(i, { includes_note: e.target.value })} />
             </div>
-            {tagsRow(r, i)}
             {photosRow(r, i)}
           </div>
         ))}
