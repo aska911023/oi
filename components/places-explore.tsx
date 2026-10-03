@@ -7,6 +7,7 @@ import { POI_KINDS } from "@/lib/types";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { KIND_TABLE, DETAILS, safeKw } from "@/lib/places-config";
+import ImageZoom from "@/components/image-zoom";
 
 const PAGE = 24;
 
@@ -184,7 +185,7 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
           <div className="overlay" onClick={() => setActive(null)} />
           <div className="detail" role="dialog" aria-modal="true">
             <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
-            {active.image ? <img className="detail-img" src={active.image} alt={active.name} /> : <div className="detail-img photo-ph">{I.map}</div>}
+            {active.image ? <ImageZoom src={active.image} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
             <div className="detail-body">
               <div className="card-eyebrow">{active.region}{active.town ? " · " + active.town : ""}</div>
               <h2>{active.name}</h2>
