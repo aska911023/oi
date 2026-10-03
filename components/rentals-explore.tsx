@@ -6,6 +6,9 @@ import { GEOGRAPHIC_AREAS, RENTAL_TAGS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { priceLabel } from "@/lib/data";
 import { POI_KINDS, type RentalShop, type RentalPlan } from "@/lib/types";
+import SaveBookmark from "@/components/save-bookmark";
+import SharePlaceButton from "@/components/share-place-button";
+import PlaceComments from "@/components/place-comments";
 
 const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
 
@@ -113,10 +116,12 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
         <div className="cards">
           {rows.length === 0 && <div className="empty">這個地區還沒有收錄租車店,換個縣市看看。</div>}
           {rows.map((s) => (
-            <button key={s.id} className="card" onClick={() => setActive(s)}>
+            <div key={s.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
+              onClick={() => setActive(s)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(s); } }}>
               <div className="photo">
                 {s.image ? <img src={s.image} alt={s.name} loading="lazy" /> : <div className="photo-ph">{I.car}</div>}
                 {s.featured && <span className="tag-feat">精選</span>}
+                <SaveBookmark type="rental" id={s.id} floating nextPath="/rentals" />
               </div>
               <div className="card-body">
                 <div className="card-eyebrow">{s.region}{s.town ? " · " + s.town : ""}</div>
@@ -127,7 +132,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
                   {s.units_left != null && s.units_left > 0 && <span className="capacity">{I.car} {s.units_left} 台可租</span>}
                 </div>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
@@ -146,7 +151,10 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
           <div className="overlay" onClick={() => setActive(null)} />
           <div className="detail" role="dialog" aria-modal="true">
             <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
-            {active.image ? <img className="detail-img" src={active.image} alt={active.name} /> : <div className="detail-img photo-ph">{I.car}</div>}
+            <div className="detail-imgwrap">
+              {active.image ? <img className="detail-img" src={active.image} alt={active.name} /> : <div className="detail-img photo-ph">{I.car}</div>}
+              <SaveBookmark type="rental" id={active.id} floating nextPath="/rentals" />
+            </div>
             <div className="detail-body">
               <div className="card-eyebrow">{active.region}{active.town ? " · " + active.town : ""}</div>
               <h2>{active.name}</h2>
@@ -176,6 +184,11 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
                 <a className="btn btn-primary" href={mapHref(active)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 150 }}>{I.map} 取車地點</a>
                 {active.website && <a className="btn btn-ghost" href={active.website} target="_blank" rel="noopener noreferrer">官網 {I.out}</a>}
                 {active.line_url && <a className="btn btn-ghost" href={active.line_url} target="_blank" rel="noopener noreferrer">LINE 預約</a>}
+                <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
+              </div>
+
+              <div className="shop-block" style={{ marginTop: 22 }}>
+                <PlaceComments kind="rental" placeId={active.id} />
               </div>
             </div>
           </div>
