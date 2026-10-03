@@ -3,13 +3,24 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ROOM_TAGS } from "@/lib/data";
-import type { RoomType } from "@/lib/types";
+import MultiImageUploader from "@/components/admin/multi-image-uploader";
+import type { RoomType, RoomKind, RoomPricing } from "@/lib/types";
 
 type Row = Partial<RoomType> & { _new?: boolean; _dirty?: boolean };
 
-const blank = (stayId: string): Row => ({
-  stay_id: stayId, name: "", price: 2000, capacity: 2, rooms_total: null, rooms_left: null,
-  beds: "", amenities: "", image: "", description: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
+// 包棟分時期價格欄位
+const PERIODS: { key: keyof RoomPricing; label: string }[] = [
+  { key: "weekday", label: "平日" },
+  { key: "peak_weekday", label: "旺季平日" },
+  { key: "minor_holiday", label: "小假日" },
+  { key: "holiday", label: "假日" },
+  { key: "rack", label: "定價" },
+];
+
+const blank = (stayId: string, kind: RoomKind): Row => ({
+  stay_id: stayId, kind, name: "", price: kind === "whole" ? 8000 : 2000, capacity: kind === "whole" ? 6 : 2,
+  rooms_total: null, rooms_left: null, beds: "", amenities: "", image: "", images: [], description: "",
+  pricing: {}, includes_note: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
 });
 
 export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false }: { stayId: string; onChange?: () => void; allowFeatured?: boolean }) {
@@ -28,7 +39,9 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
   }, [stayId]);
 
   const patch = (i: number, p: Partial<Row>) => setRows((r) => r.map((x, k) => (k === i ? { ...x, ...p, _dirty: true } : x)));
-  const add = () => setRows((r) => [...r, blank(stayId)]);
+  const patchPrice = (i: number, key: keyof RoomPricing, val: string) =>
+    setRows((r) => r.map((x, k) => (k === i ? { ...x, pricing: { ...(x.pricing || {}), [key]: val === "" ? null : Number(val) }, _dirty: true } : x)));
+  const add = (kind: RoomKind) => setRows((r) => [...r, blank(stayId, kind)]);
 
   async function removeRow(i: number) {
     const row = rows[i];
@@ -46,10 +59,18 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
     const sb = createClient();
     for (const row of rows.filter((r) => r._dirty)) {
       if (!row.name?.trim()) continue;
+      const kind: RoomKind = row.kind === "whole" ? "whole" : "single";
+      const pricing = row.pricing || {};
+      // 包棟以「平日」為前台起價;單間用自己的價格
+      const price = kind === "whole" ? (Number(pricing.weekday) || Number(row.price) || 0) : (Number(row.price) || 0);
       const payload = {
-        stay_id: stayId, name: row.name.trim(), price: Number(row.price) || 0, capacity: Number(row.capacity) || 1,
+        stay_id: stayId, kind, name: row.name.trim(), price, capacity: Number(row.capacity) || 1,
         rooms_total: row.rooms_total ?? null, rooms_left: row.rooms_left ?? null, beds: row.beds || null,
-        amenities: row.amenities || "", image: row.image || "", description: row.description || "",
+        amenities: row.amenities || "",
+        image: (row.images && row.images[0]) || row.image || "",
+        images: row.images || [],
+        description: row.description || "",
+        pricing, includes_note: kind === "whole" ? (row.includes_note || "") : null,
         sort: Number(row.sort) || 0, published: row.published ?? true, featured: row.featured ?? false, tags: row.tags || [],
       };
       if (row.id) await sb.from("room_types").update(payload).eq("id", row.id);
@@ -63,40 +84,106 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
 
   if (loading) return <p style={{ color: "var(--muted)", fontSize: 13 }}>載入房型…</p>;
 
+  const indexed = rows.map((r, i) => ({ r, i }));
+  const singles = indexed.filter((x) => x.r.kind !== "whole");
+  const wholes = indexed.filter((x) => x.r.kind === "whole");
+
+  const extraRow = (r: Row, i: number) => (
+    <div className="rt-extra">
+      <span className="rt-num">加人 平日 NT$<input type="number" min={0} value={r.pricing?.extra_weekday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_weekday", e.target.value)} />/人</span>
+      <span className="rt-num">加人 假日 NT$<input type="number" min={0} value={r.pricing?.extra_holiday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_holiday", e.target.value)} />/人</span>
+    </div>
+  );
+
+  const tagsRow = (r: Row, i: number) => (
+    <div className="rt-tags fac-grid">
+      {ROOM_TAGS.map((t) => {
+        const set = new Set(r.tags || []);
+        const on = set.has(t);
+        return <button type="button" key={t} className={"chip" + (on ? " on" : "")} onClick={() => { on ? set.delete(t) : set.add(t); patch(i, { tags: [...set] }); }}>{t}</button>;
+      })}
+    </div>
+  );
+
+  const photosRow = (r: Row, i: number) => (
+    <div className="rt-photos">
+      <span className="rt-photos-cap">房型照片(可多張,第一張為封面)</span>
+      <MultiImageUploader prefix="room" compact
+        value={r.images && r.images.length ? r.images : (r.image ? [r.image] : [])}
+        onChange={(imgs) => patch(i, { images: imgs, image: imgs[0] || "" })} />
+    </div>
+  );
+
+  const toggles = (r: Row, i: number) => (
+    <>
+      <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
+      {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => patch(i, { featured: !r.featured })}>{r.featured ? "★置頂" : "置頂"}</button>}
+      <button type="button" className="rt-kind-btn" onClick={() => patch(i, { kind: r.kind === "whole" ? "single" : "whole" })}>轉為{r.kind === "whole" ? "單間" : "包棟"}</button>
+      <button className="lnk danger" onClick={() => removeRow(i)}>刪</button>
+    </>
+  );
+
   return (
     <div className="rt-editor">
       <div className="rt-head">
         <b>房型管理</b>
-        <span className="sub">前台「起價 / 剩餘 / 人數」會自動用房型彙整</span>
+        <span className="sub">前台「起價 / 剩餘 / 人數」會自動用房型彙整;包棟以「平日」為起價</span>
       </div>
 
-      {rows.length === 0 && <div className="day-empty">還沒有房型,點下方「＋ 新增房型」。至少要有一個房型。</div>}
+      {rows.length === 0 && <div className="day-empty">還沒有房型,下方可新增「獨立單間」或「包棟方案」。</div>}
 
+      {/* 獨立單間 */}
+      <div className="rt-group-head">獨立單間 <span>{singles.length}</span></div>
       <div className="rt-list">
-        {rows.map((r, i) => (
+        {singles.map(({ r, i }) => (
           <div className="rt-item" key={r.id || "new" + i}>
             <div className="rt-row">
               <input className="rt-name" value={r.name || ""} placeholder="房型名稱(雙人房)" onChange={(e) => patch(i, { name: e.target.value })} />
               <span className="rt-num">NT$<input type="number" min={0} value={r.price ?? 0} onChange={(e) => patch(i, { price: Number(e.target.value) })} />/晚</span>
               <span className="rt-num">可住<input type="number" min={1} value={r.capacity ?? 2} onChange={(e) => patch(i, { capacity: Number(e.target.value) })} />人</span>
               <span className="rt-num">剩<input type="number" min={0} value={r.rooms_left ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_left: e.target.value === "" ? null : Number(e.target.value) })} />間</span>
-              <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
-              {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => patch(i, { featured: !r.featured })}>{r.featured ? "★置頂" : "置頂"}</button>}
-              <button className="lnk danger" onClick={() => removeRow(i)}>刪</button>
+              {toggles(r, i)}
             </div>
-            <div className="rt-tags fac-grid">
-              {ROOM_TAGS.map((t) => {
-                const set = new Set(r.tags || []);
-                const on = set.has(t);
-                return <button type="button" key={t} className={"chip" + (on ? " on" : "")} onClick={() => { on ? set.delete(t) : set.add(t); patch(i, { tags: [...set] }); }}>{t}</button>;
-              })}
-            </div>
+            {extraRow(r, i)}
+            {tagsRow(r, i)}
+            {photosRow(r, i)}
           </div>
         ))}
       </div>
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => add("single")}>＋ 新增單間房型</button>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-        <button className="btn btn-ghost btn-sm" onClick={add}>＋ 新增房型</button>
+      {/* 包棟 */}
+      <div className="rt-group-head" style={{ marginTop: 22 }}>包棟方案 <span>{wholes.length}</span></div>
+      <div className="rt-list">
+        {wholes.map(({ r, i }) => (
+          <div className="rt-item whole" key={r.id || "new" + i}>
+            <div className="rt-row">
+              <input className="rt-name" value={r.name || ""} placeholder="包棟方案(4~6人包棟 兩房)" onChange={(e) => patch(i, { name: e.target.value })} />
+              <span className="rt-num">可住<input type="number" min={1} value={r.capacity ?? 6} onChange={(e) => patch(i, { capacity: Number(e.target.value) })} />人</span>
+              <span className="rt-num">剩<input type="number" min={0} value={r.rooms_left ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_left: e.target.value === "" ? null : Number(e.target.value) })} />組</span>
+              {toggles(r, i)}
+            </div>
+            <div className="rt-prices">
+              {PERIODS.map((p) => (
+                <label key={p.key} className="rt-price-cell">
+                  <span>{p.label}</span>
+                  <span className="rt-price-in">NT$<input type="number" min={0} value={(r.pricing?.[p.key] as number | null | undefined) ?? ""} placeholder="—" onChange={(e) => patchPrice(i, p.key, e.target.value)} /></span>
+                </label>
+              ))}
+            </div>
+            {extraRow(r, i)}
+            <div className="rt-includes">
+              <span className="rt-photos-cap">包含哪些房間 / 說明(前台會顯示)</span>
+              <textarea rows={2} value={r.includes_note || ""} placeholder="例:10人包棟提供三間雙人套房及一間四人套房" onChange={(e) => patch(i, { includes_note: e.target.value })} />
+            </div>
+            {tagsRow(r, i)}
+            {photosRow(r, i)}
+          </div>
+        ))}
+      </div>
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => add("whole")}>＋ 新增包棟方案</button>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
         <button className="btn btn-primary btn-sm" onClick={saveAll} disabled={busy}>{busy ? "儲存中…" : "儲存房型"}</button>
       </div>
     </div>

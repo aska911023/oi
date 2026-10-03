@@ -967,6 +967,94 @@ create or replace function public.search_trips(
 $$;
 grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
 
+-- ================= 多張圖片:stays + room_types 相簿(封面/房型可上傳多張,前台輪播) =================
+alter table public.stays add column if not exists images text[] not null default '{}';
+alter table public.room_types add column if not exists images text[] not null default '{}';
+
+-- search_stays:回傳 images(封面相簿;空則退回單張 image)
+drop function if exists public.search_stays(text,text,int,int,int,text,text,int,int);
+create or replace function public.search_stays(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_sort text default 'default',
+  lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with agg as (
+    select rt.stay_id,
+           min(rt.price) filter (where rt.published) as mn,
+           sum(rt.rooms_left) filter (where rt.published) as sm,
+           max(rt.capacity) filter (where rt.published) as mx
+    from public.room_types rt group by rt.stay_id
+  ),
+  base as (
+    select s.id, s.name, s.region, s.town, s.category,
+           coalesce(a.mn, s.price) as price,
+           coalesce(a.mx, s.guests) as guests,
+           s.image,
+           coalesce(nullif(s.images,'{}'), array_remove(array[nullif(s.image,'')], null)) as images,
+           s.description, s.amenities, s.website,
+           coalesce(a.sm, s.rooms_left) as rooms_left,
+           s.published, s.sample, s.featured, s.created_at
+    from public.stays s left join agg a on a.stay_id = s.id
+    where s.published and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or coalesce(a.mn, s.price) >= p_price_min)
+      and (p_price_max is null or coalesce(a.mn, s.price) <= p_price_max)
+      and (p_guests is null or coalesce(a.mx, s.guests) >= p_guests)
+      and (coalesce(kw,'') = '' or
+           (coalesce(s.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (
+    select * from base order by featured desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      created_at desc
+    limit greatest(lim,0) offset greatest(off,0)
+  )
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_stays(text,text,int,int,int,text,text,int,int) to anon, authenticated;
+
+-- search_rooms:回傳 images(房型相簿;空則退回民宿相簿/單張封面)
+drop function if exists public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int);
+create or replace function public.search_rooms(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_amenities text[] default null, p_room_tags text[] default null,
+  p_sort text default 'default', lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select rt.id, rt.name as room_name, rt.price, rt.capacity, rt.rooms_left, rt.beds, rt.description as room_desc, rt.tags,
+           coalesce(nullif(rt.image, ''), s.image) as image,
+           coalesce(nullif(rt.images,'{}'), nullif(s.images,'{}'),
+                    array_remove(array[nullif(rt.image,''), nullif(s.image,'')], null)) as images,
+           rt.featured,
+           s.id as stay_id, s.name as stay_name, s.region, s.town, s.category, s.amenities, s.website, s.description as stay_desc, rt.created_at
+    from public.room_types rt join public.stays s on s.id = rt.stay_id
+    where rt.published and s.published and s.approved and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or rt.price >= p_price_min)
+      and (p_price_max is null or rt.price <= p_price_max)
+      and (p_guests is null or rt.capacity >= p_guests)
+      and (p_amenities is null or (select bool_and(s.amenities ilike '%'||a||'%') from unnest(p_amenities) a))
+      and (p_room_tags is null or rt.tags @> p_room_tags)
+      and (coalesce(kw,'') = '' or (coalesce(s.name,'')||' '||coalesce(rt.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by featured desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last, created_at desc
+    limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
+
+-- ================= 房型 包棟/單間 + 分時期價格 + 包含房間;住宿入住/退房時間 =================
+alter table public.room_types add column if not exists kind text not null default 'single';   -- 'single'(獨立單間) | 'whole'(包棟)
+alter table public.room_types add column if not exists pricing jsonb not null default '{}';    -- {weekday,peak_weekday,minor_holiday,holiday,rack,extra_weekday,extra_holiday}
+alter table public.room_types add column if not exists includes_note text;                     -- 包棟包含哪些房間(自由文字)
+alter table public.stays add column if not exists check_in text;    -- 最早入住(例 15:00)
+alter table public.stays add column if not exists check_out text;   -- 最晚退房(例 11:00)
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

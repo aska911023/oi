@@ -6,6 +6,7 @@ import type { RoomCard, SortMode } from "@/lib/types";
 import { CATEGORIES, ALL_CATEGORY_LABEL, GEOGRAPHIC_AREAS, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
+import PhotoCarousel from "@/components/photo-carousel";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
 
 const PAGE = 24;
@@ -160,7 +161,7 @@ export default function Explore({ rooms, total = 0, blocks, searchHint, heroLayo
           {rows.map((r) => (
             <Link key={r.id} href={`/stay/${r.stay_id}`} className="card">
               <div className="photo">
-                <img src={r.image} alt={r.stay_name} loading="lazy" />
+                <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
                 {r.featured && <span className="tag-feat">精選置頂</span>}
                 {r.rooms_left != null && <span className={"tag-rooms" + (r.rooms_left <= 2 ? " low" : "")}>剩 {r.rooms_left} 間</span>}
               </div>

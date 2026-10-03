@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
+import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { Stay } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -12,8 +13,9 @@ const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 type Form = Omit<Stay, "id"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
-  price: 0, guests: 1, image: "", description: "", amenities: "",
+  price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", rooms_left: null, address: "", lat: null, lng: null,
+  check_in: "", check_out: "",
   published: false, featured: false, sample: false,
 };
 
@@ -23,19 +25,6 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  async function upload(file: File) {
-    if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
-    setUploading(true);
-    const sb = createClient();
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `stay-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
-    setUploading(false);
-    if (error) { alert("上傳失敗:" + error.message); return; }
-    setForm((f) => (f ? { ...f, image: sb.storage.from("site").getPublicUrl(path).data.publicUrl } : f));
-  }
 
   const stats = useMemo(() => ({
     total: list.length,
@@ -71,12 +60,16 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
     const payload = {
       name: form.name.trim(), region: form.region, town: form.town.trim(),
       category: form.category, price: Number(form.price) || 0, guests: Number(form.guests) || 1,
-      image: form.image.trim(), description: form.description.trim(), amenities: form.amenities.trim(),
+      image: (form.images && form.images[0]) || form.image.trim(),
+      images: form.images || [],
+      description: form.description.trim(), amenities: form.amenities.trim(),
       website: form.website.trim(),
       rooms_left: form.rooms_left === null || form.rooms_left === undefined || (form.rooms_left as unknown as string) === "" ? null : Number(form.rooms_left),
       address: (form.address || "").trim(),
       lat: form.lat === null || form.lat === undefined || (form.lat as unknown as string) === "" ? null : Number(form.lat),
       lng: form.lng === null || form.lng === undefined || (form.lng as unknown as string) === "" ? null : Number(form.lng),
+      check_in: (form.check_in || "").trim() || null,
+      check_out: (form.check_out || "").trim() || null,
       published: form.published, featured: form.featured, sample: form.sample,
       owner_id: ownerId ?? undefined,
       approved: ownerId ? undefined : true, // admin 建立自動核准;業者建立維持待審
@@ -178,6 +171,8 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
               <div className="wide"><label>地址(Google 地圖 / 導航用)</label><input value={form.address || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="例:屏東縣恆春鎮…" /></div>
               <div><label>緯度 lat(選填)</label><input value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value === "" ? null : Number(e.target.value) })} placeholder="22.00" /></div>
               <div><label>經度 lng(選填)</label><input value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value === "" ? null : Number(e.target.value) })} placeholder="120.74" /></div>
+              <div><label>最早入住時間</label><input value={form.check_in || ""} onChange={(e) => setForm({ ...form, check_in: e.target.value })} placeholder="例:15:00" /></div>
+              <div><label>最晚退房時間</label><input value={form.check_out || ""} onChange={(e) => setForm({ ...form, check_out: e.target.value })} placeholder="例:11:00" /></div>
               <div className="wide"><label>設施 / 服務(可複選)</label>
                 <div className="fac-grid">
                   {AMENITY_OPTIONS.map((a) => {
@@ -188,15 +183,10 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                   })}
                 </div>
               </div>
-              <div className="wide"><label>封面圖片</label>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  {form.image && <img src={form.image} alt="" style={{ height: 44, borderRadius: 8 }} />}
-                  <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
-                    {uploading ? "上傳中…" : form.image ? "更換" : "選檔上傳"}
-                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
-                  </label>
-                  <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="或貼圖片網址 https://…" style={{ flex: 1, minWidth: 160 }} />
-                </div>
+              <div className="wide"><label>封面相簿(可多張,第一張為封面,前台會輪播)</label>
+                <MultiImageUploader prefix="stay"
+                  value={form.images && form.images.length ? form.images : (form.image ? [form.image] : [])}
+                  onChange={(imgs) => setForm({ ...form, images: imgs, image: imgs[0] || "" })} />
               </div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>

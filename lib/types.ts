@@ -17,10 +17,13 @@ export interface Stay {
   price: number; // 每晚起價 TWD
   guests: number; // 最多入住人數
   image: string;
+  images?: string[]; // 封面相簿(第一張為封面);空則沿用 image
   description: string;
   amenities: string; // 「、」分隔
   website: string; // 導流連結,空字串代表無
   rooms_left?: number | null; // 剩餘房數(null = 未設定,不顯示)
+  check_in?: string | null; // 最早入住(例 15:00)
+  check_out?: string | null; // 最晚退房(例 11:00)
   address?: string; // 地址(Google Map / 導航用)
   lat?: number | null;
   lng?: number | null;
@@ -79,6 +82,7 @@ export interface RoomCard {
   beds?: string | null;
   room_desc?: string | null;
   image: string;
+  images?: string[]; // 房型相簿;空則退回民宿相簿/封面
   featured?: boolean;
   tags?: string[];
   stay_id: string;
@@ -91,10 +95,24 @@ export interface RoomCard {
   stay_desc?: string | null;
 }
 
+// 房型分時期價格 + 加人費(包棟用;單間可只填平日=price)
+export interface RoomPricing {
+  weekday?: number | null;       // 平日
+  peak_weekday?: number | null;  // 旺季平日
+  minor_holiday?: number | null; // 小假日
+  holiday?: number | null;       // 假日
+  rack?: number | null;          // 定價
+  extra_weekday?: number | null; // 加人(平日)/人
+  extra_holiday?: number | null; // 加人(假日)/人
+}
+
+export type RoomKind = "single" | "whole"; // 獨立單間 / 包棟
+
 // 民宿房型(掛在 stays 下)
 export interface RoomType {
   id: string;
   stay_id: string;
+  kind?: RoomKind;
   name: string;
   price: number;
   capacity: number;
@@ -103,7 +121,10 @@ export interface RoomType {
   beds?: string | null;
   amenities: string;
   image: string;
+  images?: string[]; // 房型相簿(第一張為封面)
   description: string;
+  pricing?: RoomPricing;      // 分時期價格 + 加人費
+  includes_note?: string | null; // 包棟包含哪些房間
   sort: number;
   published: boolean;
   featured?: boolean;
