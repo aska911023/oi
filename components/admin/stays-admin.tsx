@@ -23,6 +23,19 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function upload(file: File) {
+    if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
+    setUploading(true);
+    const sb = createClient();
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `stay-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
+    setUploading(false);
+    if (error) { alert("上傳失敗:" + error.message); return; }
+    setForm((f) => (f ? { ...f, image: sb.storage.from("site").getPublicUrl(path).data.publicUrl } : f));
+  }
 
   const stats = useMemo(() => ({
     total: list.length,
@@ -175,7 +188,16 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                   })}
                 </div>
               </div>
-              <div className="wide"><label>圖片網址(https)</label><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://…" /></div>
+              <div className="wide"><label>封面圖片</label>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  {form.image && <img src={form.image} alt="" style={{ height: 44, borderRadius: 8 }} />}
+                  <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+                    {uploading ? "上傳中…" : form.image ? "更換" : "選檔上傳"}
+                    <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); }} />
+                  </label>
+                  <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="或貼圖片網址 https://…" style={{ flex: 1, minWidth: 160 }} />
+                </div>
+              </div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
             </div>

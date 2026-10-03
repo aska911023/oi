@@ -8,6 +8,7 @@ import HeroCarousel from "@/components/hero-carousel";
 import SaveTripButton from "@/components/save-trip-button";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
+import TripComments from "@/components/trip-comments";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -44,6 +45,7 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
   const [rows, setRows] = useState<Trip[]>(initialTrips);
   const [rpcTotal, setRpcTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
+  const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const firstRun = useRef(true);
 
   function args(off: number) {
@@ -95,32 +97,36 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
         {results.map((t) => {
           const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
+          const open = !!openComments[t.id];
           return (
-            <Link key={t.id} href={`/trips/${t.id}`} className="trip-card">
-              {photos.length > 0 && <div className="trip-photos"><HeroCarousel images={photos} height={160} /></div>}
-              <div className="trip-card-top">
-                <h3>{t.title}</h3>
-                <span className="trip-days">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}</span>
-              </div>
-              <div className="trip-by">by {t.owner_name || "旅人"}</div>
-              {t.summary && <p className="trip-sum">{t.summary}</p>}
-              <div className="trip-tags">
-                <span>{t.headcount} 人</span>
-                {t.transport && <span>{t.transport}</span>}
-                {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
-                {t.region && <span>{t.region}</span>}
-                <span>{t.items?.length || 0} 個停靠點</span>
-              </div>
+            <div className="trip-card" key={t.id}>
+              <Link href={`/trips/${t.id}`} className="trip-card-link">
+                {photos.length > 0 && <div className="trip-photos"><HeroCarousel images={photos} height={160} /></div>}
+                <div className="trip-card-top">
+                  <h3>{t.title}</h3>
+                  <span className="trip-days">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}</span>
+                </div>
+                <div className="trip-by">by {t.owner_name || "旅人"}</div>
+                {t.summary && <p className="trip-sum">{t.summary}</p>}
+                <div className="trip-tags">
+                  <span>{t.headcount} 人</span>
+                  {t.transport && <span>{t.transport}</span>}
+                  {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
+                  {t.region && <span>{t.region}</span>}
+                  <span>{t.items?.length || 0} 個停靠點</span>
+                </div>
+              </Link>
               <div className="trip-actions">
                 <TripLikeButton tripId={t.id} count={t.like_count || 0} />
-                <span className="trip-act" title="留言">
+                <button className={"trip-act" + (open ? " on" : "")} title="留言" onClick={() => setOpenComments((p) => ({ ...p, [t.id]: !p[t.id] }))}>
                   <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z" /></svg>
                   {(t.comment_count || 0) > 0 && <span className="trip-act-n">{t.comment_count}</span>}
-                </span>
+                </button>
                 <ShareLinkButton path={`/trips/${t.id}`} />
                 <span style={{ marginLeft: "auto" }}><SaveTripButton tripId={t.id} /></span>
               </div>
-            </Link>
+              {open && <div className="trip-card-comments"><TripComments tripId={t.id} compact /></div>}
+            </div>
           );
         })}
       </div>

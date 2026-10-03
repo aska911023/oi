@@ -1,8 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Logo({ href = "/", src, size }: { href?: string; src?: string; size?: number }) {
+  const pathname = usePathname();
+
+  function onClick(e: React.MouseEvent) {
+    // 已經在同一頁時,點 LOGO 平滑捲回最頂(不重新導航)
+    if (pathname === href) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   return (
-    <Link href={href} className="brand" aria-label="偶宿 O!">
+    <Link href={href} className="brand" aria-label="偶宿 O!" onClick={onClick}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="brand-logo" src={src} alt="偶宿 O!" style={size ? { height: size, maxHeight: size } : undefined} />
