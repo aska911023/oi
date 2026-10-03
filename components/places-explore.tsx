@@ -8,6 +8,9 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { KIND_TABLE, DETAILS, safeKw, type WeekHour } from "@/lib/places-config";
 import ImageZoom from "@/components/image-zoom";
+import SaveBookmark from "@/components/save-bookmark";
+import SharePlaceButton from "@/components/share-place-button";
+import PlaceComments from "@/components/place-comments";
 
 const PAGE = 24;
 
@@ -157,17 +160,19 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
         <div className="cards">
           {results.length === 0 && <div className="empty">{copy.empty}</div>}
           {results.map((p) => (
-            <button key={p.id} className="card" onClick={() => setActive(p)}>
+            <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
+              onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}>
               <div className="photo">
                 {p.image ? <img src={p.image} alt={p.name} loading="lazy" /> : <div className="photo-ph">{I.map}</div>}
                 {p.featured && <span className="tag-feat">精選</span>}
+                <SaveBookmark type={kindState} id={p.id} floating nextPath={`/places/${kindState}`} />
               </div>
               <div className="card-body">
                 <div className="card-eyebrow">{p.region}{p.town ? " · " + p.town : ""}</div>
                 <h3>{p.name}</h3>
                 <div className="card-desc">{p.description || p.address}</div>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
@@ -186,7 +191,10 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
           <div className="overlay" onClick={() => setActive(null)} />
           <div className="detail" role="dialog" aria-modal="true">
             <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
-            {active.image ? <ImageZoom src={active.image} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
+            <div className="detail-imgwrap">
+              {active.image ? <ImageZoom src={active.image} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
+              <SaveBookmark type={kindState} id={active.id} floating nextPath={`/places/${kindState}`} />
+            </div>
             <div className="detail-body">
               <div className="card-eyebrow">{active.region}{active.town ? " · " + active.town : ""}</div>
               <h2>{active.name}</h2>
@@ -252,6 +260,11 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
                     {copy.cta} {I.out}
                   </a>
                 )}
+                <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
+              </div>
+
+              <div className="shop-block" style={{ marginTop: 22 }}>
+                <PlaceComments kind={kindState} placeId={active.id} />
               </div>
             </div>
           </div>

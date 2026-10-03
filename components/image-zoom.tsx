@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// 圖片右下角放大鏡 → 全螢幕 lightbox:滾輪縮放、滑鼠拖曳移動、雙擊還原。
+const clamp = (v: number) => Math.min(6, Math.max(1, v));
+
+// 圖片右下角放大鏡 → 全螢幕檢視:+/− 或滾輪縮放、放大後可用滑鼠拖曳移動、雙擊切換。
 export default function ImageZoom({ src, alt, imgClassName }: { src: string; alt?: string; imgClassName?: string }) {
   const [open, setOpen] = useState(false);
   const [scale, setScale] = useState(1);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
   const [dragging, setDragging] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   const reset = () => { setScale(1); setPos({ x: 0, y: 0 }); };
 
@@ -23,19 +25,16 @@ export default function ImageZoom({ src, alt, imgClassName }: { src: string; alt
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [open]);
 
-  // 滾輪縮放(非 passive 才能 preventDefault)
+  // 滾輪縮放(掛在整個 overlay;非 passive 才能 preventDefault)
   useEffect(() => {
-    const el = imgRef.current;
+    const el = overlayRef.current;
     if (!open || !el) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      setScale((s) => Math.min(6, Math.max(1, s - e.deltaY * 0.0016 * s)));
-    };
+    const onWheel = (e: WheelEvent) => { e.preventDefault(); setScale((s) => clamp(s - e.deltaY * 0.0018 * s)); };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, [open]);
 
-  // 縮回 1 倍時自動置中
+  // 縮回 1 倍自動置中
   useEffect(() => { if (scale <= 1) setPos({ x: 0, y: 0 }); }, [scale]);
 
   const pt = (e: React.MouseEvent | React.TouchEvent) => ("touches" in e ? e.touches[0] : e);
@@ -51,6 +50,7 @@ export default function ImageZoom({ src, alt, imgClassName }: { src: string; alt
     setPos({ x: drag.current.px + (p.clientX - drag.current.x), y: drag.current.py + (p.clientY - drag.current.y) });
   };
   const onUp = () => { drag.current = null; setDragging(false); };
+  const zoom = (f: number) => (e: React.MouseEvent) => { e.stopPropagation(); setScale((s) => clamp(s * f)); };
 
   return (
     <div className="imgzoom">
@@ -62,13 +62,18 @@ export default function ImageZoom({ src, alt, imgClassName }: { src: string; alt
         </svg>
       </button>
       {open && (
-        <div className="imgzoom-overlay" onClick={() => setOpen(false)} role="dialog" aria-modal="true"
+        <div ref={overlayRef} className="imgzoom-overlay" onClick={() => setOpen(false)} role="dialog" aria-modal="true"
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchMove={onMove} onTouchEnd={onUp}>
           <button type="button" className="imgzoom-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }} aria-label="關閉">✕</button>
-          <div className="imgzoom-hint">滾輪縮放 · 拖曳移動 · 雙擊還原</div>
+          <div className="imgzoom-zoombtns" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={zoom(1 / 1.4)} aria-label="縮小">−</button>
+            <span>{Math.round(scale * 100)}%</span>
+            <button type="button" onClick={zoom(1.4)} aria-label="放大">＋</button>
+          </div>
+          <div className="imgzoom-hint">滾輪或 ＋ − 縮放 · 放大後可拖曳 · 雙擊切換</div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={imgRef} className="imgzoom-full" src={src} alt={alt || ""} draggable={false}
-            style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, cursor: scale > 1 ? (dragging ? "grabbing" : "grab") : "default", transition: dragging ? "none" : "transform .12s" }}
+          <img className="imgzoom-full" src={src} alt={alt || ""} draggable={false}
+            style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, cursor: scale > 1 ? (dragging ? "grabbing" : "grab") : "zoom-in", transition: dragging ? "none" : "transform .12s" }}
             onClick={(e) => e.stopPropagation()}
             onDoubleClick={(e) => { e.stopPropagation(); scale > 1 ? reset() : setScale(2.5); }}
             onMouseDown={onDown} onTouchStart={onDown} />

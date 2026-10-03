@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateTrips } from "@/app/actions";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
@@ -50,7 +50,30 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
   const [pickTab, setPickTab] = useState<TripItemType>("attraction");
   const [pickQ, setPickQ] = useState("");
   const [customName, setCustomName] = useState("");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // 載入「我的收藏」(民宿 saved + 景點/美食/停車/租車 saved_places),planner 可只看收藏的
+  useEffect(() => {
+    if (!loggedIn) return;
+    let alive = true;
+    (async () => {
+      const sb = createClient();
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user || !alive) return;
+      const [sp, sv] = await Promise.all([
+        sb.from("saved_places").select("kind, place_id").eq("user_id", user.id),
+        sb.from("saved").select("stay_id").eq("user_id", user.id),
+      ]);
+      if (!alive) return;
+      const s = new Set<string>();
+      (sp.data as { kind: string; place_id: string }[] | null)?.forEach((r) => s.add(`${r.kind}:${r.place_id}`));
+      (sv.data as { stay_id: string }[] | null)?.forEach((r) => s.add(`stay:${r.stay_id}`));
+      setSavedSet(s);
+    })();
+    return () => { alive = false; };
+  }, [loggedIn]);
 
   const dayList = Array.from({ length: days }, (_, i) => i + 1);
   const defaultSlot = (t: TripItemType): "day" | "night" => (t === "stay" ? "night" : "day");
@@ -114,9 +137,10 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
     if (!tab) return []; // 「自訂」沒有清單
     let pool = pools[tab.key];
     if (pickTab === "station") pool = pool.filter((x) => x.name.startsWith(stationSys === "hsr" ? "高鐵" : "台鐵"));
+    if (savedOnly) pool = pool.filter((x) => savedSet.has(`${pickTab}:${x.id}`));
     const q = pickQ.trim().toLowerCase();
     return pool.filter((x) => !q || (x.name + x.region + x.town).toLowerCase().includes(q)).slice(0, 60);
-  }, [pickTab, pickQ, pools, stationSys]);
+  }, [pickTab, pickQ, pools, stationSys, savedOnly, savedSet]);
 
   const isAdded = (day: number, refId: string) => items.some((it) => it.day === day && it.refId === refId);
   function togglePoolItem(day: number, type: TripItemType, name: string, refId: string, slot: "day" | "night") {
@@ -330,9 +354,16 @@ export default function TripPlanner({ stays, attractions, foods, parkings, renta
                     <button className={stationSys === "tra" ? "on" : ""} onClick={() => setStationSys("tra")}>台鐵</button>
                   </div>
                 )}
-                <input className="admin-search" value={pickQ} onChange={(e) => setPickQ(e.target.value)} placeholder="搜尋名稱、地區…" style={{ width: "100%", marginBottom: 10 }} />
+                <div className="pick-filterbar">
+                  <input className="admin-search" value={pickQ} onChange={(e) => setPickQ(e.target.value)} placeholder="搜尋名稱、地區…" style={{ flex: 1 }} />
+                  {loggedIn && (
+                    <button type="button" className={"chip" + (savedOnly ? " on" : "")} onClick={() => setSavedOnly((v) => !v)} title="先去逛一圈、點書籤收藏,再回來這裡安排">
+                      ♥ 我的收藏
+                    </button>
+                  )}
+                </div>
                 <div className="pick-list">
-                  {pickResults.length === 0 && <div className="day-empty">找不到,或這個分類還沒有資料。可切到「自訂」手動加。</div>}
+                  {pickResults.length === 0 && <div className="day-empty">{savedOnly ? "這個分類還沒有收藏。逛探索頁點圖片上的書籤收藏,再回來安排。" : "找不到,或這個分類還沒有資料。可切到「自訂」手動加。"}</div>}
                   {pickResults.map((x) => {
                     const added = isAdded(pickDay, x.id);
                     return (

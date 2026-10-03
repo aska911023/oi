@@ -1055,6 +1055,47 @@ alter table public.room_types add column if not exists includes_note text;      
 alter table public.stays add column if not exists check_in text;    -- 最早入住(例 15:00)
 alter table public.stays add column if not exists check_out text;   -- 最晚退房(例 11:00)
 
+-- ================= 景點/美食/停車:收藏 + 留言牆(kind+place_id 定位) =================
+create table if not exists public.saved_places (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null,
+  place_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, kind, place_id)
+);
+alter table public.saved_places enable row level security;
+drop policy if exists sp_own on public.saved_places;
+create policy sp_own on public.saved_places for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists idx_saved_places_user on public.saved_places(user_id);
+
+create table if not exists public.place_comments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null,
+  place_id uuid not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+alter table public.place_comments enable row level security;
+drop policy if exists pc_read on public.place_comments;
+create policy pc_read on public.place_comments for select using (true);
+drop policy if exists pc_insert on public.place_comments;
+create policy pc_insert on public.place_comments for insert with check (auth.uid() = user_id);
+drop policy if exists pc_delete on public.place_comments;
+create policy pc_delete on public.place_comments for delete using (auth.uid() = user_id);
+create index if not exists idx_place_comments on public.place_comments(kind, place_id, created_at desc);
+
+create or replace function public.place_comments_list(p_kind text, p_id uuid)
+returns table(id uuid, body text, created_at timestamptz, name text)
+language sql stable security definer set search_path = public as $$
+  select c.id, c.body, c.created_at, pr.display_name as name
+  from public.place_comments c
+  left join public.profiles pr on pr.id = c.user_id
+  where c.kind = p_kind and c.place_id = p_id
+  order by c.created_at desc
+$$;
+grant execute on function public.place_comments_list(text, uuid) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

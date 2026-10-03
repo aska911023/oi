@@ -7,6 +7,7 @@ import { ALL_CATEGORY_LABEL, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabe
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import PhotoCarousel from "@/components/photo-carousel";
+import SaveBookmark from "@/components/save-bookmark";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
 
 const PAGE = 24;
@@ -165,22 +166,25 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
         <div className="cards">
           {rows.length === 0 && <div className="empty">找不到符合條件的房型,換個關鍵字或風格試試。</div>}
           {rows.map((r) => (
-            <Link key={r.id} href={`/stay/${r.stay_id}`} className="card">
-              <div className="photo">
-                <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
-                {r.featured && <span className="tag-feat">精選置頂</span>}
-                {r.rooms_left != null && <span className={"tag-rooms" + (r.rooms_left <= 2 ? " low" : "")}>剩 {r.rooms_left} 間</span>}
-              </div>
-              <div className="card-body">
-                <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
-                <h3>{r.stay_name}</h3>
-                <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
-                <div className="card-bottom">
-                  <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
-                  <span className="capacity">{I.users} {r.capacity} 人</span>
+            <div className="card-wrap" key={r.id}>
+              <Link href={`/stay/${r.stay_id}`} className="card">
+                <div className="photo">
+                  <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
+                  {r.featured && <span className="tag-feat">精選置頂</span>}
+                  {r.rooms_left != null && <span className={"tag-rooms" + (r.rooms_left <= 2 ? " low" : "")}>剩 {r.rooms_left} 間</span>}
                 </div>
-              </div>
-            </Link>
+                <div className="card-body">
+                  <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
+                  <h3>{r.stay_name}</h3>
+                  <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
+                  <div className="card-bottom">
+                    <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
+                    <span className="capacity">{I.users} {r.capacity} 人</span>
+                  </div>
+                </div>
+              </Link>
+              <SaveBookmark type="stay" id={r.stay_id} floating nextPath={`/stay/${r.stay_id}`} />
+            </div>
           ))}
         </div>
 
