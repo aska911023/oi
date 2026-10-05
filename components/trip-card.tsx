@@ -36,9 +36,18 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z" /></svg>
           {(t.comment_count || 0) > 0 && <span className="trip-act-n">{t.comment_count}</span>}
         </button>
-        <ShareLinkButton path={`/trips/${t.id}`} />
+        <ShareLinkButton path={`/trips/${t.id}`} tripId={t.id} />
         <span style={{ marginLeft: "auto" }}><SaveTripButton tripId={t.id} /></span>
       </div>
+
+      {(() => {
+        const parts: string[] = [];
+        if (t.like_count) parts.push(`${t.like_count} 讚`);
+        if (t.comment_count) parts.push(`${t.comment_count} 留言`);
+        if (t.share_count) parts.push(`${t.share_count} 分享`);
+        if (t.save_count) parts.push(`${t.save_count} 收藏`);
+        return parts.length > 0 ? <div className="ig-stats">{parts.join(" · ")}</div> : null;
+      })()}
 
       <div className="ig-caption">
         <Link href={`/trips/${t.id}`} className="ig-title">{t.title}</Link>

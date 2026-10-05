@@ -737,6 +737,23 @@ img { display: block; max-width: 100%; }
 .ig-viewc { display: block; width: 100%; background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; padding: 10px 14px 14px; text-align: left; }
 .ig-comments { padding: 8px 14px 14px; }
 .ig-post .trip-manage { padding: 12px 14px; margin-top: 0; }
+.ig-stats { padding: 6px 14px 0; font-size: 12.5px; color: var(--text-2); font-weight: 600; }
+/* 通知鈴鐺 */
+.notif-wrap { position: relative; display: inline-flex; }
+.notif-btn { position: relative; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 6px; border-radius: 10px; display: grid; place-items: center; line-height: 0; }
+.notif-btn:hover { background: var(--green-soft); color: var(--green); }
+.notif-badge { position: absolute; top: 0; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 10px; background: #e0245e; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center; line-height: 1; }
+.notif-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: min(340px, 90vw); background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.notif-head { padding: 12px 16px; font-weight: 800; color: var(--ink); border-bottom: 1px solid var(--border); font-size: 15px; }
+.notif-empty { padding: 20px 16px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.notif-list { max-height: 60vh; overflow: auto; }
+.notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+.notif-item:last-child { border-bottom: 0; }
+.notif-item:hover { background: var(--page); }
+.notif-mark { flex: none; font-size: 15px; }
+.notif-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.5; }
+.notif-text b { color: var(--ink); }
+.notif-time { flex: none; font-size: 11px; color: var(--muted); }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

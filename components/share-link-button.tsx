@@ -1,8 +1,11 @@
 "use client";
 
-export default function ShareLinkButton({ path }: { path: string; label?: string }) {
+import { createClient } from "@/lib/supabase/client";
+
+export default function ShareLinkButton({ path, tripId }: { path: string; label?: string; tripId?: string }) {
   async function share(e: React.MouseEvent) {
     e.preventDefault(); e.stopPropagation();
+    if (tripId) { try { await createClient().rpc("bump_trip_share", { p_trip: tripId }); } catch { /* 靜默 */ } }
     const url = `${window.location.origin}${path}`;
     const data = { title: "偶宿 O! 行程", url };
     if (navigator.share) { try { await navigator.share(data); return; } catch { return; } }

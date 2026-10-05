@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
+import NotificationBell from "@/components/notification-bell";
 
 export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
   const sb = await createClient();
@@ -28,6 +29,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           {user ? (
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
+              <NotificationBell />
               <Link href="/me/trips" className="cta">歡迎,{name}</Link>
             </>
           ) : (

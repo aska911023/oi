@@ -217,6 +217,8 @@ export interface Trip {
   owner_name?: string | null; // 發布者暱稱(search_trips 帶回)
   like_count?: number;
   comment_count?: number;
+  save_count?: number;
+  share_count?: number;
 }
 
 export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;

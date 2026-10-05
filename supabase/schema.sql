@@ -1322,6 +1322,60 @@ create or replace function public.search_rooms(
 $$;
 grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
 
+-- ================= 行程通知鈴鐺(Threads 式)+ 分享/收藏計數 =================
+alter table public.trips add column if not exists share_count int not null default 0;
+
+create or replace function public.bump_trip_share(p_trip uuid)
+returns void language sql security definer set search_path = public as $$
+  update public.trips set share_count = share_count + 1 where id = p_trip and is_public;
+$$;
+grant execute on function public.bump_trip_share(uuid) to anon, authenticated;
+
+drop function if exists public.search_trips(text,int,int,int,int,int,text,text,int,int);
+create or replace function public.search_trips(
+  kw text default '', p_days_min int default null, p_days_max int default null,
+  p_budget_max int default null, p_head_min int default null, p_head_max int default null,
+  p_transport text default null, p_region text default null, lim int default 24, off int default 0
+) returns jsonb language sql stable security definer set search_path = public as $$
+  with base as (
+    select t.*,
+      (select p.display_name from public.profiles p where p.id = t.owner_id) as owner_name,
+      (select count(*) from public.trip_likes l where l.trip_id = t.id) as like_count,
+      (select count(*) from public.trip_comments c where c.trip_id = t.id) as comment_count,
+      (select count(*) from public.saved_trips sv where sv.trip_id = t.id) as save_count,
+      t.share_count
+    from public.trips t
+    where t.is_public
+      and (p_days_min is null or t.days >= p_days_min) and (p_days_max is null or t.days <= p_days_max)
+      and (p_budget_max is null or (t.budget is not null and t.budget <= p_budget_max))
+      and (p_head_min is null or t.headcount >= p_head_min) and (p_head_max is null or t.headcount <= p_head_max)
+      and (p_transport is null or t.transport = p_transport) and (p_region is null or t.region = p_region)
+      and (coalesce(kw,'') = '' or (coalesce(t.title,'')||' '||coalesce(t.summary,'')||' '||coalesce(t.region,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_trips(text,int,int,int,int,int,text,text,int,int) to anon, authenticated;
+
+create or replace function public.my_notifications(lim int default 30)
+returns table(kind text, trip_id uuid, trip_title text, actor text, created_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select * from (
+    select 'like'::text as kind, t.id as trip_id, t.title as trip_title, coalesce(pr.display_name,'旅人') as actor, l.created_at
+    from public.trip_likes l join public.trips t on t.id=l.trip_id and t.owner_id=auth.uid()
+    left join public.profiles pr on pr.id=l.user_id where l.user_id <> auth.uid()
+    union all
+    select 'comment', t.id, t.title, coalesce(pr.display_name,'旅人'), c.created_at
+    from public.trip_comments c join public.trips t on t.id=c.trip_id and t.owner_id=auth.uid()
+    left join public.profiles pr on pr.id=c.user_id where c.user_id <> auth.uid()
+    union all
+    select 'save', t.id, t.title, coalesce(pr.display_name,'旅人'), sv.created_at
+    from public.saved_trips sv join public.trips t on t.id=sv.trip_id and t.owner_id=auth.uid()
+    left join public.profiles pr on pr.id=sv.user_id where sv.user_id <> auth.uid()
+  ) x order by 5 desc limit greatest(lim,0);
+$$;
+grant execute on function public.my_notifications(int) to authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
