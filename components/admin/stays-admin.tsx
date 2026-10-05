@@ -16,7 +16,7 @@ const EMPTY: Form = {
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", rooms_left: null, address: "", lat: null, lng: null,
   license_no: "", check_in: "", check_out: "",
-  published: false, featured: false, sample: false, ad_tier: "free",
+  published: false, featured: false, sample: false, ad_tier: "free", save_boost: 0,
 };
 
 export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; ownerId?: string }) {
@@ -73,6 +73,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       check_out: (form.check_out || "").trim() || null,
       published: form.published, featured: form.featured, sample: form.sample,
       ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
+      save_boost: ownerId ? undefined : (Number(form.save_boost) || 0), // 收藏數墊高只有 admin 能設
       owner_id: ownerId ?? undefined,
       approved: ownerId ? undefined : true, // admin 建立自動核准;業者建立維持待審
     };
@@ -203,6 +204,11 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                     <option value="featured">精選曝光</option>
                     <option value="flagship">旗艦</option>
                   </select>
+                </label>
+              )}
+              {!ownerId && (
+                <label className="check" style={{ gap: 6 }}>收藏數墊高
+                  <input type="number" min={0} value={form.save_boost ?? 0} onChange={(e) => setForm({ ...form, save_boost: Number(e.target.value) })} style={{ width: 70, padding: "6px 8px", borderRadius: 8, border: "1px solid var(--border-strong)" }} />
                 </label>
               )}
             </div>
