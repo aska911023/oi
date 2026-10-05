@@ -32,6 +32,7 @@ export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: bool
           <Link href="/rentals" onClick={close}>租車</Link>
           <Link href="/plan" onClick={close}>規劃行程</Link>
           <Link href="/trips" onClick={close}>行程分享</Link>
+          <Link href="/feed" onClick={close}>旅人圈</Link>
           <div className="m-div" />
           {loggedIn ? (
             <>
