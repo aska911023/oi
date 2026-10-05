@@ -53,7 +53,49 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   const [customName, setCustomName] = useState("");
   const [savedOnly, setSavedOnly] = useState(false);
   const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
+  const [exporting, setExporting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
+
+  // 一鍵分享 PDF:把「列印版面」截圖成 PDF,手機用系統分享、桌機下載(避免中文字型問題,用 rasterize)
+  async function sharePdf() {
+    const el = printRef.current;
+    if (!el || exporting) return;
+    setExporting(true);
+    const prev = el.getAttribute("style") || "";
+    el.style.cssText = "display:block;position:fixed;left:-10000px;top:0;width:794px;background:#fff;padding:32px;";
+    try {
+      const [h2c, jspdf] = await Promise.all([import("html2canvas"), import("jspdf")]);
+      const html2canvas = h2c.default;
+      const JsPDF = jspdf.jsPDF;
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#fff", ignoreElements: (n) => n.tagName === "IMG" });
+      el.setAttribute("style", prev);
+      const pdf = new JsPDF({ unit: "px", format: "a4" });
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pw) / canvas.width;
+      const img = canvas.toDataURL("image/jpeg", 0.9);
+      let left = imgH, pos = 0;
+      pdf.addImage(img, "JPEG", 0, pos, pw, imgH);
+      left -= ph;
+      while (left > 0) { pos -= ph; pdf.addPage(); pdf.addImage(img, "JPEG", 0, pos, pw, imgH); left -= ph; }
+      const blob = pdf.output("blob");
+      const file = new File([blob], `${title || "行程"}.pdf`, { type: "application/pdf" });
+      const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+      if (nav.canShare && nav.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title, text: title });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = file.name;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      }
+    } catch {
+      el.setAttribute("style", prev);
+      alert("產生 PDF 失敗,請改用瀏覽器列印存 PDF。");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // 載入「我的收藏」(民宿 saved + 景點/美食/停車/租車 saved_places),planner 可只看收藏的
   useEffect(() => {
@@ -299,7 +341,8 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
           <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : tripId ? "更新行程" : "儲存到我的行程"}</button>
           <button className="btn btn-ghost" onClick={download}>下載檔案(.json)</button>
           <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>匯入檔案</button>
-          <button className="btn btn-ghost" onClick={() => window.print()}>列印 / 存 PDF</button>
+          <button className="btn btn-ghost" onClick={sharePdf} disabled={exporting}>{exporting ? "產生中…" : "分享 PDF"}</button>
+          <button className="btn btn-ghost" onClick={() => window.print()}>列印</button>
           <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
         </div>
@@ -307,7 +350,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       </div>
 
       {/* 列印用版面 */}
-      <div className="trip-print">
+      <div className="trip-print" ref={printRef}>
         <h1>{title}</h1>
         <p className="tp-meta">{days} 天 · {headcount} 人 · 交通:{transport}{budget ? ` · 每人預算 NT$${budget}` : ""}{region ? ` · ${region}` : ""}</p>
         {summary && <p className="tp-summary">{summary}</p>}
