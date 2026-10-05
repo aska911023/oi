@@ -175,7 +175,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
           {rows.map((r) => (
             <div className="card-wrap" key={r.id}>
               <Link href={`/stay/${r.stay_id}`} className="card">
-                <div className="photo">
+                <div className={"photo" + (toImgs(r.image, r.images).length ? "" : " noimg")}>
                   {toImgs(r.image, r.images).length
                     ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} />
                     : <div className="photo-ph">{I.house}</div>}

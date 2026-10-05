@@ -167,7 +167,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
           {results.map((p) => (
             <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
               onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}>
-              <div className="photo">
+              <div className={"photo" + (toImgs(p.image, p.images).length ? "" : " noimg")}>
                 {toImgs(p.image, p.images).length ? <PhotoCarousel images={toImgs(p.image, p.images)} alt={p.name} /> : <div className="photo-ph">{I.map}</div>}
                 {p.featured && <span className="tag-feat">精選</span>}
                 <SaveBookmark type={kindState} id={p.id} floating nextPath={`/places/${kindState}`} />
