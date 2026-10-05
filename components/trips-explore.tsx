@@ -78,12 +78,6 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
 
   return (
     <>
-      <Link href={loggedIn ? "/plan" : "/login?next=/plan"} className="compose-shortcut">
-        <Avatar src={myAvatar} name={myName} size={38} />
-        <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
-        <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
-      </Link>
-
       <div className="trips-filter">
         <input className="admin-search" value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋行程名稱、地區…" />
         <select value={dayB} onChange={(e) => setDayB(e.target.value)}>{DAY_BUCKETS.map((b) => <option key={b.v} value={b.v}>{b.label}</option>)}</select>
@@ -93,7 +87,13 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
         <select value={region} onChange={(e) => setRegion(e.target.value)}><option value="all">不限地區</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select>
       </div>
 
-      <div className="sec-head"><div className="st"><h2 className="serif">公開行程</h2><span className="count">{rpcTotal} 筆</span></div></div>
+      <Link href={loggedIn ? "/plan" : "/login?next=/plan"} className="compose-shortcut">
+        <Avatar src={myAvatar} name={myName} size={38} />
+        <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
+        <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
+      </Link>
+
+      <div className="sec-head"><div className="st"><h2 className="serif">推薦行程</h2><span className="count">{rpcTotal} 筆</span></div></div>
 
       <div className="ig-feed">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}

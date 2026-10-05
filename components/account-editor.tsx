@@ -1,31 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/avatar";
+import AvatarCropper from "@/components/avatar-cropper";
 
 export default function AccountEditor({ initialAvatar, initialName }: { initialAvatar: string | null; initialName: string }) {
+  const router = useRouter();
   const [avatar, setAvatar] = useState<string | null>(initialAvatar);
   const [name, setName] = useState(initialName);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
-  async function upload(file: File) {
-    if (!file.type.startsWith("image/")) { alert("請選圖片檔"); return; }
+  async function uploadBlob(blob: Blob) {
     setUploading(true);
     const sb = createClient();
     const { data: { user } } = await sb.auth.getUser();
     if (!user) { setUploading(false); return; }
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const path = `avatar-${user.id}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-    const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
+    const path = `avatar-${user.id}-${Math.random().toString(36).slice(2, 6)}.jpg`;
+    const { error } = await sb.storage.from("site").upload(path, blob, { upsert: true, cacheControl: "3600", contentType: "image/jpeg" });
     if (error) { setUploading(false); alert("上傳失敗:" + error.message); return; }
     const url = sb.storage.from("site").getPublicUrl(path).data.publicUrl;
-    await sb.from("profiles").update({ avatar_url: url }).eq("id", user.id);
-    setAvatar(url);
+    const { error: e2 } = await sb.from("profiles").update({ avatar_url: url }).eq("id", user.id);
     setUploading(false);
+    if (e2) { alert("更新失敗:" + e2.message); return; }
+    setAvatar(url);
     setMsg("頭貼已更新");
+    router.refresh(); // 讓右上角 header 重新抓頭貼
   }
 
   async function save() {
@@ -36,6 +40,7 @@ export default function AccountEditor({ initialAvatar, initialName }: { initialA
     const { error } = await sb.from("profiles").update({ display_name: name.trim() || null }).eq("id", user.id);
     setBusy(false);
     setMsg(error ? "儲存失敗:" + error.message : "已儲存");
+    if (!error) router.refresh();
   }
 
   return (
@@ -45,7 +50,7 @@ export default function AccountEditor({ initialAvatar, initialName }: { initialA
         <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
           {uploading ? "上傳中…" : "上傳頭貼"}
           <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploading}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) setPendingFile(f); e.target.value = ""; }} />
         </label>
       </div>
       <div className="ae-field">
@@ -56,6 +61,11 @@ export default function AccountEditor({ initialAvatar, initialName }: { initialA
         <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "儲存中…" : "儲存"}</button>
         {msg && <span className="ae-msg">{msg}</span>}
       </div>
+
+      {pendingFile && (
+        <AvatarCropper file={pendingFile} onCancel={() => setPendingFile(null)}
+          onCropped={(blob) => { setPendingFile(null); uploadBlob(blob); }} />
+      )}
     </div>
   );
 }
