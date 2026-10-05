@@ -194,7 +194,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                   onChange={(imgs) => setForm({ ...form, images: imgs, image: imgs[0] || "" })} />
               </div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
-              <div className="wide"><label>影片介紹 / 網紅推薦(YouTube 或 Instagram 連結,選填)</label><input value={form.embed_url || ""} onChange={(e) => setForm({ ...form, embed_url: e.target.value })} placeholder="https://youtu.be/… 或 https://instagram.com/p/…" /></div>
+              <div className="wide"><label>影片介紹 / 網紅推薦(YouTube / Instagram / TikTok 連結,選填)</label><input value={form.embed_url || ""} onChange={(e) => setForm({ ...form, embed_url: e.target.value })} placeholder="https://youtu.be/… · instagram.com/p/… · tiktok.com/@…/video/…" /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
