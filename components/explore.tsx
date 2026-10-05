@@ -53,6 +53,9 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
   const [rows, setRows] = useState<RoomCard[]>(rooms);
   const [rpcTotal, setRpcTotal] = useState(total);
   const [loading, setLoading] = useState(false);
+  // 自己剛按的收藏先在前端加減,數字立刻會動;重新查詢時 RPC 回來的值會蓋掉它
+  const [saveDelta, setSaveDelta] = useState<Record<string, number>>({});
+  const saveCountOf = (r: RoomCard) => (r.save_count ?? 0) + (saveDelta[r.id] ?? 0);
   const firstRun = useRef(true);
 
   function rpcArgs(off: number) {
@@ -200,11 +203,12 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                   <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
                   <div className="card-bottom">
                     <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
-                    {(r.save_count ?? 0) >= SAVE_COUNT_MIN && <span className="card-saves">♥ {r.save_count} 人收藏</span>}
+                    {saveCountOf(r) >= SAVE_COUNT_MIN && <span className="card-saves">♥ {saveCountOf(r)} 人收藏</span>}
                   </div>
                 </div>
               </Link>
-              <SaveBookmark type="room" id={r.id} floating nextPath={`/stay/${r.stay_id}`} />
+              <SaveBookmark type="room" id={r.id} floating nextPath={`/stay/${r.stay_id}`}
+                onToggle={(on) => setSaveDelta((d) => ({ ...d, [r.id]: (d[r.id] ?? 0) + (on ? 1 : -1) }))} />
               <CompareToggle card={r} />
             </div>
           ))}

@@ -1693,3 +1693,21 @@ grant execute on function public.assign_stay_owner(uuid, uuid) to authenticated;
 alter table public.stays drop constraint if exists stays_category_check;
 alter table public.stays add constraint stays_category_check
   check (category = any (array['海景度假','山林小屋','設計旅宿','親子友善','寵物友善','包棟民宿','復古老宅']));
+
+
+-- ============================================================
+-- 2026-10-06 修正房型卡「N 人收藏」永遠是 0
+-- 原因:saved_places 有 RLS(只看得到自己的),search_rooms 是 SECURITY INVOKER,
+--      首頁第一屏又用匿名 client 跑 → 內部 count(*) 被 RLS 濾成 0。
+-- 做法:只把「算人數」這件事用 DEFINER 小函式繞過 RLS,其餘維持原樣。
+-- ============================================================
+create or replace function public.room_save_count(p_room uuid)
+returns integer language sql stable security definer set search_path to 'public'
+as $$
+  select count(*)::int from public.saved_places sp
+  where sp.kind = 'room' and sp.place_id = p_room;
+$$;
+revoke all on function public.room_save_count(uuid) from public;
+grant execute on function public.room_save_count(uuid) to anon, authenticated;
+-- search_rooms 內的 save_count 改成:
+--   (public.room_save_count(rt.id) + coalesce(s.save_boost, 0))::int as save_count

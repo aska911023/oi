@@ -8,7 +8,11 @@ export type SaveType = "stay" | "room" | "attraction" | "food" | "parking" | "re
 
 // 書籤收藏 icon。type=stay 用 saved 表;其餘用 saved_places(kind+place_id)。
 // floating=true 時浮在圖片右上角。
-export default function SaveBookmark({ type, id, floating = false, nextPath = "/" }: { type: SaveType; id: string; floating?: boolean; nextPath?: string }) {
+// onToggle:收藏成功後回報新狀態,讓外層(例如房型卡的「N 人收藏」)能當場更新數字,
+// 不必等伺服器快取過期。
+export default function SaveBookmark({ type, id, floating = false, nextPath = "/", onToggle }: {
+  type: SaveType; id: string; floating?: boolean; nextPath?: string; onToggle?: (saved: boolean) => void;
+}) {
   const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
@@ -44,6 +48,7 @@ export default function SaveBookmark({ type, id, floating = false, nextPath = "/
     }
     setSaved(!saved);
     setBusy(false);
+    onToggle?.(!saved);   // 讓外層當場更新「N 人收藏」,不必等伺服器快取過期
   }
 
   return (
