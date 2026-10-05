@@ -17,6 +17,7 @@ const TOP = [
   { href: "/admin", label: "旅遊上架", group: true },
   { href: "/admin/members", label: "會員" },
   { href: "/admin/vendors", label: "業者審核" },
+  { href: "/admin/leads", label: "開發名單" },
   { href: "/admin/site", label: "首頁設定" },
   { href: "/admin/analytics", label: "數據" },
 ];

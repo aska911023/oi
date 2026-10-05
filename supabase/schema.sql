@@ -1479,3 +1479,94 @@ alter table public.trips add column if not exists embed_url text;
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');
 -- ============================================================
+
+
+-- ============================================================
+-- 開發名單 leads：內部 BD 用。候選民宿／景點，尚未洽談、尚未取得圖文授權。
+-- 刻意與 stays/attractions 分離，避免未授權資料混進上架資料被誤發布。
+-- ============================================================
+create table if not exists public.leads (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null default 'stay',
+  code text,                       -- 來源編號 NB01 / V01
+  name text not null,
+  county text,                     -- 花蓮縣 / 新北市 / 宜蘭縣
+  area text,                       -- 子區域：北海岸 / 東北角
+  town text,                       -- 鄉鎮：金山 / 九份 / 五結
+  address text,
+  category text,                   -- 景點用：景點/博物館/夜市/溫泉/特色活動
+  theme text,                      -- 主題或活動子項
+  priority text,                   -- A 優先洽談 / B 補資料
+  status text not null default '候選',
+  guests_min int,
+  guests_max int,
+  guests_ambiguous boolean not null default false,  -- 人數只有單一數字，待人工確認
+  price_from int,                  -- 解析出的最低參考價（元／棟／晚）
+  price_note text,                 -- 價格原文
+  room_note text,
+  whole_house text,
+  parking text,
+  phone text,
+  line_id text,
+  website text,
+  license_no text,                 -- 民宿登記號線索
+  summary text,                    -- 包棟人數・參考價・選店理由
+  contact_note text,               -- 聯絡方式・地址・查核提醒 原文
+  description text,                -- 介紹草稿
+  open_note text,                  -- 景點：開放提醒／查核狀態
+  photo_status text,               -- 照片商用授權狀態
+  photo_urls text[] not null default '{}',
+  source_doc text,                 -- 來源名單
+  checked_on date,                 -- 名單查核日
+  owner_note text,                 -- 人工後續備註
+  contacted_at timestamptz,
+  stay_id uuid references public.stays(id) on delete set null,  -- 談成後連到正式上架資料
+  raw jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'leads_kind_chk') then
+    alter table public.leads add constraint leads_kind_chk
+      check (kind in ('stay', 'attraction'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'leads_priority_chk') then
+    alter table public.leads add constraint leads_priority_chk
+      check (priority is null or priority in ('A', 'B'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'leads_status_chk') then
+    alter table public.leads add constraint leads_status_chk
+      check (status in ('候選', '已聯絡', '洽談中', '已簽約', '婉拒', '暫不處理'));
+  end if;
+end $$;
+
+-- 同一份名單同一家只會有一筆 → 重跑匯入是冪等的
+create unique index if not exists leads_source_name_uidx on public.leads (source_doc, name);
+create index if not exists leads_kind_idx     on public.leads (kind);
+create index if not exists leads_county_idx   on public.leads (county);
+create index if not exists leads_priority_idx on public.leads (priority);
+create index if not exists leads_status_idx   on public.leads (status);
+
+create or replace function public.tg_leads_touch()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+
+drop trigger if exists trg_leads_touch on public.leads;
+create trigger trg_leads_touch before update on public.leads
+  for each row execute function public.tg_leads_touch();
+
+-- RLS：內部資料，只有 admin 看得到、改得動
+alter table public.leads enable row level security;
+drop policy if exists leads_admin_all on public.leads;
+create policy leads_admin_all on public.leads
+  for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+revoke all on public.leads from anon;
+grant select, insert, update, delete on public.leads to authenticated;

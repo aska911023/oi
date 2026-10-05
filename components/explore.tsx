@@ -20,7 +20,13 @@ const I = {
   pin: <svg width="15" height="15" viewBox="0 0 24 24" {...S}><path d="M12 21s7-6.3 7-12a7 7 0 1 0-14 0c0 5.7 7 12 7 12z" /><circle cx="12" cy="9" r="2.4" /></svg>,
   grid: <svg width="15" height="15" viewBox="0 0 24 24" {...S}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
   arrow: <svg width="17" height="17" viewBox="0 0 24 24" {...S}><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
+  // 尚未取得照片授權時的佔位
+  house: <svg width="34" height="34" viewBox="0 0 24 24" {...S}><path d="M3 10.5 12 4l9 6.5" /><path d="M5 10v9h14v-9" /><path d="M10 19v-5h4v5" /></svg>,
 };
+
+// 相簿優先,無相簿退回單張 image;都沒有則回空陣列(顯示佔位)
+const toImgs = (image?: string | null, images?: string[] | null) =>
+  (images && images.length ? images : image ? [image] : []);
 
 
 export default function Explore({ rooms, total = 0, regions = [], categories = [], blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; regions?: string[]; categories?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
@@ -170,7 +176,9 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
             <div className="card-wrap" key={r.id}>
               <Link href={`/stay/${r.stay_id}`} className="card">
                 <div className="photo">
-                  <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
+                  {toImgs(r.image, r.images).length
+                    ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} />
+                    : <div className="photo-ph">{I.house}</div>}
                   <div className="card-badges">
                     {r.kind === "whole" && <span className="cbadge cbadge-whole">包棟</span>}
                     {r.ad_tier && r.ad_tier !== "free" && <span className="cbadge cbadge-feat">精選</span>}

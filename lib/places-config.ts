@@ -20,7 +20,7 @@ export interface WeekHour { day: string; closed?: boolean; open?: string; close?
 
 export const DETAILS: Record<PoiKind, DetailField[]> = {
   attraction: [
-    { key: "tags", label: "類型 / 主題", type: "tags", options: ["離島", "海邊", "山林", "農場", "動物農場", "國家公園", "博物館", "遊樂園", "漁港", "老街", "溫泉", "DIY體驗", "衝浪", "坐船"] },
+    { key: "tags", label: "類型 / 主題", type: "tags", options: ["離島", "海邊", "山林", "農場", "動物農場", "國家公園", "博物館", "遊樂園", "漁港", "老街", "溫泉", "DIY體驗", "衝浪", "坐船", "水上活動", "戶外活動", "公園綠地"] },
     { key: "ticket", label: "門票", type: "text" },
     { key: "hours", label: "開放時間", type: "text" },
     { key: "stay_time", label: "建議停留", type: "text" },

@@ -506,6 +506,12 @@ img { display: block; max-width: 100%; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
 .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 560px) { .frow { grid-template-columns: 1fr; } }
+
+/* 開發名單篩選列 */
+.lead-f { padding: 10px 13px; border: 1px solid var(--border-strong); border-radius: 10px; font-size: 14px; background: #fff; color: var(--text); font-family: inherit; min-width: 150px; }
+.lead-f:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+@media (max-width: 560px) { .lead-f { flex: 1 1 100%; min-width: 0; } }
+
 .btn-sm { padding: 8px 14px; font-size: 13px; }
 
 /* per-element style controls */
