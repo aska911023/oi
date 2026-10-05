@@ -250,11 +250,13 @@ img { display: block; max-width: 100%; }
 .cm-head h2 { font-size: 22px; margin: 0; }
 .cm-head .close { position: static; }
 .cm-scroll { overflow: auto; }
-.cm-table { border-collapse: collapse; width: 100%; min-width: 520px; }
+/* table-layout:fixed → 各民宿欄真正等分;auto 會依內容長短分配,4 欄時最長的那欄會被撐寬 */
+.cm-table { border-collapse: collapse; width: 100%; min-width: 520px; table-layout: fixed; }
+.cm-table thead th:first-child { width: 96px; }
 .cm-table th, .cm-table td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: left; font-size: 13.5px; vertical-align: middle; }
 .cm-table thead th { border-bottom: 2px solid var(--border-strong); vertical-align: bottom; }
 .cm-table thead th:first-child, .cm-table tbody th { position: sticky; left: 0; background: var(--page); z-index: 1; font-weight: 700; color: var(--green); white-space: nowrap; }
-.cm-colimg { width: 150px; height: 100px; border-radius: 10px; overflow: hidden; background: var(--green-soft); }
+.cm-colimg { width: 100%; max-width: 200px; height: 118px; border-radius: 10px; overflow: hidden; background: var(--green-soft); }
 .cm-colimg img { width: 100%; height: 100%; object-fit: cover; }
 .cm-remove { margin-top: 6px; border: 0; background: none; color: var(--muted); font-size: 12px; cursor: pointer; }
 .cm-remove:hover { color: #c0392b; }
@@ -742,7 +744,11 @@ img { display: block; max-width: 100%; }
 .tc-head span { color: var(--muted); font-weight: 600; margin-left: 2px; }
 .trip-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 /* IG 貼文式行程卡 + 單欄 feed */
-.ig-feed { display: flex; flex-direction: column; gap: 26px; max-width: 500px; margin: 0 auto; }
+/* 三欄貼文牆(窄螢幕自動降為兩欄/單欄);align-items:start 讓各卡維持自己的高度 */
+.ig-feed { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; align-items: start; }
+.ig-feed .empty { grid-column: 1 / -1; }
+@media (max-width: 1040px) { .ig-feed { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .ig-feed { grid-template-columns: 1fr; } }
 .ig-post { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .ig-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
 .ig-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 17px; flex: none; }
@@ -764,11 +770,12 @@ img { display: block; max-width: 100%; }
 .ig-headlink { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: inherit; }
 .ig-headlink:hover .ig-name { color: var(--green); }
 /* 分享行程捷徑(Threads 式 compose 列)*/
-.compose-shortcut { display: flex; align-items: center; gap: 12px; max-width: 500px; margin: 4px auto 30px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; color: var(--text); transition: border-color .15s; }
-.compose-shortcut:hover { border-color: var(--green); }
-.cs-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 16px; flex: none; }
-.cs-prompt { flex: 1; color: var(--muted); font-size: 14.5px; }
-.cs-btn { flex: none; }
+.compose-shortcut { display: flex; align-items: center; gap: 16px; margin: 4px 0 30px; background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 20px 24px; color: var(--text); transition: border-color .15s, box-shadow .15s; }
+.compose-shortcut:hover { border-color: var(--green); box-shadow: var(--shadow-sm); }
+.cs-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 19px; flex: none; }
+.cs-prompt { flex: 1; color: var(--muted); font-size: 16.5px; }
+.cs-btn { flex: none; padding: 12px 22px; font-size: 14.5px; }
+@media (max-width: 560px) { .compose-shortcut { padding: 15px 16px; gap: 12px; } .cs-prompt { font-size: 15px; } }
 /* 個人頁 */
 .profile-head { display: flex; align-items: center; gap: 16px; }
 .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 28px; flex: none; }
