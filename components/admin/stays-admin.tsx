@@ -22,10 +22,17 @@ const EMPTY: Form = {
 };
 
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
+export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
 
-export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
-  initial: Stay[]; ownerId?: string; bdInitial?: StayBd[];
+export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [] }: {
+  initial: Stay[]; ownerId?: string; bdInitial?: StayBd[]; ownersInitial?: OwnerProfile[];
 }) {
+  const owners = Object.fromEntries(ownersInitial.map((o) => [o.id, o]));
+  const ownerName = (id?: string | null) => {
+    if (!id) return null;
+    const o = owners[id];
+    return o ? (o.display_name || o.full_name || id.slice(0, 8)) : id.slice(0, 8);
+  };
   const [list, setList] = useState<Stay[]>(initial);
   // 洽談紀錄存在 stay_bd(只有 admin 讀得到),不放 stays 以免被公開 API 讀走。
   // 業者自己的 /vendor 頁(有 ownerId)不顯示這些內部欄位。
@@ -167,12 +174,12 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
           <thead>
             <tr>
               <th></th><th>名稱</th><th>地區</th><th>風格</th><th>狀態</th>
-              {isAdminView && <><th>洽談</th><th>內部備註</th></>}
+              {isAdminView && <><th>業主</th><th>洽談</th><th>內部備註</th></>}
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={isAdminView ? 8 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={isAdminView ? 9 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
             {filtered.map((s) => (
               <tr key={s.id}>
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
@@ -185,6 +192,12 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
                     : <span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span>}
                 </td>
                 {isAdminView && <>
+                <td>
+                  <button className={"owner-cell" + (s.owner_id ? " on" : "")} onClick={() => setAssign(s)}
+                    title={s.owner_id ? "業者自管中,點擊可更換或收回" : "平台自管,點擊指派給業者"}>
+                    {s.owner_id ? ownerName(s.owner_id) : "平台自管"}
+                  </button>
+                </td>
                 <td>
                   <div className="bd-checks">
                     <label><input type="checkbox" checked={!!bd[s.id]?.contacted}
@@ -205,7 +218,6 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
-                    {isAdminView && <button className="lnk" onClick={() => setAssign(s)}>{s.owner_id ? "業主" : "指派業主"}</button>}
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
