@@ -33,7 +33,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
               <NotificationBell />
-              <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={24} /> 歡迎,{name}</Link>
+              <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={30} /> 歡迎,{name}</Link>
             </>
           ) : (
             <Link href="/login" className="cta">登入 / 註冊</Link>

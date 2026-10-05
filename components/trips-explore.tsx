@@ -90,7 +90,7 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
       <div className="sec-head" style={{ marginTop: 28 }}><div className="st"><h2 className="serif">推薦行程</h2><span className="count">{rpcTotal} 筆</span></div></div>
 
       <Link href={loggedIn ? "/plan" : "/login?next=/plan"} className="compose-shortcut">
-        <Avatar src={myAvatar} name={myName} size={38} />
+        <Avatar src={myAvatar} name={myName} size={46} />
         <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
         <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
       </Link>
