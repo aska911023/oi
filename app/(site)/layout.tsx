@@ -49,6 +49,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <span>{settings.footer_copyright}</span>
           <span className="tagline">{settings.footer_tagline}</span>
         </div>
+        {/* 蜜罐:真人看不到也不會點;盲抓所有連結的爬蟲會踩到 → middleware 封該 IP。
+            刻意用純 <a>(非 <Link>)避免 Next 預抓誤觸,並加 nofollow 讓正派爬蟲略過。 */}
+        <a href="/api/_t" className="hp-trap" aria-hidden="true" tabIndex={-1} rel="nofollow noindex">請勿點擊</a>
       </footer>
       <CompareBar />
     </CompareProvider>

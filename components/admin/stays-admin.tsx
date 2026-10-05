@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
+import StaysImport from "@/components/admin/stays-import";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { Stay } from "@/lib/types";
 
@@ -127,6 +128,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
             </button>
           ))}
         </div>
+        <StaysImport existingNames={list.map((s) => s.name)} onDone={refresh} />
         <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>＋ 新增民宿</button>
       </div>
 

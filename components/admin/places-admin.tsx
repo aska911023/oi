@@ -6,6 +6,7 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { revalidatePois } from "@/app/actions";
 import { KIND_TABLE, DETAILS, WEEKDAYS, type WeekHour } from "@/lib/places-config";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
+import PlacesImport from "@/components/admin/places-import";
 import { type Place, type PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -119,6 +120,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
 
       <div className="admin-bar">
         <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`搜尋${label}名稱、地區…`} />
+        <PlacesImport kind={kind} existingNames={list.map((p) => p.name)} onDone={refresh} />
         <button className="btn btn-primary" onClick={() => setForm(empty())}>＋ 新增{label}</button>
       </div>
 
