@@ -1135,6 +1135,41 @@ create or replace function public.search_rooms(
 $$;
 grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
 
+-- ================= 事件埋點(分析):瀏覽 / 導流點擊 / 地圖 … =================
+create table if not exists public.events (
+  id bigint generated always as identity primary key,
+  type text not null,
+  stay_id uuid,
+  room_id uuid,
+  user_id uuid,
+  meta jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+alter table public.events enable row level security;
+create index if not exists idx_events_type_time on public.events(type, created_at desc);
+create index if not exists idx_events_stay on public.events(stay_id, created_at desc);
+
+create or replace function public.log_event(p_type text, p_stay uuid default null, p_room uuid default null, p_meta jsonb default '{}')
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_type is null or length(p_type) > 40 then return; end if;
+  insert into public.events(type, stay_id, room_id, user_id, meta)
+  values (p_type, p_stay, p_room, auth.uid(), coalesce(p_meta, '{}'::jsonb));
+end $$;
+grant execute on function public.log_event(text, uuid, uuid, jsonb) to anon, authenticated;
+
+create or replace function public.stay_event_stats(p_stay uuid, p_days int default 30)
+returns table(type text, cnt bigint) language sql stable security definer set search_path = public as $$
+  select e.type, count(*)::bigint from public.events e
+  where e.stay_id = p_stay and e.created_at >= now() - (p_days || ' days')::interval
+    and (
+      exists (select 1 from public.profiles pr where pr.id = auth.uid() and pr.role = 'admin')
+      or exists (select 1 from public.stays s where s.id = p_stay and s.owner_id = auth.uid())
+    )
+  group by e.type
+$$;
+grant execute on function public.stay_event_stats(uuid, int) to authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

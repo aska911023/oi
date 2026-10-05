@@ -6,6 +6,8 @@ import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
 import RoomList from "@/components/room-list";
 import BackLink from "@/components/back-link";
+import TrackView from "@/components/track-view";
+import OutboundLink from "@/components/outbound-link";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +51,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
       <BackLink fallback="/" label="← 回探索" />
 
       <div className="shop">
+        <TrackView stayId={s.id} />
         {toImgs(s.image, s.images).length > 0 && (
           <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} /></div>
         )}
@@ -71,12 +74,12 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
         )}
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
-          {s.website && <a className="btn btn-primary" href={s.website} target="_blank" rel="noopener noreferrer">前往預訂 / 民宿官網 {OUT}</a>}
+          {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-primary">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
           {(s.address || (s.lat != null && s.lng != null)) && (
-            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer"
+            <OutboundLink type="click_map" stayId={s.id} className="btn btn-ghost"
               href={s.lat != null && s.lng != null
                 ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`
-                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</a>
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</OutboundLink>
           )}
           <SaveButton stayId={s.id} />
         </div>
