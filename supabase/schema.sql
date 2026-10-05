@@ -1170,6 +1170,82 @@ returns table(type text, cnt bigint) language sql stable security definer set se
 $$;
 grant execute on function public.stay_event_stats(uuid, int) to authenticated;
 
+-- ================= 廣告分級(曝光方案 free/featured/flagship):search 預設排序付費置頂 =================
+alter table public.stays add column if not exists ad_tier text not null default 'free';
+update public.stays set ad_tier = 'featured' where ad_tier = 'free' and featured = true;
+
+drop function if exists public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int);
+create or replace function public.search_rooms(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_amenities text[] default null, p_room_tags text[] default null,
+  p_sort text default 'default', lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select rt.id, rt.name as room_name, rt.price, rt.capacity, rt.rooms_left, rt.rooms_total, rt.beds, rt.description as room_desc, rt.tags,
+           coalesce(nullif(rt.image, ''), s.image) as image,
+           coalesce(nullif(rt.images,'{}'), nullif(s.images,'{}'),
+                    array_remove(array[nullif(rt.image,''), nullif(s.image,'')], null)) as images,
+           rt.featured, s.ad_tier,
+           s.id as stay_id, s.name as stay_name, s.region, s.town, s.category, s.amenities, s.website, s.description as stay_desc, rt.created_at,
+           case s.ad_tier when 'flagship' then 2 when 'featured' then 1 else 0 end as tier_rank
+    from public.room_types rt join public.stays s on s.id = rt.stay_id
+    where rt.published and s.published and s.approved and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or rt.price >= p_price_min)
+      and (p_price_max is null or rt.price <= p_price_max)
+      and (p_guests is null or rt.capacity >= p_guests)
+      and (p_amenities is null or (select bool_and(s.amenities ilike '%'||a||'%') from unnest(p_amenities) a))
+      and (p_room_tags is null or rt.tags @> p_room_tags)
+      and (coalesce(kw,'') = '' or (coalesce(s.name,'')||' '||coalesce(rt.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by
+      case when p_sort='default' then tier_rank end desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      tier_rank desc, featured desc nulls last, created_at desc
+    limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
+
+drop function if exists public.search_stays(text,text,int,int,int,text,text,int,int);
+create or replace function public.search_stays(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_sort text default 'default',
+  lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with agg as (
+    select rt.stay_id, min(rt.price) filter (where rt.published) as mn,
+           sum(rt.rooms_left) filter (where rt.published) as sm, max(rt.capacity) filter (where rt.published) as mx
+    from public.room_types rt group by rt.stay_id
+  ),
+  base as (
+    select s.id, s.name, s.region, s.town, s.category,
+           coalesce(a.mn, s.price) as price, coalesce(a.mx, s.guests) as guests,
+           s.image, coalesce(nullif(s.images,'{}'), array_remove(array[nullif(s.image,'')], null)) as images,
+           s.description, s.amenities, s.website, coalesce(a.sm, s.rooms_left) as rooms_left,
+           s.published, s.sample, s.featured, s.ad_tier, s.created_at,
+           case s.ad_tier when 'flagship' then 2 when 'featured' then 1 else 0 end as tier_rank
+    from public.stays s left join agg a on a.stay_id = s.id
+    where s.published and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or coalesce(a.mn, s.price) >= p_price_min)
+      and (p_price_max is null or coalesce(a.mn, s.price) <= p_price_max)
+      and (p_guests is null or coalesce(a.mx, s.guests) >= p_guests)
+      and (coalesce(kw,'') = '' or (coalesce(s.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by
+      case when p_sort='default' then tier_rank end desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      tier_rank desc, created_at desc
+    limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_stays(text,text,int,int,int,text,text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

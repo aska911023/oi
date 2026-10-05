@@ -16,7 +16,7 @@ const EMPTY: Form = {
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", rooms_left: null, address: "", lat: null, lng: null,
   license_no: "", check_in: "", check_out: "",
-  published: false, featured: false, sample: false,
+  published: false, featured: false, sample: false, ad_tier: "free",
 };
 
 export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; ownerId?: string }) {
@@ -72,6 +72,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       check_in: (form.check_in || "").trim() || null,
       check_out: (form.check_out || "").trim() || null,
       published: form.published, featured: form.featured, sample: form.sample,
+      ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
       owner_id: ownerId ?? undefined,
       approved: ownerId ? undefined : true, // admin 建立自動核准;業者建立維持待審
     };
@@ -195,7 +196,15 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 店家上架(前台可見)</label>
-              <span style={{ fontSize: 12.5, color: "var(--muted)" }}>置頂改在下方各「房型」設定</span>
+              {!ownerId && (
+                <label className="check" style={{ gap: 6 }}>曝光方案
+                  <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
+                    <option value="free">免費上架</option>
+                    <option value="featured">精選曝光</option>
+                    <option value="flagship">旗艦</option>
+                  </select>
+                </label>
+              )}
             </div>
 
             {form.id ? (

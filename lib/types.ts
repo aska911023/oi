@@ -32,6 +32,7 @@ export interface Stay {
   published: boolean;
   sample: boolean;
   featured?: boolean; // 贊助置頂
+  ad_tier?: string; // 曝光方案:free / featured / flagship
 }
 
 export type SortMode = "default" | "low" | "high";
@@ -86,6 +87,7 @@ export interface RoomCard {
   image: string;
   images?: string[]; // 房型相簿;空則退回民宿相簿/封面
   featured?: boolean;
+  ad_tier?: string; // 曝光方案(民宿層級)
   tags?: string[];
   stay_id: string;
   stay_name: string;
