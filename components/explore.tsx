@@ -18,6 +18,10 @@ const PAGE = 24;
 // (RPC 的 p_amenities / p_room_tags 參數與 toggle 邏輯都保留著,不用重做)。
 const SHOW_DETAIL_FILTERS = false;
 
+// 房型卡顯示「N 人收藏」的門檻。初期人氣還在累積,設 1 讓收藏馬上看得到;
+// 之後量大了可以調回 3,避免「1 人收藏」反而像乏人問津。
+const SAVE_COUNT_MIN = 1;
+
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
   search: <svg width="18" height="18" viewBox="0 0 24 24" {...S}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>,
@@ -196,7 +200,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                   <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
                   <div className="card-bottom">
                     <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
-                    {(r.save_count ?? 0) >= 3 && <span className="card-saves">♥ {r.save_count} 人收藏</span>}
+                    {(r.save_count ?? 0) >= SAVE_COUNT_MIN && <span className="card-saves">♥ {r.save_count} 人收藏</span>}
                   </div>
                 </div>
               </Link>
