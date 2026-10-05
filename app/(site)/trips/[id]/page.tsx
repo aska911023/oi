@@ -43,7 +43,9 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
             </span>
           </div>
 
-          {trip.embed_url && <div style={{ margin: "18px 0" }}><MediaEmbed url={trip.embed_url} /></div>}
+          {trip.embed_urls && trip.embed_urls.length > 0 && (
+            <div className="embed-list" style={{ margin: "18px 0" }}>{trip.embed_urls.map((u, i) => <MediaEmbed key={i} url={u} />)}</div>
+          )}
 
           {dayList.map((d) => (
             <div className="tv-day" key={d}>

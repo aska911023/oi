@@ -85,10 +85,10 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
           <SaveButton stayId={s.id} />
         </div>
 
-        {s.embed_url && (
+        {s.embed_urls && s.embed_urls.length > 0 && (
           <div className="shop-block">
             <h2 className="serif shop-h">影片介紹 / 網紅推薦</h2>
-            <MediaEmbed url={s.embed_url} />
+            <div className="embed-list">{s.embed_urls.map((u, i) => <MediaEmbed key={i} url={u} />)}</div>
           </div>
         )}
 

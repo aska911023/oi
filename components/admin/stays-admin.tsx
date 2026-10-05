@@ -14,7 +14,7 @@ type Form = Omit<Stay, "id"> & { id?: string };
 const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
-  website: "", embed_url: "", rooms_left: null, address: "", lat: null, lng: null,
+  website: "", embed_urls: [], rooms_left: null, address: "", lat: null, lng: null,
   license_no: "", check_in: "", check_out: "",
   published: false, featured: false, sample: false, ad_tier: "free", save_boost: 0,
 };
@@ -64,7 +64,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       images: form.images || [],
       description: form.description.trim(), amenities: form.amenities.trim(),
       website: form.website.trim(),
-      embed_url: (form.embed_url || "").trim() || null,
+      embed_urls: (form.embed_urls || []).map((u) => u.trim()).filter(Boolean),
       rooms_left: form.rooms_left === null || form.rooms_left === undefined || (form.rooms_left as unknown as string) === "" ? null : Number(form.rooms_left),
       address: (form.address || "").trim(),
       lat: form.lat === null || form.lat === undefined || (form.lat as unknown as string) === "" ? null : Number(form.lat),
@@ -194,7 +194,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                   onChange={(imgs) => setForm({ ...form, images: imgs, image: imgs[0] || "" })} />
               </div>
               <div className="wide"><label>官網 / 訂房連結(導流,選填)</label><input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://…" /></div>
-              <div className="wide"><label>影片介紹 / 網紅推薦(YouTube / Instagram / TikTok 連結,選填)</label><input value={form.embed_url || ""} onChange={(e) => setForm({ ...form, embed_url: e.target.value })} placeholder="https://youtu.be/… · instagram.com/p/… · tiktok.com/@…/video/…" /></div>
+              <div className="wide"><label>影片介紹 / 網紅推薦(YouTube / IG / TikTok,可多個,一行一個)</label><textarea rows={3} value={(form.embed_urls || []).join("\n")} onChange={(e) => setForm({ ...form, embed_urls: e.target.value.split("\n") })} placeholder={"https://youtu.be/…\nhttps://instagram.com/p/…\nhttps://tiktok.com/@…/video/…"} /></div>
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
