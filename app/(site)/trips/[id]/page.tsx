@@ -5,6 +5,7 @@ import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
 import SaveTripButton from "@/components/save-trip-button";
 import TripComments from "@/components/trip-comments";
+import MediaEmbed from "@/components/media-embed";
 import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +38,12 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
             <Link href={`/plan?load=${trip.id}`} className="btn btn-primary">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
             <span className="trip-actions" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
               <TripLikeButton tripId={trip.id} count={likeCount || 0} />
-              <ShareLinkButton path={`/trips/${trip.id}`} />
+              <ShareLinkButton path={`/trips/${trip.id}`} tripId={trip.id} />
               <SaveTripButton tripId={trip.id} />
             </span>
           </div>
+
+          {trip.embed_url && <div style={{ margin: "18px 0" }}><MediaEmbed url={trip.embed_url} /></div>}
 
           {dayList.map((d) => (
             <div className="tv-day" key={d}>

@@ -789,6 +789,10 @@ img { display: block; max-width: 100%; }
 .cropper-mask { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0,0,0,.5); pointer-events: none; }
 .cropper-box input[type="range"] { width: 240px; accent-color: var(--green); }
 .cropper-actions { display: flex; gap: 10px; align-self: stretch; justify-content: flex-end; }
+/* YouTube / IG 嵌入 */
+.media-embed.yt { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
+.media-embed.yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.media-embed.ig { max-width: 500px; }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

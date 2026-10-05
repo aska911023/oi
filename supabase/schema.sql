@@ -1471,6 +1471,10 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.my_notifications(int) to authenticated;
 
+-- ================= YouTube / IG 影片嵌入(上架民宿 + 分享行程)=================
+alter table public.stays add column if not exists embed_url text;
+alter table public.trips add column if not exists embed_url text;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

@@ -21,6 +21,7 @@ export interface Stay {
   description: string;
   amenities: string; // 「、」分隔
   website: string; // 導流連結,空字串代表無
+  embed_url?: string | null; // 影片介紹 / 網紅推薦(YouTube / IG 連結)
   rooms_left?: number | null; // 剩餘房數(null = 未設定,不顯示)
   license_no?: string | null; // 合法民宿登記證號
   check_in?: string | null; // 最早入住(例 15:00)
@@ -210,6 +211,7 @@ export interface Trip {
   transport?: string | null;
   region?: string | null;
   summary?: string | null;
+  embed_url?: string | null; // 影片(YouTube / IG 連結)
   items: TripItem[];
   is_public: boolean;
   share_slug?: string | null;

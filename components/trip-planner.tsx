@@ -34,6 +34,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   const [transport, setTransport] = useState<string>(initial?.transport || "開車");
   const [region, setRegion] = useState<string>(initial?.region || "");
   const [summary, setSummary] = useState(initial?.summary || "");
+  const [embedUrl, setEmbedUrl] = useState(initial?.embed_url || "");
   const [items, setItems] = useState<TripItem[]>(initial?.items?.map((it) => ({ ...it, id: it.id || genId() })) || []);
   const [isPublic, setIsPublic] = useState<boolean>(initialOwned ? !!initial?.is_public : false);
   const [saving, setSaving] = useState(false);
@@ -205,6 +206,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
     const payload = {
       owner_id: user.id, title, days, nights, headcount,
       budget: budget ? Number(budget) : null, transport, region: region || null, summary: summary || null, items,
+      embed_url: embedUrl.trim() || null,
       is_public: isPublic,
     };
     let error, id = tripId;
@@ -235,6 +237,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
             <div><label>交通方式</label><select value={transport} onChange={(e) => setTransport(e.target.value)}>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select></div>
             <div><label>主要地區(選填)</label><select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">不指定</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
             <div className="wide"><label>行程簡介(選填)</label><input value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="一句話描述這趟旅程" /></div>
+            <div className="wide"><label>影片(YouTube 或 Instagram 連結,選填)</label><input value={embedUrl} onChange={(e) => setEmbedUrl(e.target.value)} placeholder="https://youtu.be/… 或 https://instagram.com/p/…" /></div>
           </div>
         </div>
 

@@ -8,6 +8,7 @@ import RoomList from "@/components/room-list";
 import BackLink from "@/components/back-link";
 import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
+import MediaEmbed from "@/components/media-embed";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -83,6 +84,13 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
           )}
           <SaveButton stayId={s.id} />
         </div>
+
+        {s.embed_url && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">影片介紹 / 網紅推薦</h2>
+            <MediaEmbed url={s.embed_url} />
+          </div>
+        )}
 
         {amenities.length > 0 && (
           <div className="shop-block">
