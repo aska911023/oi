@@ -198,11 +198,10 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 店家上架(前台可見)</label>
               {!ownerId && (
-                <label className="check" style={{ gap: 6 }}>曝光方案
+                <label className="check" style={{ gap: 6 }}>曝光
                   <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
-                    <option value="free">免費上架</option>
-                    <option value="featured">精選曝光</option>
-                    <option value="flagship">旗艦</option>
+                    <option value="free">一般</option>
+                    <option value="featured">精選(優先曝光)</option>
                   </select>
                 </label>
               )}

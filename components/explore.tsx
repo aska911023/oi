@@ -171,7 +171,10 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
               <Link href={`/stay/${r.stay_id}`} className="card">
                 <div className="photo">
                   <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
-                  {r.ad_tier === "flagship" ? <span className="tag-feat tier-flagship">旗艦</span> : r.ad_tier === "featured" ? <span className="tag-feat">精選</span> : null}
+                  <div className="card-badges">
+                    {r.kind === "whole" && <span className="cbadge cbadge-whole">包棟</span>}
+                    {r.ad_tier && r.ad_tier !== "free" && <span className="cbadge cbadge-feat">精選</span>}
+                  </div>
                   {r.rooms_total != null && <span className="tag-rooms">共 {r.rooms_total} 間</span>}
                 </div>
                 <div className="card-body">

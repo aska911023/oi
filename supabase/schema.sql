@@ -1284,6 +1284,44 @@ create or replace function public.search_rooms(
 $$;
 grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
 
+-- ================= 旗艦收掉(付費之後再做);卡片顯示「包棟」標 + 曝光優先=精選+包棟 =================
+update public.stays set ad_tier = 'featured' where ad_tier = 'flagship';
+drop function if exists public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int);
+create or replace function public.search_rooms(
+  kw text default '', p_region text default null, p_price_min int default null, p_price_max int default null,
+  p_guests int default null, p_category text default null, p_amenities text[] default null, p_room_tags text[] default null,
+  p_sort text default 'default', lim int default 24, off int default 0
+) returns jsonb language sql stable as $$
+  with base as (
+    select rt.id, rt.name as room_name, rt.price, rt.capacity, rt.rooms_left, rt.rooms_total, rt.kind, rt.beds, rt.description as room_desc, rt.tags,
+           coalesce(nullif(rt.image, ''), s.image) as image,
+           coalesce(nullif(rt.images,'{}'), nullif(s.images,'{}'),
+                    array_remove(array[nullif(rt.image,''), nullif(s.image,'')], null)) as images,
+           rt.featured, s.ad_tier,
+           ((select count(*) from public.saved_places sp where sp.kind = 'room' and sp.place_id = rt.id) + coalesce(s.save_boost, 0))::int as save_count,
+           s.id as stay_id, s.name as stay_name, s.region, s.town, s.category, s.amenities, s.website, s.description as stay_desc, rt.created_at,
+           ((case when s.ad_tier <> 'free' then 1 else 0 end) + (case when rt.kind = 'whole' then 1 else 0 end)) as prio
+    from public.room_types rt join public.stays s on s.id = rt.stay_id
+    where rt.published and s.published and s.approved and s.visibility = 'published'
+      and (p_region is null or s.region = p_region)
+      and (p_category is null or s.category = p_category)
+      and (p_price_min is null or rt.price >= p_price_min)
+      and (p_price_max is null or rt.price <= p_price_max)
+      and (p_guests is null or rt.capacity >= p_guests)
+      and (p_amenities is null or (select bool_and(s.amenities ilike '%'||a||'%') from unnest(p_amenities) a))
+      and (p_room_tags is null or rt.tags @> p_room_tags)
+      and (coalesce(kw,'') = '' or (coalesce(s.name,'')||' '||coalesce(rt.name,'')||' '||coalesce(s.region,'')||' '||coalesce(s.town,'')||' '||coalesce(s.amenities,'')) ilike '%'||kw||'%')
+  ),
+  page as (select * from base order by
+      case when p_sort='default' then prio end desc nulls last,
+      case when p_sort='low' then price end asc nulls last,
+      case when p_sort='high' then price end desc nulls last,
+      prio desc, featured desc nulls last, created_at desc
+    limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object('total',(select count(*) from base),'rows',coalesce((select jsonb_agg(to_jsonb(page)) from page),'[]'::jsonb));
+$$;
+grant execute on function public.search_rooms(text,text,int,int,int,text,text[],text[],text,int,int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

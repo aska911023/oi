@@ -83,6 +83,7 @@ export interface RoomCard {
   capacity: number;
   rooms_left?: number | null;
   rooms_total?: number | null; // 總房數(前台顯示「共 N 間」)
+  kind?: RoomKind; // single / whole(卡片顯示「包棟」標)
   beds?: string | null;
   room_desc?: string | null;
   image: string;

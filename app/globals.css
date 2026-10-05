@@ -196,8 +196,12 @@ img { display: block; max-width: 100%; }
 .card:hover .photo img { transform: scale(1.05); }
 .card .photo::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(18,40,33,.06); border-radius: 16px; }
 .tag-feat { position: absolute; top: 14px; left: 14px; font-size: 11px; font-weight: 800; padding: 5px 11px; background: var(--yellow); color: var(--ink); border-radius: 20px; letter-spacing: .5px; }
-.tag-feat.tier-flagship { background: var(--green); color: #fff; }
 .card-saves { font-size: 12.5px; color: var(--green); font-weight: 700; white-space: nowrap; }
+/* 卡片標籤(包棟 / 精選)*/
+.card-badges { position: absolute; top: 14px; left: 14px; z-index: 2; display: flex; gap: 6px; }
+.cbadge { font-size: 11px; font-weight: 800; padding: 5px 11px; border-radius: 20px; letter-spacing: .5px; }
+.cbadge-whole { background: var(--green); color: #fff; }
+.cbadge-feat { background: var(--yellow); color: var(--ink); }
 .tag-rooms { position: absolute; bottom: 14px; left: 14px; font-size: 11px; font-weight: 700; padding: 5px 10px; background: rgba(255,255,255,.92); color: var(--green); border-radius: 20px; box-shadow: var(--shadow-sm); z-index: 2; }
 /* 書籤收藏 icon(浮在圖片角落) */
 .card-wrap { position: relative; }
