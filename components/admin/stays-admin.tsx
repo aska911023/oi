@@ -6,6 +6,7 @@ import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
 import StaysImport from "@/components/admin/stays-import";
+import StayOwnerAssign from "@/components/admin/stay-owner-assign";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { Stay } from "@/lib/types";
 
@@ -53,6 +54,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [form, setForm] = useState<Form | null>(null);
+  const [assign, setAssign] = useState<Stay | null>(null);
   const [busy, setBusy] = useState(false);
 
   const stats = useMemo(() => ({
@@ -203,6 +205,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                    {isAdminView && <button className="lnk" onClick={() => setAssign(s)}>{s.owner_id ? "業主" : "指派業主"}</button>}
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
@@ -279,6 +282,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
             </div>
           </div>
         </>
+      )}
+
+      {assign && (
+        <StayOwnerAssign
+          stayId={assign.id} stayName={assign.name} ownerId={assign.owner_id ?? null}
+          onClose={() => setAssign(null)} onDone={refresh}
+        />
       )}
     </>
   );

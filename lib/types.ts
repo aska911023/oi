@@ -35,6 +35,7 @@ export interface Stay {
   featured?: boolean; // 贊助置頂
   ad_tier?: string; // 曝光方案:free / featured / flagship
   save_boost?: number; // 收藏數墊高(初期社群證明;admin 設)
+  owner_id?: string | null; // 業主(指派後該業者可自管此民宿與底下房型);null = 平台自管
 }
 
 export type SortMode = "default" | "low" | "high";

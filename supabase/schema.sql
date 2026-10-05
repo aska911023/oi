@@ -1607,3 +1607,83 @@ create policy stay_bd_admin_all on public.stay_bd
 
 revoke all on public.stay_bd from anon;
 grant select, insert, update, delete on public.stay_bd to authenticated;
+
+
+-- ============================================================
+-- stay_snapshots：民宿資料快照
+-- 交給業者自行管理前先存一份,日後對方改壞/改掉都還原得回來,也能比對他們改了什麼。
+-- ============================================================
+create table if not exists public.stay_snapshots (
+  id uuid primary key default gen_random_uuid(),
+  stay_id uuid not null references public.stays(id) on delete cascade,
+  stay jsonb not null,            -- 當下的 stays 整列
+  room_types jsonb not null default '[]'::jsonb,  -- 當下的所有房型
+  reason text,                    -- 例:轉移給業者前備份
+  owner_before uuid,
+  owner_after uuid,
+  created_at timestamptz not null default now(),
+  created_by uuid
+);
+
+create index if not exists stay_snapshots_stay_idx on public.stay_snapshots (stay_id, created_at desc);
+
+create or replace function public.tg_stay_snapshot_stamp()
+returns trigger language plpgsql as $$
+begin
+  new.created_by := auth.uid();
+  return new;
+end $$;
+
+drop trigger if exists trg_stay_snapshot_stamp on public.stay_snapshots;
+create trigger trg_stay_snapshot_stamp before insert on public.stay_snapshots
+  for each row execute function public.tg_stay_snapshot_stamp();
+
+alter table public.stay_snapshots enable row level security;
+drop policy if exists stay_snapshots_admin on public.stay_snapshots;
+create policy stay_snapshots_admin on public.stay_snapshots
+  for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+revoke all on public.stay_snapshots from anon;
+grant select, insert, update, delete on public.stay_snapshots to authenticated;
+
+-- ------------------------------------------------------------
+-- 指派業主：先存快照、再改 owner_id,兩件事在同一個交易裡完成
+-- p_owner 傳 null = 收回自管
+-- ------------------------------------------------------------
+create or replace function public.assign_stay_owner(p_stay uuid, p_owner uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'public'
+as $$
+declare
+  v_before uuid;
+  v_snap uuid;
+begin
+  if not public.is_admin() then
+    raise exception '只有管理者可以指派業主';
+  end if;
+
+  select owner_id into v_before from public.stays where id = p_stay;
+  if not found then
+    raise exception '找不到這筆民宿';
+  end if;
+
+  insert into public.stay_snapshots (stay_id, stay, room_types, reason, owner_before, owner_after)
+  select p_stay,
+         to_jsonb(s),
+         coalesce((select jsonb_agg(to_jsonb(rt)) from public.room_types rt where rt.stay_id = p_stay), '[]'::jsonb),
+         case when p_owner is null then '收回自管前備份' else '轉移給業者前備份' end,
+         v_before, p_owner
+  from public.stays s where s.id = p_stay
+  returning id into v_snap;
+
+  update public.stays set owner_id = p_owner where id = p_stay;
+
+  return jsonb_build_object('snapshot_id', v_snap, 'owner_before', v_before, 'owner_after', p_owner);
+end $$;
+
+revoke all on function public.assign_stay_owner(uuid, uuid) from public, anon;
+grant execute on function public.assign_stay_owner(uuid, uuid) to authenticated;
