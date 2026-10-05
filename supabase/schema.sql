@@ -1376,6 +1376,28 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.my_notifications(int) to authenticated;
 
+-- ================= 個人公開行程(點頭像看某人分享的行程)=================
+create or replace function public.user_public_trips(p_uid uuid, lim int default 24, off int default 0)
+returns jsonb language sql stable security definer set search_path = public as $$
+  with base as (
+    select t.*,
+      (select p.display_name from public.profiles p where p.id = t.owner_id) as owner_name,
+      (select count(*) from public.trip_likes l where l.trip_id = t.id) as like_count,
+      (select count(*) from public.trip_comments c where c.trip_id = t.id) as comment_count,
+      (select count(*) from public.saved_trips sv where sv.trip_id = t.id) as save_count,
+      t.share_count
+    from public.trips t
+    where t.is_public and t.owner_id = p_uid
+  ),
+  page as (select * from base order by created_at desc limit greatest(lim,0) offset greatest(off,0))
+  select jsonb_build_object(
+    'name', (select display_name from public.profiles where id = p_uid),
+    'total', (select count(*) from base),
+    'rows', coalesce((select jsonb_agg(to_jsonb(page)) from page), '[]'::jsonb)
+  );
+$$;
+grant execute on function public.user_public_trips(uuid, int, int) to anon, authenticated;
+
 -- ============================================================
 -- 完成。設定 admin(擇一):
 --   update public.profiles set role='admin' where id = (select id from auth.users where email='你的email');

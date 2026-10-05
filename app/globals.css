@@ -738,6 +738,18 @@ img { display: block; max-width: 100%; }
 .ig-comments { padding: 8px 14px 14px; }
 .ig-post .trip-manage { padding: 12px 14px; margin-top: 0; }
 .ig-stats { padding: 6px 14px 0; font-size: 12.5px; color: var(--text-2); font-weight: 600; }
+.ig-headlink { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: inherit; }
+.ig-headlink:hover .ig-name { color: var(--green); }
+/* 分享行程捷徑(Threads 式 compose 列)*/
+.compose-shortcut { display: flex; align-items: center; gap: 12px; max-width: 500px; margin: 0 auto 22px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px; color: var(--text); transition: border-color .15s; }
+.compose-shortcut:hover { border-color: var(--green); }
+.cs-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 16px; flex: none; }
+.cs-prompt { flex: 1; color: var(--muted); font-size: 14.5px; }
+.cs-btn { flex: none; }
+/* 個人頁 */
+.profile-head { display: flex; align-items: center; gap: 16px; }
+.profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 28px; flex: none; }
+.profile-head h1 { font-size: 28px; }
 /* 通知鈴鐺 */
 .notif-wrap { position: relative; display: inline-flex; }
 .notif-btn { position: relative; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 6px; border-radius: 10px; display: grid; place-items: center; line-height: 0; }

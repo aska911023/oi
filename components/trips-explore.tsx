@@ -30,7 +30,7 @@ const HEAD_BUCKETS = [
   { v: "5+", label: "5 人以上" },
 ];
 
-export default function TripsExplore({ initialTrips, initialTotal }: { initialTrips: Trip[]; initialTotal: number }) {
+export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "" }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string }) {
   const [kw, setKw] = useState("");
   const [dayB, setDayB] = useState("all");
   const [budgetB, setBudgetB] = useState("all");
@@ -77,6 +77,12 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
 
   return (
     <>
+      <Link href={loggedIn ? "/plan" : "/login?next=/plan"} className="compose-shortcut">
+        <div className="cs-avatar" aria-hidden>{(myName || "旅").slice(0, 1)}</div>
+        <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
+        <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
+      </Link>
+
       <div className="trips-filter">
         <input className="admin-search" value={kw} onChange={(e) => setKw(e.target.value)} placeholder="搜尋行程名稱、地區…" />
         <select value={dayB} onChange={(e) => setDayB(e.target.value)}>{DAY_BUCKETS.map((b) => <option key={b.v} value={b.v}>{b.label}</option>)}</select>

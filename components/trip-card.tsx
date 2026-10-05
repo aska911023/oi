@@ -19,11 +19,17 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
   return (
     <article className="ig-post">
       <header className="ig-head">
-        <div className="ig-avatar" aria-hidden>{author.slice(0, 1)}</div>
-        <div className="ig-user">
-          <div className="ig-name">{author}</div>
-          <div className="ig-sub">{sub}</div>
-        </div>
+        {t.owner_id ? (
+          <Link href={`/u/${t.owner_id}`} className="ig-headlink">
+            <div className="ig-avatar" aria-hidden>{author.slice(0, 1)}</div>
+            <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
+          </Link>
+        ) : (
+          <>
+            <div className="ig-avatar" aria-hidden>{author.slice(0, 1)}</div>
+            <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
+          </>
+        )}
       </header>
 
       {photos.length > 0 && (
