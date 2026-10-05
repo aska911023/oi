@@ -10,11 +10,11 @@ export default async function PlacesPage({ params }: { params: Promise<{ kind: s
   const meta = POI_KINDS.find((k) => k.slug === kind);
   if (!meta) notFound();
 
-  const { places, total } = await getPlaceInitial(meta.kind as PoiKind);
+  const { places, total, regions } = await getPlaceInitial(meta.kind as PoiKind);
 
   return (
     <main>
-      <PlacesExplore places={places} total={total} kind={meta.kind as PoiKind} />
+      <PlacesExplore places={places} total={total} kind={meta.kind as PoiKind} regions={regions} />
     </main>
   );
 }

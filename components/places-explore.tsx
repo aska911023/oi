@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Place, PoiKind } from "@/lib/types";
 import { POI_KINDS } from "@/lib/types";
-import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { KIND_TABLE, DETAILS, safeKw, type WeekHour } from "@/lib/places-config";
 import ImageZoom from "@/components/image-zoom";
@@ -32,7 +31,7 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ places, total = 0, kind }: { places: Place[]; total?: number; kind: PoiKind }) {
+export default function PlacesExplore({ places, total = 0, kind, regions = [] }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[] }) {
   const [kw, setKw] = useState("");
   const [region, setRegion] = useState("all");
   const [tags, setTags] = useState<string[]>([]);
@@ -130,15 +129,19 @@ export default function PlacesExplore({ places, total = 0, kind }: { places: Pla
             </div>
           </div>
 
-          <div className="disc-filters">
-            <div className="filter-row">
-              <span className="filter-cap">{I.pin} 地區</span>
-              <select className="region-select" value={region} onChange={(e) => setRegion(e.target.value)} aria-label="縣市">
-                <option value="all">全部地區</option>
-                {GEOGRAPHIC_AREAS.map((a) => <optgroup key={a.name} label={a.name}>{a.regions.map((r) => <option key={r} value={r}>{r}</option>)}</optgroup>)}
-              </select>
+          {regions.length > 0 && (
+            <div className="disc-filters">
+              <div className="filter-row" style={{ alignItems: "flex-start" }}>
+                <span className="filter-cap">{I.pin} 地區</span>
+                <div className="chips">
+                  <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部地區</button>
+                  {regions.map((r) => (
+                    <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
           {tagOptions.length > 0 && (
             <div className="disc-filters">
               <div className="filter-row" style={{ alignItems: "flex-start" }}>
