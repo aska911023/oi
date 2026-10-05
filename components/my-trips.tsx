@@ -48,7 +48,7 @@ export default function MyTrips({ initial }: { initial: Trip[] }) {
   }
 
   return (
-    <div className="trips-grid">
+    <div className="ig-feed">
       {list.map((t) => (
         <TripCard key={t.id} trip={t} manageSlot={
           <>

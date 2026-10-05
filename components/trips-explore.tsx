@@ -88,7 +88,7 @@ export default function TripsExplore({ initialTrips, initialTotal }: { initialTr
 
       <div className="sec-head"><div className="st"><h2 className="serif">公開行程</h2><span className="count">{rpcTotal} 筆</span></div></div>
 
-      <div className="trips-grid">
+      <div className="ig-feed">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
         {results.map((t) => <TripCard key={t.id} trip={t} />)}
       </div>

@@ -718,6 +718,25 @@ img { display: block; max-width: 100%; }
 .tc-head { font-weight: 700; font-size: 13.5px; color: var(--text-2); margin-bottom: 8px; }
 .tc-head span { color: var(--muted); font-weight: 600; margin-left: 2px; }
 .trip-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+/* IG 貼文式行程卡 + 單欄 feed */
+.ig-feed { display: flex; flex-direction: column; gap: 26px; max-width: 500px; margin: 0 auto; }
+.ig-post { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.ig-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.ig-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 17px; flex: none; }
+.ig-user { flex: 1; min-width: 0; }
+.ig-name { font-weight: 700; font-size: 14px; color: var(--ink); line-height: 1.2; }
+.ig-sub { font-size: 12px; color: var(--muted); }
+.ig-media { display: block; }
+.ig-media .disc-img { border-radius: 0; }
+.ig-actions { display: flex; align-items: center; gap: 6px; padding: 8px 12px 2px; }
+.ig-caption { padding: 4px 14px 0; font-size: 14px; line-height: 1.6; color: var(--text); }
+.ig-title { font-weight: 700; color: var(--ink); }
+.ig-cap-sum { color: var(--text-2); }
+.ig-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 0; }
+.ig-tags span { font-size: 12px; color: var(--text-2); background: var(--page); border: 1px solid var(--border); border-radius: 16px; padding: 3px 10px; }
+.ig-viewc { display: block; width: 100%; background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; padding: 10px 14px 14px; text-align: left; }
+.ig-comments { padding: 8px 14px 14px; }
+.ig-post .trip-manage { padding: 12px 14px; margin-top: 0; }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

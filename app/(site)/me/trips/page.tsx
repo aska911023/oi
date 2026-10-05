@@ -41,7 +41,7 @@ export default async function MyTripsPage() {
       {savedTrips.length === 0 ? (
         <div className="empty">還沒有收藏的行程。到<Link href="/trips" style={{ color: "var(--green)", textDecoration: "underline" }}>行程分享牆</Link>按 ♡ 收藏喜歡的行程。</div>
       ) : (
-        <div className="trips-grid">
+        <div className="ig-feed">
           {savedTrips.map((t) => <TripCard key={t.id} trip={t} />)}
         </div>
       )}
