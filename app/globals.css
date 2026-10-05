@@ -766,6 +766,19 @@ img { display: block; max-width: 100%; }
 .notif-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.5; }
 .notif-text b { color: var(--ink); }
 .notif-time { flex: none; font-size: 11px; color: var(--muted); }
+.notif-ava { position: relative; flex: none; }
+.notif-ava .notif-mark { position: absolute; right: -2px; bottom: -3px; font-size: 10px; background: #fff; border-radius: 50%; width: 16px; height: 16px; display: grid; place-items: center; box-shadow: 0 0 0 1px var(--border); }
+/* 頭貼 */
+.avatar { border-radius: 50%; object-fit: cover; flex: none; display: block; }
+.avatar-initial { background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; }
+.cta-user { display: inline-flex; align-items: center; gap: 8px; }
+/* 帳號頭貼/暱稱編輯 */
+.account-editor { display: flex; flex-direction: column; gap: 16px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+.ae-avatar { display: flex; align-items: center; gap: 14px; }
+.ae-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 5px; }
+.ae-field input { width: 100%; max-width: 320px; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: inherit; background: #fff; }
+.ae-actions { display: flex; align-items: center; gap: 12px; }
+.ae-msg { font-size: 13px; color: var(--green); font-weight: 600; }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

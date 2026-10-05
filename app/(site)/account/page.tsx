@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/signout-button";
+import AccountEditor from "@/components/account-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ export default async function Account() {
           <h1>我的帳號</h1>
           <span className="role-badge">{ROLE_LABEL[role]}</span>
         </div>
+
+        <AccountEditor initialAvatar={profile?.avatar_url || null} initialName={profile?.display_name || ""} />
 
         <div className="account-card">
           <dl style={{ margin: 0 }}>

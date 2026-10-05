@@ -4,6 +4,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
 import NotificationBell from "@/components/notification-bell";
+import Avatar from "@/components/avatar";
 
 export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
   const sb = await createClient();
@@ -12,10 +13,12 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
 
   let name = "";
   let role = "user";
+  let avatarUrl: string | null = null;
   if (user) {
-    const { data } = await sb.from("profiles").select("display_name, role").eq("id", user.id).maybeSingle();
+    const { data } = await sb.from("profiles").select("display_name, role, avatar_url").eq("id", user.id).maybeSingle();
     name = data?.display_name || user.email?.split("@")[0] || "";
     role = data?.role || "user";
+    avatarUrl = data?.avatar_url || null;
   }
 
   return (
@@ -30,7 +33,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
               <NotificationBell />
-              <Link href="/me/trips" className="cta">歡迎,{name}</Link>
+              <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={24} /> 歡迎,{name}</Link>
             </>
           ) : (
             <Link href="/login" className="cta">登入 / 註冊</Link>

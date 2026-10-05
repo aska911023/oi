@@ -7,6 +7,7 @@ import SaveTripButton from "@/components/save-trip-button";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
 import TripComments from "@/components/trip-comments";
+import Avatar from "@/components/avatar";
 import type { Trip } from "@/lib/types";
 
 // IG 貼文式行程卡:頭像+暱稱 → 大圖 → 動作列 → 標題/摘要 → 留言。看別人/看自己共用。
@@ -21,12 +22,12 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
       <header className="ig-head">
         {t.owner_id ? (
           <Link href={`/u/${t.owner_id}`} className="ig-headlink">
-            <div className="ig-avatar" aria-hidden>{author.slice(0, 1)}</div>
+            <Avatar src={t.owner_avatar} name={author} size={40} />
             <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
           </Link>
         ) : (
           <>
-            <div className="ig-avatar" aria-hidden>{author.slice(0, 1)}</div>
+            <Avatar src={t.owner_avatar} name={author} size={40} />
             <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
           </>
         )}

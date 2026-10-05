@@ -5,6 +5,7 @@ import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import TripCard from "@/components/trip-card";
+import Avatar from "@/components/avatar";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -30,7 +31,7 @@ const HEAD_BUCKETS = [
   { v: "5+", label: "5 人以上" },
 ];
 
-export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "" }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string }) {
+export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "", myAvatar = null }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string; myAvatar?: string | null }) {
   const [kw, setKw] = useState("");
   const [dayB, setDayB] = useState("all");
   const [budgetB, setBudgetB] = useState("all");
@@ -78,7 +79,7 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
   return (
     <>
       <Link href={loggedIn ? "/plan" : "/login?next=/plan"} className="compose-shortcut">
-        <div className="cs-avatar" aria-hidden>{(myName || "旅").slice(0, 1)}</div>
+        <Avatar src={myAvatar} name={myName} size={38} />
         <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
         <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
       </Link>

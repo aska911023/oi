@@ -215,6 +215,7 @@ export interface Trip {
   share_slug?: string | null;
   created_at?: string;
   owner_name?: string | null; // 發布者暱稱(search_trips 帶回)
+  owner_avatar?: string | null; // 發布者頭貼
   like_count?: number;
   comment_count?: number;
   save_count?: number;

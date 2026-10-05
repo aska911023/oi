@@ -54,7 +54,6 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   const [savedOnly, setSavedOnly] = useState(false);
   const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   // 一鍵分享 PDF:把「列印版面」截圖成 PDF,手機用系統分享、桌機下載(避免中文字型問題,用 rasterize)
@@ -197,45 +196,8 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
     });
   }
 
-  function download() {
-    const data = { title, days, nights, headcount, budget: budget ? Number(budget) : null, transport, region, summary, items };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${title || "行程"}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function importFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const d = JSON.parse(String(reader.result));
-        setTitle(d.title || "我的行程");
-        setDays(Math.min(30, Math.max(1, Number(d.days) || 2)));
-        setNights(Math.max(0, Number(d.nights) ?? 1));
-        setHeadcount(Number(d.headcount) || 2);
-        setBudget(d.budget != null ? String(d.budget) : "");
-        setTransport(d.transport || "開車");
-        setRegion(d.region || "");
-        setSummary(d.summary || "");
-        setItems(Array.isArray(d.items) ? d.items.map((it: TripItem) => ({ ...it, id: it.id || genId() })) : []);
-        setTripId(null);
-        setIsPublic(false);
-        alert("已載入行程檔案。");
-      } catch {
-        alert("檔案格式不正確,請選擇之前從這裡下載的 .json。");
-      }
-    };
-    reader.readAsText(file);
-  }
-
   async function save() {
-    if (!loggedIn) { alert("請先登入才能把行程存到帳號(仍可用「下載檔案」保存)。"); return; }
+    if (!loggedIn) { alert("請先登入才能把行程存到帳號。"); return; }
     setSaving(true);
     const sb = createClient();
     const { data: { user } } = await sb.auth.getUser();
@@ -339,12 +301,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
         {/* 動作列 */}
         <div className="plan-actions">
           <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : tripId ? "更新行程" : "儲存到我的行程"}</button>
-          <button className="btn btn-ghost" onClick={download}>下載檔案(.json)</button>
-          <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>匯入檔案</button>
           <button className="btn btn-ghost" onClick={sharePdf} disabled={exporting}>{exporting ? "產生中…" : "分享 PDF"}</button>
-          <button className="btn btn-ghost" onClick={() => window.print()}>列印</button>
-          <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: "none" }}
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
         </div>
         {!loggedIn && <p className="plan-hint">未登入也能規劃並「下載檔案」與旅伴互傳;登入後可存到帳號、公開分享。</p>}
       </div>
