@@ -1570,3 +1570,40 @@ create policy leads_admin_all on public.leads
 
 revoke all on public.leads from anon;
 grant select, insert, update, delete on public.leads to authenticated;
+
+
+-- ============================================================
+-- stay_bd：民宿洽談紀錄（已聯繫 / 拒絕 / 備註）
+-- ★ 刻意不放在 stays：stays 的 SELECT policy 是「published 就人人可讀」,
+--   備註寫在 stays 會被公開 API 讀到。這張表只有 admin 讀得到。
+-- ============================================================
+create table if not exists public.stay_bd (
+  stay_id uuid primary key references public.stays(id) on delete cascade,
+  contacted boolean not null default false,   -- 已聯繫
+  rejected boolean not null default false,    -- 對方拒絕
+  note text,                                  -- 內部備註
+  updated_at timestamptz not null default now(),
+  updated_by uuid
+);
+
+create or replace function public.tg_stay_bd_touch()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  new.updated_by := auth.uid();
+  return new;
+end $$;
+
+drop trigger if exists trg_stay_bd_touch on public.stay_bd;
+create trigger trg_stay_bd_touch before insert or update on public.stay_bd
+  for each row execute function public.tg_stay_bd_touch();
+
+alter table public.stay_bd enable row level security;
+drop policy if exists stay_bd_admin_all on public.stay_bd;
+create policy stay_bd_admin_all on public.stay_bd
+  for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+revoke all on public.stay_bd from anon;
+grant select, insert, update, delete on public.stay_bd to authenticated;

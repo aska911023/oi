@@ -20,8 +20,36 @@ const EMPTY: Form = {
   published: false, featured: false, sample: false, ad_tier: "free", save_boost: 0,
 };
 
-export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; ownerId?: string }) {
+export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
+
+export default function StaysAdmin({ initial, ownerId, bdInitial = [] }: {
+  initial: Stay[]; ownerId?: string; bdInitial?: StayBd[];
+}) {
   const [list, setList] = useState<Stay[]>(initial);
+  // 洽談紀錄存在 stay_bd(只有 admin 讀得到),不放 stays 以免被公開 API 讀走。
+  // 業者自己的 /vendor 頁(有 ownerId)不顯示這些內部欄位。
+  const isAdminView = !ownerId;
+  const [bd, setBd] = useState<Record<string, StayBd>>(
+    () => Object.fromEntries(bdInitial.map((b) => [b.stay_id, b])),
+  );
+
+  async function saveBd(stayId: string, patch: Partial<StayBd>) {
+    const next: StayBd = {
+      stay_id: stayId,
+      contacted: bd[stayId]?.contacted ?? false,
+      rejected: bd[stayId]?.rejected ?? false,
+      note: bd[stayId]?.note ?? null,
+      ...patch,
+    };
+    setBd((p) => ({ ...p, [stayId]: next }));          // 先更新畫面
+    const sb = createClient();
+    const { error } = await sb.from("stay_bd").upsert(next, { onConflict: "stay_id" });
+    if (error) {
+      alert("洽談紀錄儲存失敗:" + error.message);
+      setBd((p) => ({ ...p, [stayId]: { ...next, ...bd[stayId] } }));   // 失敗就還原
+    }
+  }
+
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [form, setForm] = useState<Form | null>(null);
@@ -135,10 +163,14 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       <div className="atable-wrap">
         <table className="atable">
           <thead>
-            <tr><th></th><th>名稱</th><th>地區</th><th>風格</th><th>狀態</th><th>操作</th></tr>
+            <tr>
+              <th></th><th>名稱</th><th>地區</th><th>風格</th><th>狀態</th>
+              {isAdminView && <><th>洽談</th><th>內部備註</th></>}
+              <th>操作</th>
+            </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={isAdminView ? 8 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
             {filtered.map((s) => (
               <tr key={s.id}>
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
@@ -150,6 +182,23 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
                     ? <span className="pill pending">待審核</span>
                     : <span className={"pill " + (s.published ? "live" : "draft")}>{s.published ? "已上架" : "草稿"}</span>}
                 </td>
+                {isAdminView && <>
+                <td>
+                  <div className="bd-checks">
+                    <label><input type="checkbox" checked={!!bd[s.id]?.contacted}
+                      onChange={(e) => saveBd(s.id, { contacted: e.target.checked })} /> 已聯繫</label>
+                    <label><input type="checkbox" checked={!!bd[s.id]?.rejected}
+                      onChange={(e) => saveBd(s.id, { rejected: e.target.checked })} /> 拒絕</label>
+                  </div>
+                </td>
+                <td>
+                  <input className="bd-note" defaultValue={bd[s.id]?.note || ""}
+                    placeholder="聯絡結果、報價…"
+                    onBlur={(e) => {
+                      if ((bd[s.id]?.note || "") !== e.target.value) saveBd(s.id, { note: e.target.value });
+                    }} />
+                </td>
+                </>}
                 <td>
                   <div className="row-actions">
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>

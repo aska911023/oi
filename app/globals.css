@@ -518,6 +518,13 @@ img { display: block; max-width: 100%; }
 .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 560px) { .frow { grid-template-columns: 1fr; } }
 
+/* 民宿列表的洽談紀錄(已聯繫/拒絕/備註) */
+.bd-checks { display: flex; flex-direction: column; gap: 4px; white-space: nowrap; }
+.bd-checks label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); cursor: pointer; }
+.bd-checks input { accent-color: var(--green); cursor: pointer; }
+.bd-note { width: 100%; min-width: 150px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; color: var(--text); }
+.bd-note:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+
 /* Excel 批次匯入對話框 */
 .imp-steps { margin: 0 0 16px; padding-left: 20px; }
 .imp-steps li { font-size: 14px; color: var(--text); margin-bottom: 10px; line-height: 1.9; }
