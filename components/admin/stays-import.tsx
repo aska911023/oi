@@ -108,7 +108,7 @@ export default function StaysImport({ existingNames, onDone }: {
       };
       if (!REGIONS.includes(p.region)) p.errors.push(`縣市「${p.region || "空白"}」不在清單中`);
       if (!p.town) p.errors.push("鄉鎮市區必填");
-      if (!CATEGORIES.includes(p.category as never)) p.errors.push(`風格「${p.category || "空白"}」不在六選一中`);
+      if (!CATEGORIES.includes(p.category as never)) p.errors.push(`風格「${p.category || "空白"}」不在清單中`);
       if (Number.isNaN(guests)) p.errors.push("可住人數不是數字");
       else if (p.guests === null || p.guests < 1 || p.guests > 100) p.errors.push("可住人數需為 1~100");
       if (Number.isNaN(price)) p.errors.push("每晚最低價不是數字");

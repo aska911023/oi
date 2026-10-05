@@ -8,6 +8,7 @@ export const CATEGORIES: StayCategory[] = [
   "親子友善",
   "寵物友善",
   "包棟民宿",
+  "復古老宅",
 ];
 
 export const ALL_CATEGORY_LABEL = "全部民宿";

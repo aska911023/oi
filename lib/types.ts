@@ -6,7 +6,8 @@ export type StayCategory =
   | "設計旅宿"
   | "親子友善"
   | "寵物友善"
-  | "包棟民宿";
+  | "包棟民宿"
+  | "復古老宅";
 
 export interface Stay {
   id: string;

@@ -13,6 +13,11 @@ import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings
 
 const PAGE = 24;
 
+// 「設施」「房型」兩排細項篩選先關起來:目前上架資料的設施/房型標籤還填得不完整,
+// 篩下去容易撈到空結果,反而讓人以為站上沒東西。等這兩個欄位填得夠齊再改回 true 即可
+// (RPC 的 p_amenities / p_room_tags 參數與 toggle 邏輯都保留著,不用重做)。
+const SHOW_DETAIL_FILTERS = false;
+
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
   search: <svg width="18" height="18" viewBox="0 0 24 24" {...S}><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>,
@@ -133,7 +138,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
               </div>
             )}
           </div>
-          <div className="disc-filters">
+          {SHOW_DETAIL_FILTERS && <div className="disc-filters">
             <div className="filter-row" style={{ alignItems: "flex-start" }}>
               <span className="filter-cap">設施</span>
               <div className="chips">
@@ -150,7 +155,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                 ))}
               </div>
             </div>
-          </div>
+          </div>}
         </div>
       </section>
 

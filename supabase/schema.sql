@@ -1687,3 +1687,9 @@ end $$;
 
 revoke all on function public.assign_stay_owner(uuid, uuid) from public, anon;
 grant execute on function public.assign_stay_owner(uuid, uuid) to authenticated;
+
+
+-- 2026-10-06 新增民宿風格「復古老宅」(放寬 CHECK;前端 CATEGORIES/StayCategory 已同步)
+alter table public.stays drop constraint if exists stays_category_check;
+alter table public.stays add constraint stays_category_check
+  check (category = any (array['海景度假','山林小屋','設計旅宿','親子友善','寵物友善','包棟民宿','復古老宅']));
