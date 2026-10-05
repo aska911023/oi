@@ -216,19 +216,6 @@ export interface Trip {
   comment_count?: number;
 }
 
-// 社交貼文牆
-export interface Post {
-  id: string;
-  user_id: string;
-  body?: string | null;
-  images?: string[];
-  created_at: string;
-  name?: string | null;      // 作者暱稱(posts_feed 帶回)
-  like_count?: number;
-  comment_count?: number;
-  liked?: boolean;
-}
-
 export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;
 
 export const TRIP_ITEM_LABEL: Record<TripItemType, string> = {

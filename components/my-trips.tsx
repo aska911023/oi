@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { revalidateTrips } from "@/app/actions";
+import TripCard from "@/components/trip-card";
 import type { Trip } from "@/lib/types";
 
 export default function MyTrips({ initial }: { initial: Trip[] }) {
@@ -47,24 +48,17 @@ export default function MyTrips({ initial }: { initial: Trip[] }) {
   }
 
   return (
-    <div className="mytrips">
+    <div className="trips-grid">
       {list.map((t) => (
-        <div className="mytrip-row" key={t.id}>
-          <div className="mytrip-main">
-            <div className="mytrip-title">
-              {t.title}
-              {t.is_public ? <span className="pill live" style={{ marginLeft: 8 }}>公開</span> : <span className="pill draft" style={{ marginLeft: 8 }}>私人</span>}
-            </div>
-            <div className="mytrip-meta">{t.days} 天 · {t.headcount} 人{t.transport ? ` · ${t.transport}` : ""}{t.region ? ` · ${t.region}` : ""} · {t.items?.length || 0} 個點</div>
-          </div>
-          <div className="mytrip-actions">
+        <TripCard key={t.id} trip={t} manageSlot={
+          <>
+            {t.is_public ? <span className="pill live">公開</span> : <span className="pill draft">私人</span>}
             <Link className="lnk" href={`/plan?load=${t.id}`}>編輯</Link>
-            <Link className="lnk" href={`/trips/${t.id}`}>檢視</Link>
             <button className="lnk" onClick={() => togglePublic(t)} disabled={busy === t.id}>{t.is_public ? "取消公開" : "公開"}</button>
             {t.is_public && <button className="lnk" onClick={() => copyLink(t)}>複製連結</button>}
             <button className="lnk danger" onClick={() => remove(t)} disabled={busy === t.id}>刪除</button>
-          </div>
-        </div>
+          </>
+        } />
       ))}
     </div>
   );

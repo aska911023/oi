@@ -712,6 +712,7 @@ img { display: block; max-width: 100%; }
 .trip-card-comments { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .tc-head { font-weight: 700; font-size: 13.5px; color: var(--text-2); margin-bottom: 8px; }
 .tc-head span { color: var(--muted); font-weight: 600; margin-left: 2px; }
+.trip-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

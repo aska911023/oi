@@ -25,7 +25,6 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
-          <Link href="/feed">旅人圈</Link>
           {user ? (
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}

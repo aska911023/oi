@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import MyTrips from "@/components/my-trips";
 import SignOutButton from "@/components/signout-button";
-import SaveTripButton from "@/components/save-trip-button";
+import TripCard from "@/components/trip-card";
 import { createClient } from "@/lib/supabase/server";
 import type { Trip } from "@/lib/types";
 
@@ -41,20 +41,8 @@ export default async function MyTripsPage() {
       {savedTrips.length === 0 ? (
         <div className="empty">還沒有收藏的行程。到<Link href="/trips" style={{ color: "var(--green)", textDecoration: "underline" }}>行程分享牆</Link>按 ♡ 收藏喜歡的行程。</div>
       ) : (
-        <div className="mytrips">
-          {savedTrips.map((t) => (
-            <div className="mytrip-row" key={t.id}>
-              <div className="mytrip-main">
-                <div className="mytrip-title">{t.title}</div>
-                <div className="mytrip-meta">{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""} · {t.headcount} 人{t.region ? ` · ${t.region}` : ""} · {t.items?.length || 0} 個停靠點</div>
-              </div>
-              <div className="mytrip-actions">
-                <Link className="lnk" href={`/trips/${t.id}`}>檢視</Link>
-                <Link className="lnk" href={`/plan?load=${t.id}`}>複製規劃</Link>
-                <SaveTripButton tripId={t.id} compact />
-              </div>
-            </div>
-          ))}
+        <div className="trips-grid">
+          {savedTrips.map((t) => <TripCard key={t.id} trip={t} />)}
         </div>
       )}
 
