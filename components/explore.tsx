@@ -180,7 +180,6 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                   <div className="card-desc">{r.room_name}{r.beds ? ` · ${r.beds}` : ""}</div>
                   <div className="card-bottom">
                     <strong>{priceLabel(r.price)} <small>/ 晚起</small></strong>
-                    <span className="capacity">{I.users} {r.capacity} 人</span>
                   </div>
                 </div>
               </Link>
