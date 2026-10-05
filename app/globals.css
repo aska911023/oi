@@ -216,6 +216,33 @@ img { display: block; max-width: 100%; }
 .eg-sub { font-size: 14px; color: var(--text-2); margin: 0 0 20px; }
 .eg-note { font-size: 13.5px; color: var(--muted); margin: 0 0 22px; line-height: 1.7; }
 .eg-btn { width: 100%; justify-content: center; font-size: 16px; padding: 13px; }
+/* 比較器 */
+.compare-toggle.float { position: absolute; top: 54px; right: 12px; z-index: 4; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.9); color: var(--ink); cursor: pointer; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,.2); transition: background .15s, transform .1s, color .15s; }
+.compare-toggle.float:hover { background: #fff; }
+.compare-toggle.float:active { transform: scale(.9); }
+.compare-toggle.float.on { background: var(--green); color: #fff; }
+.compare-toggle.float:disabled { opacity: .45; cursor: default; }
+.compare-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 1500; display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-lg); padding: 10px 14px; max-width: calc(100vw - 24px); }
+.cb-thumbs { display: flex; gap: 8px; }
+.cb-thumb { position: relative; width: 52px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--green-soft); flex: none; }
+.cb-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.cb-ph { width: 100%; height: 100%; background: var(--green-soft); }
+.cb-x { position: absolute; top: 1px; right: 1px; width: 16px; height: 16px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 10px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.cb-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.compare-overlay { position: fixed; inset: 0; z-index: 1600; background: rgba(8,20,16,.55); display: grid; place-items: center; padding: 20px; animation: pop .2s ease; }
+.compare-modal { background: #fff; border-radius: 20px; width: min(960px, 96vw); max-height: 90dvh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); overflow: hidden; }
+.cm-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); flex: none; }
+.cm-head h2 { font-size: 22px; margin: 0; }
+.cm-head .close { position: static; }
+.cm-scroll { overflow: auto; }
+.cm-table { border-collapse: collapse; width: 100%; min-width: 520px; }
+.cm-table th, .cm-table td { border-bottom: 1px solid var(--border); padding: 12px 14px; text-align: left; font-size: 13.5px; vertical-align: middle; }
+.cm-table thead th { border-bottom: 2px solid var(--border-strong); vertical-align: bottom; }
+.cm-table thead th:first-child, .cm-table tbody th { position: sticky; left: 0; background: var(--page); z-index: 1; font-weight: 700; color: var(--text-2); white-space: nowrap; }
+.cm-colimg { width: 150px; height: 100px; border-radius: 10px; overflow: hidden; background: var(--green-soft); }
+.cm-colimg img { width: 100%; height: 100%; object-fit: cover; }
+.cm-remove { margin-top: 6px; border: 0; background: none; color: var(--muted); font-size: 12px; cursor: pointer; }
+.cm-remove:hover { color: #c0392b; }
 .pick-filterbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .pick-filterbar .admin-search { margin-bottom: 0; }
 .pick-filterbar .chip { white-space: nowrap; cursor: pointer; }

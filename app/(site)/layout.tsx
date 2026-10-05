@@ -2,6 +2,8 @@ import Link from "next/link";
 import SiteHeader from "@/components/site-header";
 import SiteTheme from "@/components/site-theme";
 import EntryGate from "@/components/entry-gate";
+import CompareBar from "@/components/compare-bar";
+import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
 import { POI_KINDS } from "@/lib/types";
@@ -12,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
   return (
-    <>
+    <CompareProvider>
       <SiteTheme s={settings} />
       <EntryGate logoSrc={settings.logo_image || undefined} />
       <SiteHeader />
@@ -48,6 +50,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <span className="tagline">{settings.footer_tagline}</span>
         </div>
       </footer>
-    </>
+      <CompareBar />
+    </CompareProvider>
   );
 }

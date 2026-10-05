@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import PhotoCarousel from "@/components/photo-carousel";
 import SaveBookmark from "@/components/save-bookmark";
+import CompareToggle from "@/components/compare-toggle";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
 
 const PAGE = 24;
@@ -184,6 +185,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                 </div>
               </Link>
               <SaveBookmark type="room" id={r.id} floating nextPath={`/stay/${r.stay_id}`} />
+              <CompareToggle card={r} />
             </div>
           ))}
         </div>
