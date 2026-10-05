@@ -64,6 +64,11 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
             🕒 {s.check_in ? `入住 ${s.check_in} 後` : ""}{s.check_in && s.check_out ? " · " : ""}{s.check_out ? `退房 ${s.check_out} 前` : ""}
           </div>
         )}
+        {s.license_no && (
+          <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13.5, color: "var(--muted)", marginTop: 6 }}>
+            🏛 合法民宿登記證號:{s.license_no}
+          </div>
+        )}
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
           {s.website && <a className="btn btn-primary" href={s.website} target="_blank" rel="noopener noreferrer">前往預訂 / 民宿官網 {OUT}</a>}

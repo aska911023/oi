@@ -15,7 +15,7 @@ const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", rooms_left: null, address: "", lat: null, lng: null,
-  check_in: "", check_out: "",
+  license_no: "", check_in: "", check_out: "",
   published: false, featured: false, sample: false,
 };
 
@@ -68,6 +68,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
       address: (form.address || "").trim(),
       lat: form.lat === null || form.lat === undefined || (form.lat as unknown as string) === "" ? null : Number(form.lat),
       lng: form.lng === null || form.lng === undefined || (form.lng as unknown as string) === "" ? null : Number(form.lng),
+      license_no: (form.license_no || "").trim() || null,
       check_in: (form.check_in || "").trim() || null,
       check_out: (form.check_out || "").trim() || null,
       published: form.published, featured: form.featured, sample: form.sample,
@@ -168,6 +169,7 @@ export default function StaysAdmin({ initial, ownerId }: { initial: Stay[]; owne
               <div><label>縣市</label><select value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
               <div><label>鄉鎮市區 *</label><input value={form.town} onChange={(e) => setForm({ ...form, town: e.target.value })} placeholder="例:恆春鎮" /></div>
               <div><label>風格</label><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as Stay["category"] })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+              <div className="wide"><label>合法民宿登記證號(選填,顯示於前台增加信任)</label><input value={form.license_no || ""} onChange={(e) => setForm({ ...form, license_no: e.target.value })} placeholder="例:宜蘭縣民宿第 000123 號" /></div>
               <div className="wide"><label>地址(Google 地圖 / 導航用)</label><input value={form.address || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="例:屏東縣恆春鎮…" /></div>
               <div><label>緯度 lat(選填)</label><input value={form.lat ?? ""} onChange={(e) => setForm({ ...form, lat: e.target.value === "" ? null : Number(e.target.value) })} placeholder="22.00" /></div>
               <div><label>經度 lng(選填)</label><input value={form.lng ?? ""} onChange={(e) => setForm({ ...form, lng: e.target.value === "" ? null : Number(e.target.value) })} placeholder="120.74" /></div>

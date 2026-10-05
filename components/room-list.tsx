@@ -62,7 +62,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               </div>
               <div className="room-price-col">
                 <div className="room-price">{priceLabel(r.price)}<small>/{whole ? "晚起" : "晚"}</small></div>
-                {r.rooms_left != null && <span className={"room-stock" + (r.rooms_left <= 1 ? " low" : "")}>剩 {r.rooms_left} {whole ? "組" : "間"}</span>}
+                {r.rooms_total != null && <span className="room-stock">共 {r.rooms_total} {whole ? "組" : "間"}</span>}
               </div>
             </div>
           );
@@ -86,7 +86,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               <div className="m-amenities" style={{ marginTop: 6 }}>
                 <span className="am-chip">可住 {active.capacity} 人</span>
                 {active.beds && <span className="am-chip">{active.beds}</span>}
-                {active.rooms_left != null && <span className="am-chip">剩 {active.rooms_left} {active.kind === "whole" ? "組" : "間"}</span>}
+                {active.rooms_total != null && <span className="am-chip">共 {active.rooms_total} {active.kind === "whole" ? "組" : "間"}</span>}
                 {(active.tags || []).map((t) => <span key={t} className="am-chip">{t}</span>)}
               </div>
 

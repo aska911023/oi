@@ -171,7 +171,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                 <div className="photo">
                   <PhotoCarousel images={r.images && r.images.length ? r.images : [r.image]} alt={r.stay_name} />
                   {r.featured && <span className="tag-feat">精選置頂</span>}
-                  {r.rooms_left != null && <span className={"tag-rooms" + (r.rooms_left <= 2 ? " low" : "")}>剩 {r.rooms_left} 間</span>}
+                  {r.rooms_total != null && <span className="tag-rooms">共 {r.rooms_total} 間</span>}
                 </div>
                 <div className="card-body">
                   <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>

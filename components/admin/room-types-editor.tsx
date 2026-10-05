@@ -146,7 +146,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
               <input className="rt-name" value={r.name || ""} placeholder="房型名稱(雙人房)" onChange={(e) => patch(i, { name: e.target.value })} />
               <span className="rt-num">NT$<input type="number" min={0} value={r.price ?? 0} onChange={(e) => patch(i, { price: Number(e.target.value) })} />/晚</span>
               <span className="rt-num">可住<input type="number" min={1} value={r.capacity ?? 2} onChange={(e) => patch(i, { capacity: Number(e.target.value) })} />人</span>
-              <span className="rt-num">剩<input type="number" min={0} value={r.rooms_left ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_left: e.target.value === "" ? null : Number(e.target.value) })} />間</span>
+              <span className="rt-num">共<input type="number" min={0} value={r.rooms_total ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_total: e.target.value === "" ? null : Number(e.target.value) })} />間</span>
               {toggles(r, i)}
             </div>
             {extraRow(r, i)}
@@ -165,7 +165,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
             <div className="rt-row">
               <input className="rt-name" value={r.name || ""} placeholder="包棟方案(4~6人包棟 兩房)" onChange={(e) => patch(i, { name: e.target.value })} />
               <span className="rt-num">可住<input type="number" min={1} value={r.capacity ?? 6} onChange={(e) => patch(i, { capacity: Number(e.target.value) })} />人</span>
-              <span className="rt-num">剩<input type="number" min={0} value={r.rooms_left ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_left: e.target.value === "" ? null : Number(e.target.value) })} />組</span>
+              <span className="rt-num">共<input type="number" min={0} value={r.rooms_total ?? ""} placeholder="—" onChange={(e) => patch(i, { rooms_total: e.target.value === "" ? null : Number(e.target.value) })} />組</span>
               {toggles(r, i)}
             </div>
             <div className="rt-prices">
