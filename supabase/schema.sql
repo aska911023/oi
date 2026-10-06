@@ -1796,3 +1796,7 @@ grant execute on function public.vendor_stats(integer) to authenticated;
 -- 2026-10-06 可編輯標籤選項(後台 admin 可增刪;null=用程式預設 AMENITY_OPTIONS / WHOLE_HOUSE_TAGS)
 alter table public.site_settings add column if not exists amenity_options jsonb;
 alter table public.site_settings add column if not exists whole_house_options jsonb;
+
+-- 2026-10-06 業者官方 IG
+alter table public.vendor_applications add column if not exists ig_url text;
+alter table public.vendors add column if not exists ig_url text;

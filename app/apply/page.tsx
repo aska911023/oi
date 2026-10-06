@@ -65,6 +65,7 @@ export default async function ApplyPage() {
               website: latest?.website || "",
               line_url: latest?.line_url || "",
               fb_url: latest?.fb_url || "",
+              ig_url: latest?.ig_url || "",
               note: latest?.note || "",
             }}
           />

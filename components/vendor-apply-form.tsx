@@ -12,6 +12,7 @@ interface Defaults {
   website: string;
   line_url: string;
   fb_url: string;
+  ig_url: string;
   note: string;
 }
 
@@ -56,6 +57,7 @@ export default function VendorApplyForm({ userId, defaults }: { userId: string; 
       website: f.website.trim(),
       line_url: f.line_url.trim(),
       fb_url: f.fb_url.trim(),
+      ig_url: f.ig_url.trim(),
       license_url: licensePath || null,
       note: f.note.trim() || null,
       status: "pending",
@@ -83,7 +85,8 @@ export default function VendorApplyForm({ userId, defaults }: { userId: string; 
         <div><label>Email</label><input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="聯絡信箱" /></div>
         <div><label>官方網站</label><input value={f.website} onChange={(e) => set("website", e.target.value)} placeholder="https://…" /></div>
         <div><label>官方 LINE</label><input value={f.line_url} onChange={(e) => set("line_url", e.target.value)} placeholder="LINE 連結或 ID" /></div>
-        <div className="wide"><label>官方 Facebook</label><input value={f.fb_url} onChange={(e) => set("fb_url", e.target.value)} placeholder="https://facebook.com/…" /></div>
+        <div><label>官方 Facebook</label><input value={f.fb_url} onChange={(e) => set("fb_url", e.target.value)} placeholder="https://facebook.com/…" /></div>
+        <div><label>官方 Instagram</label><input value={f.ig_url} onChange={(e) => set("ig_url", e.target.value)} placeholder="https://instagram.com/…" /></div>
         <div className="wide">
           <label>營業執照 / 民宿登記證(圖片或 PDF)</label>
           <div className="af-upload">

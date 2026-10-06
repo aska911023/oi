@@ -13,6 +13,7 @@ interface App {
   website?: string | null;
   line_url?: string | null;
   fb_url?: string | null;
+  ig_url?: string | null;
   license_url?: string | null;
   note: string | null;
   status: string;
@@ -46,7 +47,7 @@ export default function VendorReview({ initial }: { initial: App[] }) {
     await sb.from("vendors").upsert({
       owner_id: a.applicant_id, business_name: a.business_name,
       phone: a.phone || null, address: a.address || null, email: a.email || null,
-      website: a.website || null, line_url: a.line_url || null, fb_url: a.fb_url || null, license_url: a.license_url || null,
+      website: a.website || null, line_url: a.line_url || null, fb_url: a.fb_url || null, ig_url: a.ig_url || null, license_url: a.license_url || null,
     }, { onConflict: "owner_id" });
     await sb.from("profiles").update({ role: "partner" }).eq("id", a.applicant_id);
     setBusy(null);
@@ -116,6 +117,7 @@ export default function VendorReview({ initial }: { initial: App[] }) {
               <div><dt>官網</dt><dd>{view.website ? <a href={view.website} target="_blank" rel="noopener noreferrer">{view.website}</a> : "—"}</dd></div>
               <div><dt>官方 LINE</dt><dd>{view.line_url || "—"}</dd></div>
               <div><dt>官方 FB</dt><dd>{view.fb_url ? <a href={view.fb_url} target="_blank" rel="noopener noreferrer">{view.fb_url}</a> : "—"}</dd></div>
+              <div><dt>官方 IG</dt><dd>{view.ig_url ? <a href={view.ig_url} target="_blank" rel="noopener noreferrer">{view.ig_url}</a> : "—"}</dd></div>
               <div><dt>營業執照</dt><dd>{view.license_url ? <button className="lnk" onClick={() => openLicense(view.license_url!)}>開啟檔案(新分頁)</button> : "未附"}</dd></div>
               <div><dt>備註</dt><dd>{view.note || "—"}</dd></div>
             </dl>
