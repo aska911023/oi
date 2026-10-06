@@ -1734,22 +1734,29 @@ AS $function$
     select
       count(*) filter (where type = 'stay_view')::bigint as views,
       count(*) filter (where type = 'click_website')::bigint as click_web,
-      count(*) filter (where type = 'click_map')::bigint as click_map
+      count(*) filter (where type = 'click_map')::bigint as click_map,
+      count(*) filter (where type = 'click_share')::bigint as shares,
+      (select count(*) from public.saved where created_at >= now() - (p_days || ' days')::interval)::bigint as saves
     from ev
   ),
   top as (
     select s.name, s.ad_tier,
       count(*) filter (where e.type = 'stay_view')::bigint as views,
-      count(*) filter (where e.type = 'click_website')::bigint as click_web
+      count(*) filter (where e.type = 'click_website')::bigint as click_web,
+      count(*) filter (where e.type = 'click_share')::bigint as shares,
+      (select count(*) from public.saved sv where sv.stay_id = s.id and sv.created_at >= now() - (p_days || ' days')::interval)::bigint as saves
     from public.stays s left join ev e on e.stay_id = s.id
     group by s.id, s.name, s.ad_tier
-    order by views desc nulls last limit 10
+    order by views desc nulls last limit 30
   ),
   tiers as (
     select s.ad_tier,
       count(distinct s.id)::bigint as stays,
       count(*) filter (where e.type = 'stay_view')::bigint as views,
-      count(*) filter (where e.type = 'click_website')::bigint as click_web
+      count(*) filter (where e.type = 'click_website')::bigint as click_web,
+      count(*) filter (where e.type = 'click_share')::bigint as shares,
+      (select count(*) from public.saved sv where sv.created_at >= now() - (p_days || ' days')::interval
+         and sv.stay_id in (select id from public.stays s2 where s2.ad_tier = s.ad_tier and s2.published and s2.visibility = 'published'))::bigint as saves
     from public.stays s left join ev e on e.stay_id = s.id
     where s.published and s.visibility = 'published'
     group by s.ad_tier

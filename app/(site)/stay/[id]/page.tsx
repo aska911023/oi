@@ -8,6 +8,7 @@ import RoomList from "@/components/room-list";
 import BackLink from "@/components/back-link";
 import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
+import ShareStayButton from "@/components/share-stay-button";
 import MediaEmbed from "@/components/media-embed";
 import type { Stay, RoomType } from "@/lib/types";
 
@@ -83,6 +84,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</OutboundLink>
           )}
           <SaveButton stayId={s.id} />
+          <ShareStayButton stayId={s.id} name={s.name} />
         </div>
 
         {s.embed_urls && s.embed_urls.length > 0 && (
