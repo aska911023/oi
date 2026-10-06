@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   // 明確宣告乾淨網址(不帶 Next 雜湊 query)— iOS Safari 對帶 query 的 favicon 常不載入
   icons: {
     icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png", sizes: "256x256" },
     ],
