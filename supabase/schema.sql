@@ -187,7 +187,7 @@ create policy profiles_upd on public.profiles for update using (id = auth.uid() 
 
 drop policy if exists stays_public_sel on public.stays;
 create policy stays_public_sel on public.stays for select
-  using ((published = true and visibility = 'published') or owner_id = auth.uid() or public.is_admin());
+  using ((published = true and visibility = 'published' and approved = true) or owner_id = auth.uid() or public.is_admin());
 drop policy if exists stays_ins on public.stays;
 create policy stays_ins on public.stays for insert with check (public.is_admin() or owner_id = auth.uid());
 drop policy if exists stays_upd on public.stays;

@@ -113,7 +113,8 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       license_no: (form.license_no || "").trim() || null,
       check_in: (form.check_in || "").trim() || null,
       check_out: (form.check_out || "").trim() || null,
-      published: form.published, featured: form.featured, sample: form.sample,
+      published: ownerId ? undefined : form.published, // 上架只有 admin 能設(業者送審)
+      featured: ownerId ? undefined : form.featured, sample: ownerId ? undefined : form.sample,
       ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
       save_boost: ownerId ? undefined : (Number(form.save_boost) || 0), // 收藏數墊高只有 admin 能設
       owner_id: ownerId ?? undefined,
@@ -274,7 +275,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
-              <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 店家上架(前台可見)</label>
+              {!ownerId ? (
+                <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 店家上架(前台可見)</label>
+              ) : (
+                <span className="check" style={{ color: form.approved ? "var(--green)" : "var(--text-2)", fontSize: 13.5 }}>
+                  {form.id && form.approved ? "✅ 已通過偶宿審核,前台可見" : "⏳ 送出後由偶宿審核,通過後才會在前台公開"}
+                </span>
+              )}
               {!ownerId && (
                 <label className="check" style={{ gap: 6 }}>曝光
                   <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
