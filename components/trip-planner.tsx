@@ -9,6 +9,18 @@ import { TRANSPORTS, TRIP_ITEM_LABEL, type Trip, type TripItem, type TripItemTyp
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const genId = () => "t" + Math.random().toString(36).slice(2, 9);
 
+// 時間改手動輸入(24 小時制)。離開欄位時把 "930"/"9:5"/"1430" 之類整理成 HH:MM;整理不出來就清空(顯示彈性)。
+function normTime(raw: string): string {
+  const s = raw.trim();
+  if (!s) return "";
+  const m = s.match(/^(\d{1,2})\s*[:：]?\s*(\d{0,2})$/);
+  if (!m) return "";
+  let h = parseInt(m[1], 10);
+  let min = m[2] === "" ? 0 : parseInt(m[2], 10);
+  if (isNaN(h) || h > 23 || min > 59) return "";
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
 interface PoolItem { id: string; name: string; region: string; town: string; stayId?: string; }
 type Pools = { stays: PoolItem[]; rooms: PoolItem[]; attractions: PoolItem[]; foods: PoolItem[]; parkings: PoolItem[]; rentals: PoolItem[]; stations: PoolItem[] };
 
@@ -260,7 +272,10 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => dropOn(it.id)}>
                         <span className="ti-grip" title="拖拉換順序">⠿</span>
-                        <input className="ti-time" type="time" value={it.time || ""} onChange={(e) => updateItem(it.id, { time: e.target.value })} />
+                        <input className="ti-time" type="text" inputMode="numeric" maxLength={5} placeholder="彈性"
+                          value={it.time || ""} title="24 小時制,例 14:30;留白=彈性"
+                          onChange={(e) => updateItem(it.id, { time: e.target.value })}
+                          onBlur={(e) => updateItem(it.id, { time: normTime(e.target.value) })} />
                         <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
                         <div className="ti-main">
                           <div className="ti-name">{it.name}</div>
@@ -321,7 +336,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
               <ul>
                 {itemsOfDay(d).map((it) => (
                   <li key={it.id}>
-                    <span className="tp-time">{it.time || "—"}</span> [{TRIP_ITEM_LABEL[it.type]}] {it.name}{it.note ? ` — ${it.note}` : ""}
+                    <span className="tp-time">{it.time || "彈性"}</span> [{TRIP_ITEM_LABEL[it.type]}] {it.name}{it.note ? ` — ${it.note}` : ""}
                     {it.image && <img className="tp-img" src={it.image} alt="" />}
                   </li>
                 ))}

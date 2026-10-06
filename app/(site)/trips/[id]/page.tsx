@@ -59,7 +59,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
                 <ul>
                   {itemsOfDay(d).map((it) => (
                     <li key={it.id}>
-                      <span className="tv-time">{it.time || "—"}</span>
+                      <span className="tv-time">{it.time || "彈性"}</span>
                       <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
                       <span className="tv-name">{it.name}</span>
                       {it.note && <span className="tv-note">— {it.note}</span>}
