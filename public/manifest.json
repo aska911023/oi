@@ -1,0 +1,14 @@
+{
+  "name": "偶宿 O! · 台灣民宿搜尋",
+  "short_name": "偶宿 O!",
+  "description": "偶爾出走,找到喜歡的一宿。以地區、風格與預算,找到喜歡的台灣民宿。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ee",
+  "theme_color": "#17635a",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}
