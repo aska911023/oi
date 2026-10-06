@@ -1,3 +1,4 @@
 {
-  "regions": ["hnd1"]
+  "_comment": "必須跟 Supabase 同區。本專案 DB 在 ap-southeast-2(雪梨),實測台灣→DB 單趟約 280ms;函式放東京會讓每個查詢都飛一趟跨洋。syd1 讓查詢變本地,只剩使用者連線付一次。日後若把 DB 搬到東京,這裡要同步改回 hnd1。",
+  "regions": ["syd1"]
 }
