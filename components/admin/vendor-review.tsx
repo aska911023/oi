@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 
 interface App {
   id: string;
@@ -50,6 +51,7 @@ export default function VendorReview({ initial }: { initial: App[] }) {
       website: a.website || null, line_url: a.line_url || null, fb_url: a.fb_url || null, ig_url: a.ig_url || null, license_url: a.license_url || null,
     }, { onConflict: "owner_id" });
     await sb.from("profiles").update({ role: "partner" }).eq("id", a.applicant_id);
+    await logAdmin("approve", { type: "vendor", id: a.applicant_id, name: a.business_name });
     setBusy(null);
     setView(null);
     await refresh();
@@ -58,6 +60,7 @@ export default function VendorReview({ initial }: { initial: App[] }) {
     setBusy(a.id);
     const sb = createClient();
     await sb.from("vendor_applications").update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", a.id);
+    await logAdmin("reject", { type: "vendor", id: a.applicant_id, name: a.business_name });
     setBusy(null);
     setView(null);
     await refresh();

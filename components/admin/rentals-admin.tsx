@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS, RENTAL_TAGS } from "@/lib/data";
 import { revalidateRentals } from "@/app/actions";
 import RentalPlansEditor from "@/components/admin/rental-plans-editor";
@@ -71,6 +72,7 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
     else { const { data, error: e } = await sb.from("rental_shops").insert(payload).select("id").single(); error = e; if (data) newId = data.id; }
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
+    if (!ownerId) logAdmin(form.id ? "edit" : "create", { type: "rental", id: newId, name: payload.name });
     setForm((f) => (f ? { ...f, id: newId } : f)); // 保留在編輯狀態以便加方案
     await refresh();
   }
@@ -78,17 +80,20 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
   async function togglePublish(s: RentalShop) {
     const sb = createClient();
     await sb.from("rental_shops").update({ published: !s.published }).eq("id", s.id);
+    if (!ownerId) logAdmin(s.published ? "unpublish" : "publish", { type: "rental", id: s.id, name: s.name });
     await refresh();
   }
   async function toggleApprove(s: RentalShop) {
     const sb = createClient();
     await sb.from("rental_shops").update({ approved: !s.approved }).eq("id", s.id);
+    if (!ownerId) logAdmin(s.approved ? "reject" : "approve", { type: "rental", id: s.id, name: s.name });
     await refresh();
   }
   async function remove(s: RentalShop) {
     if (!confirm(`確定刪除「${s.name}」?其方案也會一併刪除。`)) return;
     const sb = createClient();
     await sb.from("rental_shops").delete().eq("id", s.id);
+    if (!ownerId) logAdmin("delete", { type: "rental", id: s.id, name: s.name });
     await refresh();
   }
 

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { revalidatePois } from "@/app/actions";
 import { KIND_TABLE, DETAILS, WEEKDAYS, type WeekHour } from "@/lib/places-config";
@@ -93,6 +94,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
     else ({ error } = await sb.from(table).insert(payload));
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
+    logAdmin(form.id ? "edit" : "create", { type: "place", id: form.id, name: payload.name, detail: { 類別: label } });
     setForm(null);
     await refresh();
   }
@@ -100,12 +102,14 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   async function togglePublish(p: Place) {
     const sb = createClient();
     await sb.from(table).update({ published: !p.published }).eq("id", p.id);
+    logAdmin(p.published ? "unpublish" : "publish", { type: "place", id: p.id, name: p.name, detail: { 類別: label } });
     await refresh();
   }
   async function remove(p: Place) {
     if (!confirm(`確定刪除「${p.name}」?`)) return;
     const sb = createClient();
     await sb.from(table).delete().eq("id", p.id);
+    logAdmin("delete", { type: "place", id: p.id, name: p.name, detail: { 類別: label } });
     await refresh();
   }
 

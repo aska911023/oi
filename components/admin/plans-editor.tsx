@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 
 export interface Plan {
   id?: string; key: string; name: string; room_pins: number; priority: number; sort: number;
@@ -21,6 +22,7 @@ export default function PlansEditor({ initial }: { initial: Plan[] }) {
     if (row.builtin) { alert("內建方案(免費/精選/旗艦)不能刪除,但可以改設定。"); return; }
     if (!confirm(`刪除方案「${row.name}」?\n(已選此方案的民宿會視同免費方案)`)) return;
     if (row.id) { const { error } = await createClient().from("plans").delete().eq("id", row.id); if (error) { alert("刪除失敗:" + error.message); return; } }
+    logAdmin("delete", { type: "plan", id: row.id, name: row.name });
     setRows((r) => r.filter((_, k) => k !== i));
   }
 
@@ -35,6 +37,7 @@ export default function PlansEditor({ initial }: { initial: Plan[] }) {
       };
       const { error } = row.id ? await sb.from("plans").update(payload).eq("id", row.id) : await sb.from("plans").insert(payload);
       if (error) { alert("儲存失敗:" + error.message); setBusy(false); return; }
+      logAdmin(row._new ? "create" : "edit", { type: "plan", id: row.id, name: payload.name });
     }
     const { data } = await sb.from("plans").select("*").order("sort");
     setRows((data as Plan[]) || []);

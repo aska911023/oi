@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin as writeAdminLog } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
@@ -25,7 +26,7 @@ const EMPTY: Form = {
 
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
 export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
-interface LogRow { id: string; actor_name: string | null; action: string; target_name: string | null; detail: Record<string, unknown> | null; created_at: string }
+interface LogRow { id: string; actor_name: string | null; action: string; target_type: string | null; target_name: string | null; detail: Record<string, unknown> | null; created_at: string }
 
 type SortKey = "new" | "old" | "name" | "region" | "status" | "tier";
 const SORT_LABEL: Record<SortKey, string> = {
@@ -34,6 +35,12 @@ const SORT_LABEL: Record<SortKey, string> = {
 const ACTION_LABEL: Record<string, string> = {
   publish: "上架", unpublish: "下架", approve: "核准", reject: "退回審核",
   set_tier: "改方案", delete: "刪除", create: "新增", edit: "編輯",
+  pin: "置頂", unpin: "取消置頂", assign_owner: "指派業主", unassign_owner: "收回自管",
+  bd_contacted: "標記已聯繫", bd_uncontacted: "取消已聯繫", bd_rejected: "標記拒絕", bd_unrejected: "取消拒絕", bd_note: "改內部備註",
+  role_change: "改角色", save: "儲存",
+};
+const TYPE_LABEL: Record<string, string> = {
+  stay: "民宿", room: "房型", vendor: "業者", plan: "方案", site: "首頁設定", member: "會員", place: "景點", rental: "租車",
 };
 
 export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null, plans = [] }: {
@@ -71,7 +78,12 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     if (error) {
       alert("洽談紀錄儲存失敗:" + error.message);
       setBd((p) => ({ ...p, [stayId]: { ...next, ...bd[stayId] } }));   // 失敗就還原
+      return;
     }
+    const sName = list.find((s) => s.id === stayId)?.name;
+    if ("contacted" in patch) writeAdminLog(patch.contacted ? "bd_contacted" : "bd_uncontacted", { type: "stay", id: stayId, name: sName });
+    else if ("rejected" in patch) writeAdminLog(patch.rejected ? "bd_rejected" : "bd_unrejected", { type: "stay", id: stayId, name: sName });
+    else if ("note" in patch) writeAdminLog("bd_note", { type: "stay", id: stayId, name: sName, detail: { note: patch.note } });
   }
 
   const [q, setQ] = useState("");
@@ -83,24 +95,9 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<LogRow[] | null>(null);
 
-  // 操作紀錄:只有 admin 寫/讀(RLS 擋)。actor 身分取一次就快取,避免每次都打一輪 auth/profiles。
-  const meRef = useRef<{ id: string; name: string } | null>(null);
-  async function logAdmin(action: string, s: { id?: string; name?: string } | null, detail?: Record<string, unknown>) {
-    if (!isAdminView) return;
-    const sb = createClient();
-    if (!meRef.current) {
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return;
-      let name = user.email || "admin";
-      const { data: p } = await sb.from("profiles").select("display_name,full_name").eq("id", user.id).maybeSingle();
-      if (p) name = p.display_name || p.full_name || name;
-      meRef.current = { id: user.id, name };
-    }
-    await sb.from("admin_logs").insert({
-      actor_id: meRef.current.id, actor_name: meRef.current.name,
-      action, target_type: "stay", target_id: s?.id ?? null, target_name: s?.name ?? null, detail: detail ?? null,
-    });
-  }
+  // 操作紀錄:共用 helper(lib/admin-log);業者檢視(有 ownerId)不寫。保留原呼叫簽名。
+  const logAdmin = (action: string, s: { id?: string; name?: string } | null, detail?: Record<string, unknown>) =>
+    isAdminView ? writeAdminLog(action, { type: "stay", id: s?.id ?? null, name: s?.name ?? null, detail: detail ?? null }) : Promise.resolve();
 
   async function openLogs() {
     setLogOpen(true); setLogs(null);
@@ -377,7 +374,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
             {form.id ? (
               <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} canManage={!ownerId} roomPinQuota={planByKey[form.ad_tier || "free"]?.room_pins ?? 0} onChange={() => revalidateStays().catch(() => {})} />
+                <RoomTypesEditor stayId={form.id} stayName={form.name} allowFeatured={!ownerId} canManage={!ownerId} roomPinQuota={planByKey[form.ad_tier || "free"]?.room_pins ?? 0} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
               <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>
@@ -410,12 +407,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
             ) : (
               <div className="atable-wrap" style={{ maxHeight: "60vh", overflowY: "auto" }}>
                 <table className="atable">
-                  <thead><tr><th>時間</th><th>操作者</th><th>動作</th><th>對象</th><th>細節</th></tr></thead>
+                  <thead><tr><th>時間</th><th>操作者</th><th>類別</th><th>動作</th><th>對象</th><th>細節</th></tr></thead>
                   <tbody>
                     {logs.map((l) => (
                       <tr key={l.id}>
                         <td style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{new Date(l.created_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</td>
                         <td>{l.actor_name || "—"}</td>
+                        <td style={{ color: "var(--text-2)" }}>{TYPE_LABEL[l.target_type || ""] || l.target_type || "—"}</td>
                         <td><span className="pill">{ACTION_LABEL[l.action] || l.action}</span></td>
                         <td>{l.target_name || "—"}</td>
                         <td style={{ color: "var(--text-2)", fontSize: 12.5 }}>

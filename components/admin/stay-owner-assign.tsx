@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 
 interface Member { id: string; display_name: string | null; full_name: string | null; role: string }
 interface Snap { id: string; created_at: string; reason: string | null; owner_before: string | null; owner_after: string | null }
@@ -44,6 +45,8 @@ export default function StayOwnerAssign({ stayId, stayName, ownerId, onClose, on
     const { error } = await sb.rpc("assign_stay_owner", { p_stay: stayId, p_owner: target });
     setBusy(false);
     if (error) { setMsg("失敗:" + error.message); return; }
+    const tName = members.find((m) => m.id === target);
+    logAdmin(target ? "assign_owner" : "unassign_owner", { type: "stay", id: stayId, name: stayName, detail: target ? { 業主: tName ? who(tName) : target } : null });
     onDone();
     onClose();
   }

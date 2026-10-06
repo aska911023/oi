@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 
 interface Member {
   id: string;
@@ -32,6 +33,7 @@ export default function MembersAdmin({ initial }: { initial: Member[] }) {
     }
     setBusy(null);
     if (error) { alert("更新失敗:" + error.message); return; }
+    logAdmin("role_change", { type: "member", id: m.id, name: m.display_name || m.full_name || m.email, detail: { from: ROLE_LABEL[m.role] || m.role, to: ROLE_LABEL[role] || role } });
     setRows((rs) => rs.map((r) => (r.id === m.id ? { ...r, role } : r)));
   }
 

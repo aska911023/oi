@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 import type { RentalPlan } from "@/lib/types";
 
 type Row = Partial<RentalPlan> & { _dirty?: boolean };
@@ -35,6 +36,7 @@ export default function RentalPlansEditor({ shopId, onChange }: { shopId: string
       if (!confirm(`刪除方案「${row.name || "未命名"}」?`)) return;
       const sb = createClient();
       await sb.from("rental_plans").delete().eq("id", row.id);
+      logAdmin("delete", { type: "rental", id: shopId, name: row.name, detail: { 租車方案: true } });
     }
     setRows((r) => r.filter((_, k) => k !== i));
     onChange?.();
@@ -43,8 +45,10 @@ export default function RentalPlansEditor({ shopId, onChange }: { shopId: string
   async function saveAll() {
     setBusy(true);
     const sb = createClient();
+    let savedCount = 0;
     for (const row of rows.filter((r) => r._dirty)) {
       if (!row.name?.trim()) continue;
+      savedCount++;
       const payload = {
         shop_id: shopId, name: row.name.trim(), price_per_day: Number(row.price_per_day) || 0,
         deposit: row.deposit ?? null, includes: row.includes || "", count_total: row.count_total ?? null,
@@ -57,6 +61,7 @@ export default function RentalPlansEditor({ shopId, onChange }: { shopId: string
     const { data } = await sb.from("rental_plans").select("*").eq("shop_id", shopId).order("sort").order("price_per_day");
     setRows((data as Row[]) || []);
     setBusy(false);
+    if (savedCount > 0) logAdmin("save", { type: "rental", id: shopId, detail: { 租車方案數: savedCount } });
     onChange?.();
   }
 

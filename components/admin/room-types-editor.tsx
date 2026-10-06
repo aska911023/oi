@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logAdmin } from "@/lib/admin-log";
 import { ROOM_TAGS, WHOLE_HOUSE_TAGS } from "@/lib/data";
 import TagPalette from "@/components/admin/tag-palette";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
@@ -24,7 +25,7 @@ const blank = (stayId: string, kind: RoomKind): Row => ({
   pricing: {}, includes_note: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
 });
 
-export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false, canManage = false, roomPinQuota = 0 }: { stayId: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean; roomPinQuota?: number }) {
+export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatured = false, canManage = false, roomPinQuota = 0 }: { stayId: string; stayName?: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean; roomPinQuota?: number }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -57,6 +58,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
       if (!confirm(`刪除房型「${row.name || "未命名"}」?`)) return;
       const sb = createClient();
       await sb.from("room_types").delete().eq("id", row.id);
+      if (canManage) logAdmin("delete", { type: "room", id: row.id, name: row.name, detail: { stay: stayName } });
     }
     setRows((r) => r.filter((_, k) => k !== i));
     onChange?.();
@@ -65,8 +67,10 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
   async function saveAll() {
     setBusy(true);
     const sb = createClient();
+    let savedCount = 0;
     for (const row of rows.filter((r) => r._dirty)) {
       if (!row.name?.trim()) continue;
+      savedCount++;
       const kind: RoomKind = row.kind === "whole" ? "whole" : "single";
       const pricing = row.pricing || {};
       if (pricing.extras) pricing.extras = pricing.extras.filter((e) => (e.label || "").trim() && e.amount != null);
@@ -92,6 +96,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
     const { data } = await sb.from("room_types").select("*").eq("stay_id", stayId).order("sort").order("price");
     setRows((data as Row[]) || []);
     setBusy(false);
+    if (canManage && savedCount > 0) logAdmin("save", { type: "room", id: stayId, name: stayName, detail: { 房型數: savedCount } });
     onChange?.();
   }
 
