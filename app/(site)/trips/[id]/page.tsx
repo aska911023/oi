@@ -27,15 +27,20 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
       <main className="shell" style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 780 }}>
         <Link href="/trips" className="lnk">← 回行程分享牆</Link>
         <div className="trip-view">
-          <h1 className="serif">{trip.title}</h1>
-          <p className="trip-view-meta">
-            {trip.days} 天{trip.nights ? ` ${trip.nights} 夜` : ""} · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
-            {trip.budget != null ? ` · 每人 NT$${trip.budget.toLocaleString()}` : ""}{trip.region ? ` · ${trip.region}` : ""}
-          </p>
-          {trip.summary && <p className="trip-view-sum">{trip.summary}</p>}
+          <div className="trip-view-head">
+            <div className="trip-view-headmain">
+              <h1 className="serif">{trip.title}</h1>
+              <p className="trip-view-meta">
+                {trip.days} 天{trip.nights ? ` ${trip.nights} 夜` : ""} · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
+                {trip.budget != null ? ` · 每人 NT$${trip.budget.toLocaleString()}` : ""}{trip.region ? ` · ${trip.region}` : ""}
+              </p>
+            </div>
+            <Link href={`/plan?load=${trip.id}`} className="btn btn-primary trip-view-cta">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
+          </div>
 
-          <div className="trip-view-actions" style={{ alignItems: "center", gap: 10 }}>
-            <Link href={`/plan?load=${trip.id}`} className="btn btn-primary">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
+          {trip.summary && <p className="trip-view-sum" style={{ whiteSpace: "pre-line" }}>{trip.summary}</p>}
+
+          <div className="trip-view-actions">
             <span className="trip-actions" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
               <TripLikeButton tripId={trip.id} count={likeCount || 0} />
               <ShareLinkButton path={`/trips/${trip.id}`} tripId={trip.id} />

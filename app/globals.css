@@ -1080,3 +1080,20 @@ img { display: block; max-width: 100%; }
 
 /* 房型置頂標記(前台) */
 .room-pin { display: inline-block; background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-right: 7px; vertical-align: middle; }
+
+/* 行程詳情頁:標題左、CTA 右上 */
+.trip-view-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.trip-view-head .trip-view-headmain { min-width: 0; }
+.trip-view-cta { flex: none; white-space: nowrap; }
+
+/* 行程卡:IG 式右上三點選單 + 標題/摘要分行 */
+.ig-menu-wrap { position: relative; margin-left: auto; }
+.ig-menu-btn { border: 0; background: transparent; font-size: 22px; line-height: 1; color: var(--ink); cursor: pointer; padding: 2px 8px; }
+.ig-menu-btn:hover { color: var(--green); }
+.ig-menu-backdrop { position: fixed; inset: 0; z-index: 40; }
+.ig-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; min-width: 150px; display: flex; flex-direction: column; gap: 2px; }
+.ig-menu button, .ig-menu a { display: block; width: 100%; text-align: left; justify-content: flex-start; padding: 9px 12px; border-radius: 8px; font-size: 14px; background: transparent; border: 0; color: var(--text); cursor: pointer; text-decoration: none; }
+.ig-menu .pill { align-self: flex-start; margin: 2px 6px 4px; }
+.ig-menu button:hover, .ig-menu a:hover { background: var(--green-soft); color: var(--green); }
+.ig-title { display: block; font-weight: 700; color: var(--ink); }
+.ig-cap-sum { display: block; margin: 4px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.65; }

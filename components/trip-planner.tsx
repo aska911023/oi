@@ -236,7 +236,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
             <div><label>每人預算(選填)</label><input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="NT$" /></div>
             <div><label>交通方式</label><select value={transport} onChange={(e) => setTransport(e.target.value)}>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select></div>
             <div><label>主要地區(選填)</label><select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">不指定</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
-            <div className="wide"><label>行程簡介(選填)</label><input value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="一句話描述這趟旅程" /></div>
+            <div className="wide"><label>行程簡介 / 內文(選填,可換行)</label><textarea rows={5} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="描述這趟旅程…(可多行)" /></div>
             <div className="wide"><label>影片(YouTube / IG / TikTok,可多個,一行一個)</label><textarea rows={2} value={embedText} onChange={(e) => setEmbedText(e.target.value)} placeholder={"https://youtu.be/…\nhttps://tiktok.com/@…/video/…"} /></div>
           </div>
         </div>
@@ -313,7 +313,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       <div className="trip-print" ref={printRef}>
         <h1>{title}</h1>
         <p className="tp-meta">{days} 天 · {headcount} 人 · 交通:{transport}{budget ? ` · 每人預算 NT$${budget}` : ""}{region ? ` · ${region}` : ""}</p>
-        {summary && <p className="tp-summary">{summary}</p>}
+        {summary && <p className="tp-summary" style={{ whiteSpace: "pre-line" }}>{summary}</p>}
         {dayList.map((d) => (
           <div className="tp-day" key={d}>
             <h2>Day {d}</h2>

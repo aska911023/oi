@@ -13,6 +13,7 @@ import type { Trip } from "@/lib/types";
 // IG 貼文式行程卡:頭像+暱稱 → 大圖 → 動作列 → 標題/摘要 → 留言。看別人/看自己共用。
 export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSlot?: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
   const author = t.owner_name || "旅人";
   const sub = `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""}`;
@@ -30,6 +31,17 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
             <Avatar src={t.owner_avatar} name={author} size={40} />
             <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
           </>
+        )}
+        {manageSlot && (
+          <div className="ig-menu-wrap">
+            <button type="button" className="ig-menu-btn" aria-label="更多" onClick={() => setMenuOpen((o) => !o)}>⋯</button>
+            {menuOpen && (
+              <>
+                <div className="ig-menu-backdrop" onClick={() => setMenuOpen(false)} />
+                <div className="ig-menu" onClick={() => setMenuOpen(false)}>{manageSlot}</div>
+              </>
+            )}
+          </div>
         )}
       </header>
 
@@ -58,7 +70,7 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
 
       <div className="ig-caption">
         <Link href={`/trips/${t.id}`} className="ig-title">{t.title}</Link>
-        {t.summary && <span className="ig-cap-sum"> {t.summary}</span>}
+        {t.summary && <p className="ig-cap-sum" style={{ whiteSpace: "pre-line" }}>{t.summary}</p>}
       </div>
       <div className="ig-tags">
         <span>{t.headcount} 人</span>
@@ -71,7 +83,6 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
         <button className="ig-viewc" onClick={() => setOpen(true)}>查看全部 {t.comment_count} 則留言</button>
       )}
       {open && <div className="ig-comments"><TripComments tripId={t.id} compact /></div>}
-      {manageSlot && <div className="trip-manage">{manageSlot}</div>}
     </article>
   );
 }
