@@ -77,6 +77,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
           {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-primary">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
+          {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${encodeURIComponent(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
           {(s.address || (s.lat != null && s.lng != null)) && (
             <OutboundLink type="click_map" stayId={s.id} className="btn btn-ghost"
               href={s.lat != null && s.lng != null

@@ -1800,3 +1800,6 @@ alter table public.site_settings add column if not exists whole_house_options js
 -- 2026-10-06 業者官方 IG
 alter table public.vendor_applications add column if not exists ig_url text;
 alter table public.vendors add column if not exists ig_url text;
+
+-- 2026-10-06 民宿官方 LINE@
+alter table public.stays add column if not exists line_url text;

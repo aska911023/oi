@@ -23,6 +23,7 @@ export interface Stay {
   description: string;
   amenities: string; // 「、」分隔
   website: string; // 導流連結,空字串代表無
+  line_url?: string | null; // 官方 LINE@(連結或 ID)
   embed_urls?: string[]; // 影片介紹 / 網紅推薦(YouTube / IG / TikTok,可多個)
   rooms_left?: number | null; // 剩餘房數(null = 未設定,不顯示)
   license_no?: string | null; // 合法民宿登記證號
