@@ -1063,3 +1063,8 @@ img { display: block; max-width: 100%; }
 .rt-extra-del { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; }
 .rt-extra-del:hover { color: #c0392b; }
 .rt-extra-add { border: 1px dashed var(--green); color: var(--green); background: #fff; border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+/* 業者名單:官方連結欄 */
+.vendor-links { white-space: nowrap; }
+.vendor-links a, .vendor-links .plink { color: var(--green); font-weight: 600; margin-right: 8px; font-size: 13px; }
+.vendor-links .plink { color: var(--text-2); font-weight: 500; }

@@ -8,7 +8,7 @@ export default async function PartnersPage() {
   const { data: vendors } = await sb.from("vendors").select("*").order("created_at", { ascending: false });
   const { data: stays } = await sb
     .from("stays")
-    .select("id,name,region,town,owner_id,published,visibility,featured,ad_tier")
+    .select("id,name,region,town,owner_id,published,visibility,featured,ad_tier,approved")
     .not("owner_id", "is", null);
   return <PartnersBoard vendors={(vendors as Vendor[]) || []} stays={(stays as OwnedStay[]) || []} />;
 }
