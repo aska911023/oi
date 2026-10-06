@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ROOM_TAGS, WHOLE_HOUSE_TAGS } from "@/lib/data";
+import TagPalette from "@/components/admin/tag-palette";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { RoomType, RoomKind, RoomPricing } from "@/lib/types";
 
@@ -23,7 +24,7 @@ const blank = (stayId: string, kind: RoomKind): Row => ({
   pricing: {}, includes_note: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
 });
 
-export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false }: { stayId: string; onChange?: () => void; allowFeatured?: boolean }) {
+export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false, canManage = false }: { stayId: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -181,7 +182,12 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
               <span className="rt-photos-cap">包含哪些房間 / 說明(前台會顯示)</span>
               <textarea rows={2} value={r.includes_note || ""} placeholder="例:10人包棟提供三間雙人套房及一間四人套房" onChange={(e) => patch(i, { includes_note: e.target.value })} />
             </div>
-            {tagsRow(r, i, WHOLE_HOUSE_TAGS, "包棟特色(限包棟)")}
+            <div className="rt-tags">
+              <span className="rt-photos-cap">包棟特色(限包棟)</span>
+              <TagPalette settingKey="whole_house_options" defaults={WHOLE_HOUSE_TAGS} canManage={canManage}
+                selected={new Set(r.tags || [])}
+                onToggle={(t) => { const set = new Set(r.tags || []); set.has(t) ? set.delete(t) : set.add(t); patch(i, { tags: [...set] }); }} />
+            </div>
             {photosRow(r, i)}
           </div>
         ))}

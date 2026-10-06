@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
 import RoomTypesEditor from "@/components/admin/room-types-editor";
+import TagPalette from "@/components/admin/tag-palette";
 import StaysImport from "@/components/admin/stays-import";
 import StayOwnerAssign from "@/components/admin/stay-owner-assign";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
@@ -253,14 +254,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <div><label>最早入住時間</label><input value={form.check_in || ""} onChange={(e) => setForm({ ...form, check_in: e.target.value })} placeholder="例:15:00" /></div>
               <div><label>最晚退房時間</label><input value={form.check_out || ""} onChange={(e) => setForm({ ...form, check_out: e.target.value })} placeholder="例:11:00" /></div>
               <div className="wide"><label>設施 / 服務(可複選)</label>
-                <div className="fac-grid">
-                  {AMENITY_OPTIONS.map((a) => {
+                <TagPalette settingKey="amenity_options" defaults={AMENITY_OPTIONS} canManage={isAdminView}
+                  selected={new Set((form.amenities || "").split("、").map((s) => s.trim()).filter(Boolean))}
+                  onToggle={(a) => {
                     const set = new Set((form.amenities || "").split("、").map((s) => s.trim()).filter(Boolean));
-                    const on = set.has(a);
-                    return <button type="button" key={a} className={"chip" + (on ? " on" : "")}
-                      onClick={() => { on ? set.delete(a) : set.add(a); setForm({ ...form, amenities: [...set].join("、") }); }}>{a}</button>;
-                  })}
-                </div>
+                    set.has(a) ? set.delete(a) : set.add(a);
+                    setForm({ ...form, amenities: [...set].join("、") });
+                  }} />
               </div>
               <div className="wide"><label>封面相簿(可多張,第一張為封面,前台會輪播)</label>
                 <MultiImageUploader prefix="stay"
@@ -290,7 +290,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
             {form.id ? (
               <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} onChange={() => revalidateStays().catch(() => {})} />
+                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} canManage={!ownerId} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
               <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>

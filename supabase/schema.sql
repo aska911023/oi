@@ -1785,3 +1785,7 @@ revoke all on function public.admin_stats(integer) from public;
 grant execute on function public.admin_stats(integer) to authenticated;
 revoke all on function public.vendor_stats(integer) from public;
 grant execute on function public.vendor_stats(integer) to authenticated;
+
+-- 2026-10-06 可編輯標籤選項(後台 admin 可增刪;null=用程式預設 AMENITY_OPTIONS / WHOLE_HOUSE_TAGS)
+alter table public.site_settings add column if not exists amenity_options jsonb;
+alter table public.site_settings add column if not exists whole_house_options jsonb;

@@ -900,8 +900,16 @@ img { display: block; max-width: 100%; }
 /* 設施勾選格 */
 .region-select { border: 1px solid var(--border-strong); border-radius: 10px; padding: 9px 12px; font: inherit; font-size: 14px; background: #fff; color: var(--text); min-width: 160px; }
 .region-select:focus { outline: none; border-color: var(--green); }
-.fac-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.fac-grid { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .fac-grid .chip { cursor: pointer; font-size: 13px; }
+/* 可編輯標籤:每個 chip 右上角 × 刪除(admin)+ 末尾「＋新增」輸入框 */
+.chip-wrap { position: relative; display: inline-flex; }
+.chip-wrap .chip-del { position: absolute; top: -7px; right: -7px; width: 17px; height: 17px; padding: 0; border-radius: 50%; border: 1px solid var(--border-strong); background: #fff; color: var(--text-2); font-size: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(18,40,33,.14); }
+.chip-wrap .chip-del:hover { color: #fff; background: #c0392b; border-color: #c0392b; }
+.chip-add { display: inline-flex; align-items: center; gap: 5px; }
+.chip-add input { width: 120px; border: 1px dashed var(--border-strong); border-radius: 20px; padding: 7px 13px; font-size: 13px; background: #fff; color: var(--text); outline: none; }
+.chip-add input:focus { border-color: var(--green); border-style: solid; }
+.chip-add .chip-add-btn { border: 1px dashed var(--green); color: var(--green); background: #fff; white-space: nowrap; }
 .rt-item { display: flex; flex-direction: column; gap: 8px; }
 .rt-tags { padding-left: 2px; }
 .rt-tags .chip { font-size: 12px; }
