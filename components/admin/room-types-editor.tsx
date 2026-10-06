@@ -42,6 +42,13 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
   const patch = (i: number, p: Partial<Row>) => setRows((r) => r.map((x, k) => (k === i ? { ...x, ...p, _dirty: true } : x)));
   const patchPrice = (i: number, key: keyof RoomPricing, val: string) =>
     setRows((r) => r.map((x, k) => (k === i ? { ...x, pricing: { ...(x.pricing || {}), [key]: val === "" ? null : Number(val) }, _dirty: true } : x)));
+  // 自訂價格欄(pricing.extras)
+  const updExtras = (i: number, fn: (ex: { label: string; amount: number | null }[]) => { label: string; amount: number | null }[]) =>
+    setRows((r) => r.map((x, k) => (k === i ? { ...x, pricing: { ...(x.pricing || {}), extras: fn(x.pricing?.extras || []) }, _dirty: true } : x)));
+  const addExtra = (i: number) => updExtras(i, (ex) => [...ex, { label: "", amount: null }]);
+  const delExtra = (i: number, xi: number) => updExtras(i, (ex) => ex.filter((_, j) => j !== xi));
+  const setExtra = (i: number, xi: number, field: "label" | "amount", val: string) =>
+    updExtras(i, (ex) => ex.map((e, j) => (j === xi ? { ...e, [field]: field === "amount" ? (val === "" ? null : Number(val)) : val } : e)));
   const add = (kind: RoomKind) => setRows((r) => [...r, blank(stayId, kind)]);
 
   async function removeRow(i: number) {
@@ -62,6 +69,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
       if (!row.name?.trim()) continue;
       const kind: RoomKind = row.kind === "whole" ? "whole" : "single";
       const pricing = row.pricing || {};
+      if (pricing.extras) pricing.extras = pricing.extras.filter((e) => (e.label || "").trim() && e.amount != null);
       // 包棟起價 = 有填的各時期價格中最低者(沒填則沿用原價);單間用自己的價格
       const periodVals = [pricing.weekday, pricing.peak_weekday, pricing.minor_holiday, pricing.holiday, pricing.rack]
         .map((v) => Number(v)).filter((v) => Number.isFinite(v) && v > 0);
@@ -176,6 +184,16 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
                   <span className="rt-price-in">NT$<input type="number" min={0} value={(r.pricing?.[p.key] as number | null | undefined) ?? ""} placeholder="—" onChange={(e) => patchPrice(i, p.key, e.target.value)} /></span>
                 </label>
               ))}
+            </div>
+            <div className="rt-extras">
+              {(r.pricing?.extras || []).map((ex, xi) => (
+                <span className="rt-extra-cell" key={xi}>
+                  <input className="rt-extra-label" value={ex.label} placeholder="名稱(例:連假)" onChange={(e) => setExtra(i, xi, "label", e.target.value)} />
+                  <span className="rt-price-in">NT$<input type="number" min={0} value={ex.amount ?? ""} placeholder="—" onChange={(e) => setExtra(i, xi, "amount", e.target.value)} /></span>
+                  <button type="button" className="rt-extra-del" onClick={() => delExtra(i, xi)} title="刪除此欄">×</button>
+                </span>
+              ))}
+              <button type="button" className="rt-extra-add" onClick={() => addExtra(i)}>＋ 自訂價格欄</button>
             </div>
             {extraRow(r, i)}
             <div className="rt-includes">

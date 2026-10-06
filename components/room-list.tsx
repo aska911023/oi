@@ -10,8 +10,9 @@ import type { RoomType } from "@/lib/types";
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
 const periodsOf = (r: RoomType) => {
   const pr = r.pricing || {};
-  return ([["平日", pr.weekday], ["旺季平日", pr.peak_weekday], ["小假日", pr.minor_holiday], ["假日", pr.holiday], ["定價", pr.rack]] as [string, number | null | undefined][])
-    .filter(([, v]) => v != null) as [string, number][];
+  const base = [["平日", pr.weekday], ["旺季平日", pr.peak_weekday], ["小假日", pr.minor_holiday], ["假日", pr.holiday], ["定價", pr.rack]] as [string, number | null | undefined][];
+  const extras = (pr.extras || []).map((e) => [e.label, e.amount] as [string, number | null | undefined]);
+  return [...base, ...extras].filter(([, v]) => v != null) as [string, number][];
 };
 
 export default function RoomList({ rooms }: { rooms: RoomType[] }) {

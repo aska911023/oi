@@ -1055,3 +1055,11 @@ img { display: block; max-width: 100%; }
 .vendor-stay-row:first-child { border-top: 0; }
 .vendor-stay-row .vs-name { font-weight: 600; color: var(--ink); }
 .vendor-stay-row .vs-loc { color: var(--muted); font-size: 13px; flex: 1; }
+
+/* 包棟自訂價格欄 */
+.rt-extras { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rt-extra-cell { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 10px; padding: 3px 4px 3px 10px; background: var(--page); }
+.rt-extra-label { width: 96px; border: 0; background: transparent; font-size: 13px; color: var(--text); outline: none; }
+.rt-extra-del { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; }
+.rt-extra-del:hover { color: #c0392b; }
+.rt-extra-add { border: 1px dashed var(--green); color: var(--green); background: #fff; border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }

@@ -117,6 +117,7 @@ export interface RoomPricing {
   rack?: number | null;          // 定價
   extra_weekday?: number | null; // 加人(平日)/人
   extra_holiday?: number | null; // 加人(假日)/人
+  extras?: { label: string; amount: number | null }[]; // 自訂價格欄(連假/春節/特殊日…)
 }
 
 export type RoomKind = "single" | "whole"; // 獨立單間 / 包棟
