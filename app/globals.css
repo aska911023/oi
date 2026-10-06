@@ -223,9 +223,9 @@ img { display: block; max-width: 100%; }
 .savebm.float.on { color: var(--green); }
 .detail-imgwrap .savebm.float { left: 12px; right: auto; }
 /* 進站確認閘門 */
-.entrygate { position: fixed; inset: 0; z-index: 2000; background: var(--page); display: grid; place-items: center; padding: 24px; animation: pop .25s ease; }
+.entrygate { position: fixed; inset: 0; z-index: 2000; background: var(--page); display: grid; place-items: center; padding: 24px; animation: fade .18s ease; }
 .entrygate-card { max-width: 420px; width: 100%; text-align: center; background: #fff; border: 1px solid var(--border); border-radius: 22px; padding: 44px 32px; box-shadow: var(--shadow-lg); }
-.eg-logo { max-height: 56px; margin: 0 auto 10px; display: block; }
+.eg-logo { max-height: 84px; width: auto; max-width: 100%; margin: 0 auto 14px; display: block; }
 .eg-mark { margin-bottom: 8px; display: flex; justify-content: center; }
 .entrygate-card h2 { font-size: 30px; font-weight: 800; color: var(--ink); margin: 6px 0 4px; }
 .eg-sub { font-size: 14px; color: var(--text-2); margin: 0 0 20px; }
