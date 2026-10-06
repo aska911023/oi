@@ -783,8 +783,8 @@ img { display: block; max-width: 100%; }
 .ig-caption { padding: 4px 14px 0; font-size: 14px; line-height: 1.6; color: var(--text); }
 .ig-title { font-weight: 700; color: var(--ink); }
 .ig-cap-sum { color: var(--text-2); }
-.ig-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 0; }
-.ig-tags span { font-size: 12px; color: var(--text-2); background: var(--page); border: 1px solid var(--border); border-radius: 16px; padding: 3px 10px; }
+.ig-tags { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 14px 16px; }
+.ig-tags span { font-size: 12px; color: var(--green); background: var(--green-soft); border: 1px solid var(--green); border-radius: 16px; padding: 3px 10px; }
 .ig-viewc { display: block; width: 100%; background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; padding: 10px 14px 14px; text-align: left; }
 .ig-comments { padding: 8px 14px 14px; }
 .ig-post .trip-manage { padding: 12px 14px; margin-top: 0; }
