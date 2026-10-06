@@ -144,6 +144,11 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     await sb.from("stays").update({ approved: !s.approved }).eq("id", s.id);
     await refresh();
   }
+  async function setTier(s: Stay, ad_tier: string) {
+    const sb = createClient();
+    await sb.from("stays").update({ ad_tier }).eq("id", s.id);
+    await refresh();
+  }
   async function remove(s: Stay) {
     if (!confirm(`確定刪除「${s.name}」?此動作無法復原。`)) return;
     const sb = createClient();
@@ -230,6 +235,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
+                    {!ownerId && (
+                      <select className="tier-sel" value={s.ad_tier || "free"} onChange={(e) => setTier(s, e.target.value)} title="購買方案">
+                        <option value="free">免費方案</option>
+                        <option value="featured">精選方案</option>
+                        <option value="flagship">旗艦方案</option>
+                      </select>
+                    )}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>
@@ -283,10 +295,11 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                 </span>
               )}
               {!ownerId && (
-                <label className="check" style={{ gap: 6 }}>曝光
+                <label className="check" style={{ gap: 6 }}>購買方案
                   <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
-                    <option value="free">一般</option>
-                    <option value="featured">精選(優先曝光)</option>
+                    <option value="free">免費方案</option>
+                    <option value="featured">精選方案(優先曝光)</option>
+                    <option value="flagship">旗艦方案(最高曝光)</option>
                   </select>
                 </label>
               )}

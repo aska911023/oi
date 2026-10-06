@@ -11,6 +11,7 @@ export interface Vendor {
 export interface OwnedStay {
   id: string; name: string; region?: string | null; town?: string | null; owner_id: string;
   published?: boolean | null; visibility?: string | null; featured?: boolean | null; ad_tier?: string | null; approved?: boolean | null;
+  image?: string | null; category?: string | null; price?: number | null;
 }
 
 const TIER_LABEL: Record<string, string> = { featured: "精選", flagship: "旗艦" };
@@ -101,15 +102,19 @@ export default function PartnersBoard({ vendors, stays }: { vendors: Vendor[]; s
             <h3 className="room-list-h" style={{ marginTop: 18 }}>旗下民宿 <span className="count">{(byOwner[view.owner_id] || []).length} 間</span></h3>
             <div className="atable-wrap" style={{ marginTop: 8 }}>
               <table className="atable">
-                <thead><tr><th>民宿</th><th>地區</th><th>曝光</th><th>狀態</th></tr></thead>
+                <thead><tr><th></th><th>民宿</th><th>類型</th><th>地區</th><th>起價</th><th>曝光</th><th>狀態</th><th>操作</th></tr></thead>
                 <tbody>
-                  {(byOwner[view.owner_id] || []).length === 0 && <tr><td colSpan={4} className="empty-row">尚未綁定民宿。</td></tr>}
+                  {(byOwner[view.owner_id] || []).length === 0 && <tr><td colSpan={8} className="empty-row">尚未綁定民宿。</td></tr>}
                   {(byOwner[view.owner_id] || []).map((s) => (
                     <tr key={s.id}>
+                      <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
                       <td><b>{s.name}</b></td>
+                      <td style={{ whiteSpace: "nowrap" }}>{s.category || "—"}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{s.region || ""}{s.town ? "・" + s.town : ""}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{s.price ? `$${s.price.toLocaleString()}` : "—"}</td>
                       <td>{s.ad_tier && s.ad_tier !== "free" ? <span className="pill feat">{TIER_LABEL[s.ad_tier] || s.ad_tier}</span> : "一般"}</td>
                       <td>{isPending(s) ? <span className="pill pending">待審核</span> : <span className={"pill " + (isLive(s) ? "live" : "draft")}>{isLive(s) ? "已公開" : "未公開"}</span>}</td>
+                      <td><a className="lnk" href={`/stay/${s.id}`} target="_blank" rel="noopener noreferrer">查看</a></td>
                     </tr>
                   ))}
                 </tbody>
