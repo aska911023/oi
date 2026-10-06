@@ -802,6 +802,15 @@ img { display: block; max-width: 100%; }
 .profile-head { display: flex; align-items: center; gap: 16px; }
 .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 28px; flex: none; }
 .profile-head h1 { font-size: 28px; }
+/* 追蹤列(粉絲/追蹤數 + 追蹤鈕) */
+.follow-bar { display: flex; align-items: center; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
+.follow-counts { display: flex; gap: 16px; }
+.follow-count { background: none; border: 0; cursor: pointer; font-size: 14px; color: var(--text-2); padding: 0; }
+.follow-count b { color: var(--ink); font-size: 15px; margin-right: 3px; }
+.follow-count:hover { color: var(--green); }
+.follow-list { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow-y: auto; }
+.follow-person { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; cursor: pointer; padding: 8px 6px; border-radius: 10px; font-size: 14.5px; color: var(--ink); text-align: left; }
+.follow-person:hover { background: var(--green-soft); }
 /* 通知鈴鐺 */
 .notif-wrap { position: relative; display: inline-flex; }
 .notif-btn { position: relative; border: 0; background: none; color: var(--ink); cursor: pointer; padding: 6px; border-radius: 10px; display: grid; place-items: center; line-height: 0; }
@@ -976,6 +985,7 @@ img { display: block; max-width: 100%; }
 /* 評價 */
 .btn.on-saved { border-color: var(--green); color: var(--green); background: var(--green-soft); }
 .review-form { margin-bottom: 18px; }
+.tc-locked { background: var(--green-soft); color: var(--text-2); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; margin-bottom: 14px; }
 .review-form textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 12px; font: inherit; margin-top: 8px; background: #fff; }
 .review-form textarea:focus { outline: none; border-color: var(--green); }
 .stars-input { display: flex; gap: 2px; }

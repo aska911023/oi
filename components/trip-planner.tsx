@@ -49,6 +49,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   const [embedText, setEmbedText] = useState((initial?.embed_urls || []).join("\n"));
   const [items, setItems] = useState<TripItem[]>(initial?.items?.map((it) => ({ ...it, id: it.id || genId() })) || []);
   const [isPublic, setIsPublic] = useState<boolean>(initialOwned ? !!initial?.is_public : false);
+  const [commentPolicy, setCommentPolicy] = useState<string>(initialOwned ? (initial?.comment_policy || "all") : "all");
   const [saving, setSaving] = useState(false);
 
   function copyShareLink() {
@@ -219,7 +220,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       owner_id: user.id, title, days, nights, headcount,
       budget: budget ? Number(budget) : null, transport, region: region || null, summary: summary || null, items,
       embed_urls: embedText.split("\n").map((u) => u.trim()).filter(Boolean),
-      is_public: isPublic,
+      is_public: isPublic, comment_policy: commentPolicy,
     };
     let error, id = tripId;
     if (tripId) {
@@ -250,6 +251,11 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
             <div><label>主要地區(選填)</label><select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">不指定</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
             <div className="wide"><label>行程簡介 / 內文(選填,可換行)</label><textarea className="tp-bodybox" rows={9} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="描述這趟旅程…(可多行)" /></div>
             <div className="wide"><label>影片(YouTube / IG / TikTok,可多個,一行一個)</label><textarea rows={2} value={embedText} onChange={(e) => setEmbedText(e.target.value)} placeholder={"https://youtu.be/…\nhttps://tiktok.com/@…/video/…"} /></div>
+            <div><label>誰可以留言</label><select value={commentPolicy} onChange={(e) => setCommentPolicy(e.target.value)}>
+              <option value="all">所有人</option>
+              <option value="followers">只有粉絲</option>
+              <option value="off">關閉留言</option>
+            </select></div>
           </div>
         </div>
 

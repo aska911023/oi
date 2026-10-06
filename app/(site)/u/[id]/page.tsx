@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import TripCard from "@/components/trip-card";
 import Avatar from "@/components/avatar";
+import FollowBar from "@/components/follow-bar";
 import type { Trip } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export default async function UserTripsPage({ params }: { params: Promise<{ id: 
         <div>
           <h1 className="serif" style={{ margin: 0 }}>{name}</h1>
           <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>{rows.length} 篇公開行程</p>
+          <FollowBar uid={id} />
         </div>
       </div>
 

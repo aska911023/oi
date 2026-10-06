@@ -220,6 +220,7 @@ export interface Trip {
   embed_urls?: string[]; // 影片(YouTube / IG / TikTok,可多個)
   items: TripItem[];
   is_public: boolean;
+  comment_policy?: "all" | "followers" | "off"; // 留言權限:所有人/只有粉絲/關閉
   share_slug?: string | null;
   created_at?: string;
   owner_name?: string | null; // 發布者暱稱(search_trips 帶回)

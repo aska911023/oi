@@ -90,7 +90,7 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
       {!open && (t.comment_count || 0) > 0 && (
         <button className="ig-viewc" onClick={() => setOpen(true)}>查看全部 {t.comment_count} 則留言</button>
       )}
-      {open && <div className="ig-comments"><TripComments tripId={t.id} compact /></div>}
+      {open && <div className="ig-comments"><TripComments tripId={t.id} compact policy={t.comment_policy || "all"} ownerId={t.owner_id} /></div>}
     </article>
   );
 }

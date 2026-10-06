@@ -1844,3 +1844,110 @@ drop policy if exists plans_sel on public.plans;
 create policy plans_sel on public.plans for select using (true);
 drop policy if exists plans_all on public.plans;
 create policy plans_all on public.plans for all using (public.is_admin()) with check (public.is_admin());
+
+
+-- ============================================================
+-- 追蹤系統 + 留言政策(關閉/僅粉絲)+ 關鍵字過濾
+-- 留言寫入改走 DEFINER RPC trip_comment_add 把關,直接 INSERT 以 policy(false)擋下。
+-- ============================================================
+create table if not exists public.follows (
+  follower_id uuid not null references public.profiles(id) on delete cascade,
+  following_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  constraint follows_no_self check (follower_id <> following_id)
+);
+create index if not exists follows_following_idx on public.follows(following_id);
+alter table public.follows enable row level security;
+drop policy if exists follows_sel on public.follows;
+create policy follows_sel on public.follows for select using (true);
+drop policy if exists follows_ins on public.follows;
+create policy follows_ins on public.follows for insert with check (follower_id = auth.uid());
+drop policy if exists follows_del on public.follows;
+create policy follows_del on public.follows for delete using (follower_id = auth.uid());
+grant select on public.follows to anon, authenticated;
+grant insert, delete on public.follows to authenticated;
+
+alter table public.trips add column if not exists comment_policy text not null default 'all';
+alter table public.trips drop constraint if exists trips_comment_policy_chk;
+alter table public.trips add constraint trips_comment_policy_chk check (comment_policy in ('all','followers','off'));
+alter table public.site_settings add column if not exists comment_banned_words text default '';
+
+drop policy if exists trip_comments_ins on public.trip_comments;
+create policy trip_comments_ins on public.trip_comments for insert with check (false); -- 只能透過 trip_comment_add
+drop policy if exists trip_comments_del on public.trip_comments;
+create policy trip_comments_del on public.trip_comments for delete using (
+  user_id = auth.uid() or public.is_admin()
+  or exists (select 1 from public.trips t where t.id = trip_id and t.owner_id = auth.uid())
+);
+
+create or replace function public.trip_comment_add(p_trip uuid, p_body text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_owner uuid; v_policy text; v_body text := btrim(p_body);
+  v_words text; v_word text; v_id uuid;
+begin
+  if v_uid is null then raise exception '請先登入'; end if;
+  if v_body = '' then raise exception '留言不能空白'; end if;
+  select owner_id, coalesce(comment_policy,'all') into v_owner, v_policy from public.trips where id = p_trip;
+  if v_owner is null then raise exception '找不到這篇行程'; end if;
+  if v_policy = 'off' and v_uid <> v_owner then raise exception '這篇貼文已關閉留言'; end if;
+  if v_policy = 'followers' and v_uid <> v_owner
+     and not exists (select 1 from public.follows f where f.follower_id = v_uid and f.following_id = v_owner) then
+    raise exception '只有粉絲可以留言,先追蹤對方吧';
+  end if;
+  select coalesce(comment_banned_words,'') into v_words from public.site_settings where id = 1;
+  if coalesce(v_words,'') <> '' then
+    foreach v_word in array regexp_split_to_array(v_words, E'[\n,,、\s]+') loop
+      v_word := btrim(v_word);
+      if length(v_word) > 0 and position(lower(v_word) in lower(v_body)) > 0 then
+        raise exception '留言含有不當字詞,請修改後再送出';
+      end if;
+    end loop;
+  end if;
+  insert into public.trip_comments (trip_id, user_id, body) values (p_trip, v_uid, v_body) returning id into v_id;
+  return jsonb_build_object('id', v_id, 'body', v_body, 'created_at', now(),
+    'user_id', v_uid, 'name', (select display_name from public.profiles where id = v_uid));
+end;
+$$;
+revoke all on function public.trip_comment_add(uuid, text) from public;
+grant execute on function public.trip_comment_add(uuid, text) to authenticated;
+
+-- 留言清單帶 user_id(前端判斷誰能刪)
+create or replace function public.trip_comments_list(p_trip uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', c.id, 'body', c.body, 'created_at', c.created_at, 'user_id', c.user_id,
+    'name', (select display_name from public.profiles p where p.id = c.user_id)
+  ) order by c.created_at desc), '[]'::jsonb)
+  from public.trip_comments c where c.trip_id = p_trip;
+$$;
+grant execute on function public.trip_comments_list(uuid) to anon, authenticated;
+
+create or replace function public.follow_stats(p_uid uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'followers', (select count(*) from public.follows where following_id = p_uid),
+    'following', (select count(*) from public.follows where follower_id = p_uid),
+    'is_following', (auth.uid() is not null and exists(select 1 from public.follows where follower_id = auth.uid() and following_id = p_uid))
+  );
+$$;
+grant execute on function public.follow_stats(uuid) to anon, authenticated;
+
+create or replace function public.follow_list(p_uid uuid, p_kind text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id', pid,
+    'name', (select display_name from public.profiles where id = pid),
+    'avatar', (select avatar_url from public.profiles where id = pid)
+  )), '[]'::jsonb)
+  from (
+    select case when p_kind = 'followers' then follower_id else following_id end as pid, created_at
+    from public.follows
+    where (p_kind = 'followers' and following_id = p_uid)
+       or (p_kind = 'following' and follower_id = p_uid)
+    order by created_at desc
+  ) x;
+$$;
+grant execute on function public.follow_list(uuid, text) to anon, authenticated;

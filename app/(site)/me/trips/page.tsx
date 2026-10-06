@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import MyTrips from "@/components/my-trips";
 import SignOutButton from "@/components/signout-button";
+import FollowBar from "@/components/follow-bar";
 import TripCard from "@/components/trip-card";
 import { createClient } from "@/lib/supabase/server";
 import type { Trip } from "@/lib/types";
@@ -39,6 +40,10 @@ export default async function MyTripsPage() {
       <div className="plan-head">
         <h1 className="serif">我的行程</h1>
         <p>管理你儲存的行程,可編輯、公開分享或刪除;也能收藏別人的行程當參考。</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
+          <FollowBar uid={user.id} />
+          <Link href={`/u/${user.id}`} className="lnk">查看我的公開主頁 ›</Link>
+        </div>
       </div>
 
       <div className="account-actions" style={{ marginBottom: 26 }}>

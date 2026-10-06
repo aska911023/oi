@@ -102,7 +102,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size,
       contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone,
       footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline,
-      about_body: s.about_body, contact_intro: s.contact_intro, blocks: s.blocks, updated_at: new Date().toISOString(),
+      about_body: s.about_body, contact_intro: s.contact_intro, comment_banned_words: s.comment_banned_words, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -304,6 +304,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           </div>
         </div>
         <div className="field"><label>搜尋列下方備註</label><input value={s.search_hint} onChange={(e) => set("search_hint", e.target.value)} /></div>
+        <div className="field"><label>行程留言 — 關鍵字過濾(逗號或換行分隔;留言含到任一詞會被擋下)</label>
+          <textarea rows={3} value={s.comment_banned_words} onChange={(e) => set("comment_banned_words", e.target.value)} placeholder="例:髒話1, 髒話2, 廣告關鍵字" /></div>
         <div className="frow">
           <div className="field" style={{ margin: 0 }}><label>聯絡 Email(聯絡我們頁)</label><input value={s.contact_email} onChange={(e) => set("contact_email", e.target.value)} placeholder="hello@…" /></div>
           <div className="field" style={{ margin: 0 }}><label>官方 LINE 連結</label><input value={s.contact_line} onChange={(e) => set("contact_line", e.target.value)} placeholder="https://line.me/…" /></div>

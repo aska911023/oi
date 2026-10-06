@@ -71,7 +71,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
             </div>
           ))}
 
-          <TripComments tripId={trip.id} />
+          <TripComments tripId={trip.id} policy={trip.comment_policy || "all"} ownerId={trip.owner_id} />
         </div>
       </main>
   );
