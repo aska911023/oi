@@ -1718,3 +1718,70 @@ alter table public.stays add column if not exists phone text;
 alter table public.stays drop constraint if exists stays_category_check;
 alter table public.stays add constraint stays_category_check
   check (category = any (array['海景度假','山林小屋','設計旅宿','親子友善','寵物友善','包棟民宿','復古老宅','一般民宿']));
+
+
+-- 2026-10-06 營運數據儀表板 RPC(補記:DB 已存在,之前未入 schema)
+--   admin_stats:平台後台總數據 + 免費/精選/旗艦方案成效 + 熱門民宿 Top10(內部檢查 role=admin,非 admin 回 {"error":"forbidden"})
+--   vendor_stats:業者看自己民宿近 N 天成效(scoped owner_id = auth.uid())
+CREATE OR REPLACE FUNCTION public.admin_stats(p_days integer DEFAULT 30)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  with ev as (select * from public.events where created_at >= now() - (p_days || ' days')::interval),
+  totals as (
+    select
+      count(*) filter (where type = 'stay_view')::bigint as views,
+      count(*) filter (where type = 'click_website')::bigint as click_web,
+      count(*) filter (where type = 'click_map')::bigint as click_map
+    from ev
+  ),
+  top as (
+    select s.name, s.ad_tier,
+      count(*) filter (where e.type = 'stay_view')::bigint as views,
+      count(*) filter (where e.type = 'click_website')::bigint as click_web
+    from public.stays s left join ev e on e.stay_id = s.id
+    group by s.id, s.name, s.ad_tier
+    order by views desc nulls last limit 10
+  ),
+  tiers as (
+    select s.ad_tier,
+      count(distinct s.id)::bigint as stays,
+      count(*) filter (where e.type = 'stay_view')::bigint as views,
+      count(*) filter (where e.type = 'click_website')::bigint as click_web
+    from public.stays s left join ev e on e.stay_id = s.id
+    where s.published and s.visibility = 'published'
+    group by s.ad_tier
+  )
+  select case when exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    then jsonb_build_object(
+      'totals', (select to_jsonb(t) from totals t),
+      'top', coalesce((select jsonb_agg(to_jsonb(x)) from top x), '[]'::jsonb),
+      'tiers', coalesce((select jsonb_agg(to_jsonb(y)) from tiers y), '[]'::jsonb)
+    )
+    else jsonb_build_object('error', 'forbidden') end;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.vendor_stats(p_days integer DEFAULT 30)
+ RETURNS TABLE(stay_id uuid, name text, ad_tier text, views bigint, click_web bigint, click_map bigint, saves bigint)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select s.id, s.name, s.ad_tier,
+    count(*) filter (where e.type = 'stay_view')::bigint,
+    count(*) filter (where e.type = 'click_website')::bigint,
+    count(*) filter (where e.type = 'click_map')::bigint,
+    (select count(*) from public.saved sv where sv.stay_id = s.id)::bigint
+  from public.stays s
+  left join public.events e on e.stay_id = s.id and e.created_at >= now() - (p_days || ' days')::interval
+  where s.owner_id = auth.uid()
+  group by s.id, s.name, s.ad_tier
+  order by 4 desc;
+$function$;
+
+revoke all on function public.admin_stats(integer) from public;
+grant execute on function public.admin_stats(integer) to authenticated;
+revoke all on function public.vendor_stats(integer) from public;
+grant execute on function public.vendor_stats(integer) to authenticated;
