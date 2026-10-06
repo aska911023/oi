@@ -24,8 +24,9 @@ const EMPTY: Form = {
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
 export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
 
-export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [] }: {
+export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null }: {
   initial: Stay[]; ownerId?: string; bdInitial?: StayBd[]; ownersInitial?: OwnerProfile[];
+  loadError?: string | null;
 }) {
   const owners = Object.fromEntries(ownersInitial.map((o) => [o.id, o]));
   const ownerName = (id?: string | null) => {
@@ -149,6 +150,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
   return (
     <>
+      {loadError && (
+        <div className="load-err">
+          <b>資料沒有載入成功</b>,下面的數字不是真的。{loadError}
+          <button className="btn btn-ghost btn-sm" onClick={() => location.reload()}>重新載入</button>
+        </div>
+      )}
+
       <div className="stats">
         <div className="stat-card"><div className="n">{stats.total}</div><div className="l">全部民宿</div></div>
         <div className="stat-card"><div className="n">{stats.published}</div><div className="l">已上架</div></div>

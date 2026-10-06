@@ -518,6 +518,9 @@ img { display: block; max-width: 100%; }
 .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 560px) { .frow { grid-template-columns: 1fr; } }
 
+/* 後台載入失敗提示(不要讓人把 0 當成真的沒資料) */
+.load-err { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13.5px; line-height: 1.7; color: #a5303a; background: #fdeeec; border: 1px solid #f3cfcb; border-radius: 12px; padding: 12px 16px; margin: 0 0 18px; }
+
 /* 開放資料來源標示(授權的顯名義務) */
 .data-src { font-size: 12px; line-height: 1.7; color: var(--muted); background: var(--page); border-radius: 10px; padding: 9px 12px; margin: 14px 0 0; }
 

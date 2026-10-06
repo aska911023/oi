@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminStaysPage() {
   const sb = await createClient();
-  const [{ data }, { data: bd }] = await Promise.all([
+  const [{ data, error }, { data: bd }] = await Promise.all([
     sb.from("stays").select("*").order("created_at", { ascending: false }),
     sb.from("stay_bd").select("stay_id,contacted,rejected,note"),   // 洽談紀錄(admin only)
   ]);
@@ -17,5 +17,14 @@ export default async function AdminStaysPage() {
     ? await sb.from("profiles").select("id,display_name,full_name,role").in("id", ownerIds)
     : { data: [] };
 
-  return <StaysAdmin initial={(data as Stay[]) || []} bdInitial={bd || []} ownersInitial={owners || []} />;
+  // 查詢失敗時 data 會是 null,若直接往下渲染會變成「0 筆」,看起來像資料不見了。
+  // 寧可明講失敗讓人重試,也不要顯示錯的數字。
+  return (
+    <StaysAdmin
+      initial={(data as Stay[]) || []}
+      bdInitial={bd || []}
+      ownersInitial={owners || []}
+      loadError={error ? error.message : null}
+    />
+  );
 }
