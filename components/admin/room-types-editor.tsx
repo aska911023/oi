@@ -25,7 +25,7 @@ const blank = (stayId: string, kind: RoomKind): Row => ({
   pricing: {}, includes_note: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
 });
 
-export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatured = false, canManage = false, roomPinQuota = 0 }: { stayId: string; stayName?: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean; roomPinQuota?: number }) {
+export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatured = false, canManage = false, roomPinQuota = 0, hideSave = false, registerSave }: { stayId: string; stayName?: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean; roomPinQuota?: number; hideSave?: boolean; registerSave?: (fn: (() => Promise<void>) | null) => void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -39,6 +39,12 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
     })();
     return () => { alive = false; };
   }, [stayId]);
+
+  // 把 saveAll 註冊給父層,讓民宿編輯器的主「儲存」能一起存房型(卸載時清掉,避免存錯民宿)
+  useEffect(() => {
+    registerSave?.(saveAll);
+    return () => registerSave?.(null);
+  });
 
   const patch = (i: number, p: Partial<Row>) => setRows((r) => r.map((x, k) => (k === i ? { ...x, ...p, _dirty: true } : x)));
   const patchPrice = (i: number, key: keyof RoomPricing, val: string) =>
@@ -232,9 +238,11 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
       </div>
       <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => add("whole")}>＋ 新增包棟方案</button>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
-        <button className="btn btn-primary btn-sm" onClick={saveAll} disabled={busy}>{busy ? "儲存中…" : "儲存房型"}</button>
-      </div>
+      {!hideSave && (
+        <div style={{ display: "flex", gap: 10, marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+          <button className="btn btn-primary btn-sm" onClick={saveAll} disabled={busy}>{busy ? "儲存中…" : "儲存房型"}</button>
+        </div>
+      )}
     </div>
   );
 }

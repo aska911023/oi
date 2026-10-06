@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { logAdmin as writeAdminLog } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
@@ -92,6 +92,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   const [form, setForm] = useState<Form | null>(null);
   const [assign, setAssign] = useState<Stay | null>(null);
   const [busy, setBusy] = useState(false);
+  const roomSaveRef = useRef<(() => Promise<void>) | null>(null); // 房型編輯器把 saveAll 註冊進來,讓主「儲存」一起存
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<LogRow[] | null>(null);
 
@@ -184,9 +185,11 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       const { data, error: e } = await sb.from("stays").insert(payload).select("id").single();
       error = e; if (data) newId = data.id;
     }
-    setBusy(false);
-    if (error) { alert("儲存失敗:" + error.message); return; }
+    if (error) { setBusy(false); alert("儲存失敗:" + error.message); return; }
     await logAdmin(form.id ? "edit" : "create", { id: newId, name: form.name });
+    // 房型編輯器若已掛載(編輯既有民宿),一起把房型存起來,不用另外按「儲存房型」
+    if (roomSaveRef.current) { try { await roomSaveRef.current(); } catch { /* 房型存檔錯誤已在子元件提示 */ } }
+    setBusy(false);
     // 新建後留在編輯狀態,讓下方「房型管理」立刻出現
     setForm((f) => (f ? { ...f, id: newId } : f));
     await refresh();
@@ -374,7 +377,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
             {form.id ? (
               <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <RoomTypesEditor stayId={form.id} stayName={form.name} allowFeatured={!ownerId} canManage={!ownerId} roomPinQuota={planByKey[form.ad_tier || "free"]?.room_pins ?? 0} onChange={() => revalidateStays().catch(() => {})} />
+                <RoomTypesEditor stayId={form.id} stayName={form.name} allowFeatured={!ownerId} canManage={!ownerId} roomPinQuota={planByKey[form.ad_tier || "free"]?.room_pins ?? 0} hideSave registerSave={(fn) => { roomSaveRef.current = fn; }} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
               <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>
