@@ -168,7 +168,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
             <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
               onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}>
               <div className={"photo" + (toImgs(p.image, p.images).length ? "" : " noimg")}>
-                {toImgs(p.image, p.images).length ? <PhotoCarousel images={toImgs(p.image, p.images)} alt={p.name} /> : <div className="photo-ph">{I.map}</div>}
+                {toImgs(p.image, p.images).length ? <PhotoCarousel images={toImgs(p.image, p.images)} alt={p.name} width={640} /> : <div className="photo-ph">{I.map}</div>}
                 {p.featured && <span className="tag-feat">精選</span>}
                 <SaveBookmark type={kindState} id={p.id} floating nextPath={`/places/${kindState}`} />
               </div>
@@ -267,6 +267,15 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
                 )}
                 <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
               </div>
+
+              {/* 開放資料的顯名義務:未標示來源視為未取得授權。順便讓使用者知道資料時效 */}
+              {dText("attribution") && (
+                <p className="data-src">
+                  資料來源:{dText("attribution")}
+                  {dText("data_updated") && `,更新於 ${dText("data_updated")}`}
+                  。實際營業狀況請以店家公告為準。
+                </p>
+              )}
 
               <div className="shop-block" style={{ marginTop: 22 }}>
                 <PlaceComments kind={kindState} placeId={active.id} />

@@ -189,7 +189,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
               <Link href={`/stay/${r.stay_id}`} className="card">
                 <div className={"photo" + (toImgs(r.image, r.images).length ? "" : " noimg")}>
                   {toImgs(r.image, r.images).length
-                    ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} />
+                    ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} width={640} />
                     : <div className="photo-ph">{I.house}</div>}
                   <div className="card-badges">
                     {r.kind === "whole" && <span className="cbadge cbadge-whole">包棟</span>}

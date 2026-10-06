@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/img";
 
 // 多張圖片上傳(第一張為封面)。上傳到 site bucket;也可貼網址新增。
 export default function MultiImageUploader({
@@ -22,10 +23,14 @@ export default function MultiImageUploader({
     setUploading(true);
     const sb = createClient();
     const added: string[] = [];
-    for (const file of list) {
+    for (const raw of list) {
+      // 上傳前先在瀏覽器壓縮(長邊 1600 + WebP);手機原圖常 3MB 以上,直接傳會很慢
+      const file = await compressImage(raw);
       const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const path = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-      const { error } = await sb.storage.from("site").upload(path, file, { upsert: true, cacheControl: "3600" });
+      const { error } = await sb.storage.from("site").upload(path, file, {
+        upsert: true, cacheControl: "31536000", contentType: file.type,
+      });
       if (error) { alert("上傳失敗:" + error.message); continue; }
       added.push(sb.storage.from("site").getPublicUrl(path).data.publicUrl);
     }

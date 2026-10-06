@@ -7,7 +7,8 @@ export type StayCategory =
   | "親子友善"
   | "寵物友善"
   | "包棟民宿"
-  | "復古老宅";
+  | "復古老宅"
+  | "一般民宿";
 
 export interface Stay {
   id: string;
@@ -36,6 +37,7 @@ export interface Stay {
   featured?: boolean; // 贊助置頂
   ad_tier?: string; // 曝光方案:free / featured / flagship
   save_boost?: number; // 收藏數墊高(初期社群證明;admin 設)
+  phone?: string | null; // 聯絡電話
   owner_id?: string | null; // 業主(指派後該業者可自管此民宿與底下房型);null = 平台自管
 }
 
