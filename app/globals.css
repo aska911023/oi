@@ -1077,3 +1077,6 @@ img { display: block; max-width: 100%; }
 .plan-in { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 14px; background: #fff; color: var(--text); outline: none; }
 .plan-in.num { width: 90px; }
 .plan-in:focus { border-color: var(--green); }
+
+/* 房型置頂標記(前台) */
+.room-pin { display: inline-block; background: var(--green); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-right: 7px; vertical-align: middle; }

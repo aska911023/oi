@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StaysAdmin from "@/components/admin/stays-admin";
 import type { Stay } from "@/lib/types";
+import type { Plan } from "@/components/admin/plans-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function VendorStaysPage() {
   if (!user) redirect("/login?next=/vendor");
   const { data } = await sb.from("stays").select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
   const { data: statsData } = await sb.rpc("vendor_stats", { p_days: 30 });
+  const { data: plans } = await sb.from("plans").select("*").order("sort");
   const stats = (statsData as VStat[]) || [];
   const sum = stats.reduce((a, r) => ({ views: a.views + r.views, click_web: a.click_web + r.click_web, saves: a.saves + r.saves }), { views: 0, click_web: 0, saves: 0 });
 
@@ -49,7 +51,7 @@ export default async function VendorStaysPage() {
         </div>
       )}
 
-      <StaysAdmin initial={(data as Stay[]) || []} ownerId={user.id} />
+      <StaysAdmin initial={(data as Stay[]) || []} ownerId={user.id} plans={(plans as Plan[]) || []} />
     </>
   );
 }

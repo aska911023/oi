@@ -10,6 +10,7 @@ import StaysImport from "@/components/admin/stays-import";
 import StayOwnerAssign from "@/components/admin/stay-owner-assign";
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { Stay } from "@/lib/types";
+import type { Plan } from "@/components/admin/plans-editor";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 
@@ -25,10 +26,13 @@ const EMPTY: Form = {
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
 export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
 
-export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null }: {
+export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null, plans = [] }: {
   initial: Stay[]; ownerId?: string; bdInitial?: StayBd[]; ownersInitial?: OwnerProfile[];
-  loadError?: string | null;
+  loadError?: string | null; plans?: Plan[];
 }) {
+  const planByKey = Object.fromEntries(plans.map((p) => [p.key, p]));
+  const planFeatured = (tier?: string | null) => (planByKey[tier || "free"]?.priority ?? 0) > 0; // 付費方案(優先序>0)= 上精選曝光
+  const planOptions = plans.length ? plans : [{ key: "free", name: "免費方案", room_pins: 0, priority: 0, sort: 0 }];
   const owners = Object.fromEntries(ownersInitial.map((o) => [o.id, o]));
   const ownerName = (id?: string | null) => {
     if (!id) return null;
@@ -114,7 +118,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       check_in: (form.check_in || "").trim() || null,
       check_out: (form.check_out || "").trim() || null,
       published: ownerId ? undefined : form.published, // 上架只有 admin 能設(業者送審)
-      featured: ownerId ? undefined : form.featured, sample: ownerId ? undefined : form.sample,
+      featured: ownerId ? undefined : planFeatured(form.ad_tier), sample: ownerId ? undefined : form.sample,
       ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
       save_boost: ownerId ? undefined : (Number(form.save_boost) || 0), // 收藏數墊高只有 admin 能設
       owner_id: ownerId ?? undefined,
@@ -146,7 +150,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   }
   async function setTier(s: Stay, ad_tier: string) {
     const sb = createClient();
-    await sb.from("stays").update({ ad_tier }).eq("id", s.id);
+    await sb.from("stays").update({ ad_tier, featured: planFeatured(ad_tier) }).eq("id", s.id);
     await refresh();
   }
   async function remove(s: Stay) {
@@ -237,9 +241,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     {!ownerId && (
                       <select className="tier-sel" value={s.ad_tier || "free"} onChange={(e) => setTier(s, e.target.value)} title="購買方案">
-                        <option value="free">免費方案</option>
-                        <option value="featured">精選方案</option>
-                        <option value="flagship">旗艦方案</option>
+                        {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                       </select>
                     )}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
@@ -297,9 +299,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               {!ownerId && (
                 <label className="check" style={{ gap: 6 }}>購買方案
                   <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
-                    <option value="free">免費方案</option>
-                    <option value="featured">精選方案(優先曝光)</option>
-                    <option value="flagship">旗艦方案(最高曝光)</option>
+                    {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                   </select>
                 </label>
               )}
@@ -312,7 +312,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
             {form.id ? (
               <div style={{ marginTop: 18, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} canManage={!ownerId} onChange={() => revalidateStays().catch(() => {})} />
+                <RoomTypesEditor stayId={form.id} allowFeatured={!ownerId} canManage={!ownerId} roomPinQuota={planByKey[form.ad_tier || "free"]?.room_pins ?? 0} onChange={() => revalidateStays().catch(() => {})} />
               </div>
             ) : (
               <p style={{ marginTop: 16, fontSize: 13, color: "var(--muted)" }}>先按下方「儲存」,這間民宿的「房型管理」就會出現在這裡(價格、剩餘間數以房型為準)。</p>

@@ -38,7 +38,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
   return (
     <>
       <div className="room-list" style={{ borderTop: "none", paddingTop: 0 }}>
-        {rooms.map((r) => {
+        {[...rooms].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)).map((r) => {
           const whole = r.kind === "whole";
           const imgs = toImgs(r.image, r.images);
           return (
@@ -46,7 +46,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               onClick={() => setActive(r)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(r); } }}>
               {imgs.length > 0 && <div className="room-thumb-c"><PhotoCarousel images={imgs} dots={false} arrows={false} /></div>}
               <div className="room-main">
-                <div className="room-name">{whole && <span className="room-kind">包棟</span>}{r.name}<span className="room-more">看更多 ›</span></div>
+                <div className="room-name">{r.featured && <span className="room-pin">★ 置頂</span>}{whole && <span className="room-kind">包棟</span>}{r.name}<span className="room-more">看更多 ›</span></div>
                 {r.description && <div className="room-desc">{r.description}</div>}
                 {whole && r.includes_note && <div className="room-desc">🛏 {r.includes_note}</div>}
                 <div className="room-tags">

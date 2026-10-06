@@ -24,7 +24,7 @@ const blank = (stayId: string, kind: RoomKind): Row => ({
   pricing: {}, includes_note: "", sort: 0, published: true, featured: false, tags: [], _new: true, _dirty: true,
 });
 
-export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false, canManage = false }: { stayId: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean }) {
+export default function RoomTypesEditor({ stayId, onChange, allowFeatured = false, canManage = false, roomPinQuota = 0 }: { stayId: string; onChange?: () => void; allowFeatured?: boolean; canManage?: boolean; roomPinQuota?: number }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -130,12 +130,23 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
     </div>
   );
 
+  const togglePin = (i: number, r: Row) => {
+    if (!r.featured) {
+      const pinned = rows.filter((x) => x.featured).length;
+      if (pinned >= roomPinQuota) {
+        alert(roomPinQuota === 0 ? "目前方案不可置頂房型。請到「方案設定」調整,或把民宿升級成可置頂的方案。" : `此方案最多置頂 ${roomPinQuota} 間房型(已置頂 ${pinned} 間)。`);
+        return;
+      }
+    }
+    patch(i, { featured: !r.featured });
+  };
+
   const toggles = (r: Row, i: number) => (
     <>
       {canManage
         ? <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
         : <span className="rt-review">{r.id ? (r.published ? "✅ 已上架" : "⏳ 待偶宿審核") : "⏳ 送出後待審核"}</span>}
-      {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => patch(i, { featured: !r.featured })}>{r.featured ? "★置頂" : "置頂"}</button>}
+      {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => togglePin(i, r)}>{r.featured ? "★置頂" : "置頂"}</button>}
       <button type="button" className="rt-kind-btn" onClick={() => patch(i, { kind: r.kind === "whole" ? "single" : "whole" })}>轉為{r.kind === "whole" ? "單間" : "包棟"}</button>
       <button className="lnk danger" onClick={() => removeRow(i)}>刪</button>
     </>
@@ -145,7 +156,7 @@ export default function RoomTypesEditor({ stayId, onChange, allowFeatured = fals
     <div className="rt-editor">
       <div className="rt-head">
         <b>房型管理</b>
-        <span className="sub">前台「起價 / 剩餘 / 人數」會自動用房型彙整;包棟以「平日」為起價</span>
+        <span className="sub">前台「起價 / 剩餘 / 人數」會自動用房型彙整;包棟以「平日」為起價{allowFeatured ? `(此方案可置頂 ${roomPinQuota} 間房型)` : ""}</span>
       </div>
 
       {rows.length === 0 && <div className="day-empty">還沒有房型,下方可新增「獨立單間」或「包棟方案」。</div>}
