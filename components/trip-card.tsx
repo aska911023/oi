@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import HeroCarousel from "@/components/hero-carousel";
 import SaveTripButton from "@/components/save-trip-button";
 import TripLikeButton from "@/components/trip-like-button";
@@ -12,14 +13,21 @@ import type { Trip } from "@/lib/types";
 
 // IG 貼文式行程卡:頭像+暱稱 → 大圖 → 動作列 → 標題/摘要 → 留言。看別人/看自己共用。
 export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSlot?: ReactNode }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
+
+  // 整張卡片可點進行程;但按到互動元素(連結/按鈕/輸入框/留言區)時不導航,交給它們自己處理。
+  function cardClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest("a, button, input, textarea, .ig-comments, .ig-menu")) return;
+    router.push(`/trips/${t.id}`);
+  }
   const author = t.owner_name || "旅人";
   const sub = `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""}`;
 
   return (
-    <article className="ig-post">
+    <article className="ig-post ig-clickable" onClick={cardClick}>
       <header className="ig-head">
         {t.owner_id ? (
           <Link href={`/u/${t.owner_id}`} className="ig-headlink">
