@@ -1453,21 +1453,26 @@ grant execute on function public.user_public_trips(uuid, int, int) to anon, auth
 
 drop function if exists public.my_notifications(int);
 create or replace function public.my_notifications(lim int default 30)
-returns table(kind text, trip_id uuid, trip_title text, actor text, actor_avatar text, created_at timestamptz)
+returns table(kind text, trip_id uuid, trip_title text, actor text, actor_id uuid, actor_avatar text, created_at timestamptz)
 language sql stable security definer set search_path = public as $$
   select * from (
-    select 'like'::text as kind, t.id as trip_id, t.title as trip_title, coalesce(pr.display_name,'旅人') as actor, pr.avatar_url as actor_avatar, l.created_at
+    select 'like'::text as kind, t.id as trip_id, t.title as trip_title,
+           coalesce(pr.display_name,'旅人') as actor, l.user_id as actor_id, pr.avatar_url as actor_avatar, l.created_at
     from public.trip_likes l join public.trips t on t.id=l.trip_id and t.owner_id=auth.uid()
     left join public.profiles pr on pr.id=l.user_id where l.user_id <> auth.uid()
     union all
-    select 'comment', t.id, t.title, coalesce(pr.display_name,'旅人'), pr.avatar_url, c.created_at
+    select 'comment', t.id, t.title, coalesce(pr.display_name,'旅人'), c.user_id, pr.avatar_url, c.created_at
     from public.trip_comments c join public.trips t on t.id=c.trip_id and t.owner_id=auth.uid()
     left join public.profiles pr on pr.id=c.user_id where c.user_id <> auth.uid()
     union all
-    select 'save', t.id, t.title, coalesce(pr.display_name,'旅人'), pr.avatar_url, sv.created_at
+    select 'save', t.id, t.title, coalesce(pr.display_name,'旅人'), sv.user_id, pr.avatar_url, sv.created_at
     from public.saved_trips sv join public.trips t on t.id=sv.trip_id and t.owner_id=auth.uid()
     left join public.profiles pr on pr.id=sv.user_id where sv.user_id <> auth.uid()
-  ) x order by 6 desc limit greatest(lim,0);
+    union all
+    select 'follow', null::uuid, null::text, coalesce(pr.display_name,'旅人'), f.follower_id, pr.avatar_url, f.created_at
+    from public.follows f left join public.profiles pr on pr.id=f.follower_id
+    where f.following_id = auth.uid()
+  ) x order by created_at desc limit greatest(lim,0);
 $$;
 grant execute on function public.my_notifications(int) to authenticated;
 

@@ -5,10 +5,11 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import Avatar from "@/components/avatar";
 
-interface N { kind: string; trip_id: string; trip_title: string; actor: string; actor_avatar?: string | null; created_at: string }
+interface N { kind: string; trip_id: string | null; trip_title: string | null; actor: string; actor_id?: string | null; actor_avatar?: string | null; created_at: string }
 const SEEN_KEY = "oi_notif_seen";
-const verb = (k: string) => (k === "like" ? "按讚了你的行程" : k === "comment" ? "留言了你的行程" : "收藏了你的行程");
-const mark = (k: string) => (k === "like" ? "♥" : k === "comment" ? "💬" : "🔖");
+const verb = (k: string) => (k === "like" ? "按讚了你的行程" : k === "comment" ? "留言了你的行程" : k === "follow" ? "開始追蹤你" : "收藏了你的行程");
+const mark = (k: string) => (k === "like" ? "♥" : k === "comment" ? "💬" : k === "follow" ? "👤" : "🔖");
+const linkOf = (n: N) => (n.kind === "follow" ? (n.actor_id ? `/u/${n.actor_id}` : "#") : `/trips/${n.trip_id}`);
 
 function ago(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -71,13 +72,13 @@ export default function NotificationBell() {
         <div className="notif-panel">
           <div className="notif-head">通知</div>
           {list.length === 0 ? (
-            <div className="notif-empty">還沒有通知。等別人對你的公開行程按讚、留言或收藏吧。</div>
+            <div className="notif-empty">還沒有通知。等別人追蹤你、或對你的公開行程按讚、留言、收藏吧。</div>
           ) : (
             <div className="notif-list">
               {list.map((n, i) => (
-                <Link key={i} href={`/trips/${n.trip_id}`} className="notif-item" onClick={() => setOpen(false)}>
+                <Link key={i} href={linkOf(n)} className="notif-item" onClick={() => setOpen(false)}>
                   <span className="notif-ava"><Avatar src={n.actor_avatar} name={n.actor} size={34} /><span className="notif-mark">{mark(n.kind)}</span></span>
-                  <span className="notif-text"><b>{n.actor}</b> {verb(n.kind)}「{n.trip_title}」</span>
+                  <span className="notif-text"><b>{n.actor}</b> {verb(n.kind)}{n.kind !== "follow" && <>「{n.trip_title}」</>}</span>
                   <span className="notif-time">{ago(n.created_at)}</span>
                 </Link>
               ))}
