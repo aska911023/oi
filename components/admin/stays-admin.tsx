@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
 import { revalidateStays } from "@/app/actions";
@@ -25,6 +25,16 @@ const EMPTY: Form = {
 
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
 export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
+interface LogRow { id: string; actor_name: string | null; action: string; target_name: string | null; detail: Record<string, unknown> | null; created_at: string }
+
+type SortKey = "new" | "old" | "name" | "region" | "status" | "tier";
+const SORT_LABEL: Record<SortKey, string> = {
+  new: "建立時間(新→舊)", old: "建立時間(舊→新)", name: "名稱 A→Z", region: "地區", status: "狀態", tier: "方案(曝光高→低)",
+};
+const ACTION_LABEL: Record<string, string> = {
+  publish: "上架", unpublish: "下架", approve: "核准", reject: "退回審核",
+  set_tier: "改方案", delete: "刪除", create: "新增", edit: "編輯",
+};
 
 export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null, plans = [] }: {
   initial: Stay[]; ownerId?: string; bdInitial?: StayBd[]; ownersInitial?: OwnerProfile[];
@@ -66,9 +76,38 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
+  const [sort, setSort] = useState<SortKey>("new");
   const [form, setForm] = useState<Form | null>(null);
   const [assign, setAssign] = useState<Stay | null>(null);
   const [busy, setBusy] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
+  const [logs, setLogs] = useState<LogRow[] | null>(null);
+
+  // 操作紀錄:只有 admin 寫/讀(RLS 擋)。actor 身分取一次就快取,避免每次都打一輪 auth/profiles。
+  const meRef = useRef<{ id: string; name: string } | null>(null);
+  async function logAdmin(action: string, s: { id?: string; name?: string } | null, detail?: Record<string, unknown>) {
+    if (!isAdminView) return;
+    const sb = createClient();
+    if (!meRef.current) {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      let name = user.email || "admin";
+      const { data: p } = await sb.from("profiles").select("display_name,full_name").eq("id", user.id).maybeSingle();
+      if (p) name = p.display_name || p.full_name || name;
+      meRef.current = { id: user.id, name };
+    }
+    await sb.from("admin_logs").insert({
+      actor_id: meRef.current.id, actor_name: meRef.current.name,
+      action, target_type: "stay", target_id: s?.id ?? null, target_name: s?.name ?? null, detail: detail ?? null,
+    });
+  }
+
+  async function openLogs() {
+    setLogOpen(true); setLogs(null);
+    const sb = createClient();
+    const { data } = await sb.from("admin_logs").select("*").order("created_at", { ascending: false }).limit(200);
+    setLogs((data as LogRow[]) || []);
+  }
 
   const stats = useMemo(() => ({
     total: list.length,
@@ -86,6 +125,23 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     }
     return true;
   }), [list, q, status]);
+
+  // 排序:list 本身已是「建立時間新→舊」,其餘各鍵在 filtered 上重排。
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    const tierRank = (t?: string | null) => planByKey[t || "free"]?.priority ?? 0;
+    const statusRank = (s: Stay) => (s.approved === false ? 0 : s.published ? 2 : 1); // 待審核→草稿→已上架
+    const byName = (a: Stay, b: Stay) => a.name.localeCompare(b.name, "zh-Hant");
+    switch (sort) {
+      case "old": arr.reverse(); break;
+      case "name": arr.sort(byName); break;
+      case "region": arr.sort((a, b) => (a.region + a.town).localeCompare(b.region + b.town, "zh-Hant") || byName(a, b)); break;
+      case "status": arr.sort((a, b) => statusRank(a) - statusRank(b) || byName(a, b)); break;
+      case "tier": arr.sort((a, b) => tierRank(b.ad_tier) - tierRank(a.ad_tier) || byName(a, b)); break;
+      default: break; // new = 預設
+    }
+    return arr;
+  }, [filtered, sort, planByKey]);
 
   async function refresh() {
     const sb = createClient();
@@ -133,6 +189,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     }
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
+    await logAdmin(form.id ? "edit" : "create", { id: newId, name: form.name });
     // 新建後留在編輯狀態,讓下方「房型管理」立刻出現
     setForm((f) => (f ? { ...f, id: newId } : f));
     await refresh();
@@ -141,22 +198,26 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   async function togglePublish(s: Stay) {
     const sb = createClient();
     await sb.from("stays").update({ published: !s.published }).eq("id", s.id);
+    await logAdmin(s.published ? "unpublish" : "publish", s);
     await refresh();
   }
   async function toggleApprove(s: Stay) {
     const sb = createClient();
     await sb.from("stays").update({ approved: !s.approved }).eq("id", s.id);
+    await logAdmin(s.approved ? "reject" : "approve", s);
     await refresh();
   }
   async function setTier(s: Stay, ad_tier: string) {
     const sb = createClient();
     await sb.from("stays").update({ ad_tier, featured: planFeatured(ad_tier) }).eq("id", s.id);
+    await logAdmin("set_tier", s, { from: s.ad_tier || "free", to: ad_tier });
     await refresh();
   }
   async function remove(s: Stay) {
     if (!confirm(`確定刪除「${s.name}」?此動作無法復原。`)) return;
     const sb = createClient();
     await sb.from("stays").delete().eq("id", s.id);
+    await logAdmin("delete", s);
     await refresh();
   }
 
@@ -185,6 +246,10 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
             </button>
           ))}
         </div>
+        <select className="sort-sel" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} title="排序" aria-label="排序">
+          {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => <option key={k} value={k}>↕ {SORT_LABEL[k]}</option>)}
+        </select>
+        {isAdminView && <button className="btn btn-ghost" onClick={openLogs}>🕘 操作紀錄</button>}
         <StaysImport existingNames={list.map((s) => s.name)} onDone={refresh} />
         <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>＋ 新增民宿</button>
       </div>
@@ -199,8 +264,8 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={isAdminView ? 9 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
-            {filtered.map((s) => (
+            {sorted.length === 0 && <tr><td colSpan={isAdminView ? 9 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {sorted.map((s) => (
               <tr key={s.id}>
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
                 <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
@@ -331,6 +396,44 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
           stayId={assign.id} stayName={assign.name} ownerId={assign.owner_id ?? null}
           onClose={() => setAssign(null)} onDone={refresh}
         />
+      )}
+
+      {logOpen && (
+        <>
+          <div className="overlay" onClick={() => setLogOpen(false)} />
+          <div className="editor" role="dialog" aria-modal="true">
+            <h2>操作紀錄 <span style={{ fontSize: 13, fontWeight: 400, color: "var(--muted)" }}>最近 200 筆</span></h2>
+            {logs === null ? (
+              <p style={{ color: "var(--muted)", padding: "20px 0" }}>載入中…</p>
+            ) : logs.length === 0 ? (
+              <p style={{ color: "var(--muted)", padding: "20px 0" }}>還沒有任何操作紀錄。</p>
+            ) : (
+              <div className="atable-wrap" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                <table className="atable">
+                  <thead><tr><th>時間</th><th>操作者</th><th>動作</th><th>對象</th><th>細節</th></tr></thead>
+                  <tbody>
+                    {logs.map((l) => (
+                      <tr key={l.id}>
+                        <td style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{new Date(l.created_at).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</td>
+                        <td>{l.actor_name || "—"}</td>
+                        <td><span className="pill">{ACTION_LABEL[l.action] || l.action}</span></td>
+                        <td>{l.target_name || "—"}</td>
+                        <td style={{ color: "var(--text-2)", fontSize: 12.5 }}>
+                          {l.action === "set_tier" && l.detail
+                            ? `${planByKey[l.detail.from as string]?.name || l.detail.from} → ${planByKey[l.detail.to as string]?.name || l.detail.to}`
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="editor-actions">
+              <button className="btn btn-ghost" onClick={() => setLogOpen(false)}>關閉</button>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

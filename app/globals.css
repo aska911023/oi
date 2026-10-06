@@ -671,7 +671,7 @@ img { display: block; max-width: 100%; }
 .pb-grid input:focus, .pb-grid select:focus { outline: none; border-color: var(--green); }
 .pb-grid textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 11px 13px; font: inherit; line-height: 1.6; background: #fff; color: var(--text); resize: vertical; }
 .pb-grid textarea:focus { outline: none; border-color: var(--green); }
-.pb-grid .tp-bodybox { min-height: 220px; }
+.pb-grid .tp-bodybox { min-height: 220px; resize: both; max-width: 100%; }
 @media (max-width: 700px) { .pb-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 460px) { .pb-grid { grid-template-columns: 1fr; } }
 
@@ -1075,6 +1075,7 @@ img { display: block; max-width: 100%; }
 /* 房型審核狀態(業者端)+ 列表方案下拉 */
 .rt-review { font-size: 12.5px; color: var(--text-2); padding: 2px 4px; white-space: nowrap; }
 .tier-sel { font-size: 12.5px; padding: 3px 7px; border-radius: 8px; border: 1px solid var(--border-strong); background: #fff; color: var(--text); cursor: pointer; }
+.sort-sel { font-size: 13px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border-strong); background: #fff; color: var(--text); cursor: pointer; }
 
 /* 方案設定 */
 .plan-in { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 14px; background: #fff; color: var(--text); outline: none; }

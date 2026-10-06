@@ -1610,6 +1610,31 @@ grant select, insert, update, delete on public.stay_bd to authenticated;
 
 
 -- ============================================================
+-- admin_logs：後台操作紀錄(上架/下架/審核/改方案/刪除/編輯)
+-- 只有 admin 讀得到;寫入限 admin 且 actor_id 必須是自己,不可偽造他人。
+-- ============================================================
+create table if not exists public.admin_logs (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid references auth.users(id) on delete set null,
+  actor_name text,
+  action text not null,
+  target_type text not null default 'stay',
+  target_id uuid,
+  target_name text,
+  detail jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists admin_logs_created_idx on public.admin_logs (created_at desc);
+alter table public.admin_logs enable row level security;
+drop policy if exists admin_logs_sel on public.admin_logs;
+create policy admin_logs_sel on public.admin_logs for select using (public.is_admin());
+drop policy if exists admin_logs_ins on public.admin_logs;
+create policy admin_logs_ins on public.admin_logs for insert with check (public.is_admin() and actor_id = auth.uid());
+revoke all on public.admin_logs from anon;
+grant select, insert on public.admin_logs to authenticated;
+
+
+-- ============================================================
 -- stay_snapshots：民宿資料快照
 -- 交給業者自行管理前先存一份,日後對方改壞/改掉都還原得回來,也能比對他們改了什麼。
 -- ============================================================
