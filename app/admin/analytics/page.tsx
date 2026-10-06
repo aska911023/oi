@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import ExportReport from "@/components/admin/export-report";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +36,7 @@ export default async function Analytics({ searchParams }: { searchParams: Promis
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, margin: "0 0 16px" }}>
         <p style={{ fontSize: 13.5, color: "var(--muted)", margin: 0 }}>{rangeLabel} · 數據隨消費者瀏覽、導流、分享、收藏累積</p>
-        <ExportReport rangeLabel={rangeLabel} totals={totals} tiers={tiers} top={top} />
+        <a href={`/admin/analytics/export?days=${days}`} className="btn btn-ghost">⬇ 匯出 Excel</a>
       </div>
 
       <div className="stats">
