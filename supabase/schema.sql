@@ -1803,3 +1803,19 @@ alter table public.vendors add column if not exists ig_url text;
 
 -- 2026-10-06 民宿官方 LINE@
 alter table public.stays add column if not exists line_url text;
+
+-- 2026-10-07 曝光方案(可自訂;room_pins=該方案可置頂房型數,priority=曝光優先序)
+create table if not exists public.plans (
+  id uuid primary key default gen_random_uuid(),
+  key text unique not null, name text not null,
+  room_pins int not null default 0, priority int not null default 0, sort int not null default 0,
+  builtin boolean not null default false, created_at timestamptz not null default now()
+);
+insert into public.plans (key,name,room_pins,priority,sort,builtin) values
+  ('free','免費方案',0,0,0,true),('featured','精選方案',1,10,1,true),('flagship','旗艦方案',3,20,2,true)
+  on conflict (key) do nothing;
+alter table public.plans enable row level security;
+drop policy if exists plans_sel on public.plans;
+create policy plans_sel on public.plans for select using (true);
+drop policy if exists plans_all on public.plans;
+create policy plans_all on public.plans for all using (public.is_admin()) with check (public.is_admin());
