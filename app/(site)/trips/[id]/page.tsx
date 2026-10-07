@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,24 @@ import MediaEmbed from "@/components/media-embed";
 import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const sb = await createClient();
+  const { data } = await sb.from("trips").select("title, days, nights, region, headcount, summary, is_public").eq("id", id).maybeSingle();
+  if (!data) return { title: "找不到行程" };
+  const t = data as Partial<Trip>;
+  if (!t.is_public) return { title: t.title || "行程", robots: { index: false } }; // 私人行程不收錄
+  const meta = `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""} · ${t.headcount} 人`;
+  const title = `${t.title}(${meta})`;
+  const description = (t.summary || `${meta}的旅遊行程「${t.title}」。在偶宿 O! 看完整每日安排、住宿與景點，一鍵複製成自己的行程。`).slice(0, 150);
+  return {
+    title, description,
+    alternates: { canonical: `/trips/${id}` },
+    openGraph: { title, description, url: `/trips/${id}`, type: "article" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function TripDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

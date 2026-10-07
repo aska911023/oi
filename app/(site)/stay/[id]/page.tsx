@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -13,6 +14,24 @@ import MediaEmbed from "@/components/media-embed";
 import type { Stay, RoomType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const sb = await createClient();
+  const { data } = await sb.from("stays").select("name, region, town, category, description, image, images").eq("id", id).maybeSingle();
+  if (!data) return { title: "找不到民宿" };
+  const s = data as Partial<Stay>;
+  const place = `${s.region || ""}${s.town || ""}`;
+  const title = `${s.name} · ${place}${s.category || "民宿"}`;
+  const description = (s.description || `位於${place}的${s.category || "民宿"}「${s.name}」。在偶宿 O! 看房型、價格與周邊景點，一鍵聯繫訂房。`).slice(0, 150);
+  const img = (s.images && s.images[0]) || s.image || undefined;
+  return {
+    title, description,
+    alternates: { canonical: `/stay/${id}` },
+    openGraph: { title, description, url: `/stay/${id}`, type: "website", images: img ? [img] : undefined },
+    twitter: { card: "summary_large_image", title, description, images: img ? [img] : undefined },
+  };
+}
 
 // 相簿優先,無相簿退回單張 image
 const toImgs = (image?: string, images?: string[] | null) => (images && images.length ? images : image ? [image] : []);
