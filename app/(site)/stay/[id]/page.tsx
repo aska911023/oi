@@ -67,8 +67,34 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
     { label: "附近租車", href: "/rentals", items: (nr.data || []) as { id: string; name: string; town?: string }[] },
   ].filter((g) => g.items.length > 0);
 
+  // 結構化資料(JSON-LD):讓 Google 認得這是「住宿」,有機會在搜尋結果出現星等/價格/照片的豐富卡片。
+  const ldImgs = toImgs(s.image, s.images);
+  const roomPrices = rooms.map((r) => Number(r.price)).filter((p) => Number.isFinite(p) && p > 0);
+  const minPrice = roomPrices.length ? Math.min(...roomPrices) : (Number(s.price) > 0 ? Number(s.price) : null);
+  const sameAs = [s.website, s.line_url].filter((u): u is string => !!u && /^https?:\/\//.test(u));
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: s.name,
+    description: s.description || undefined,
+    image: ldImgs.length ? ldImgs : undefined,
+    url: `https://www.oi-stay.com/stay/${s.id}`,
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "TW",
+      addressRegion: s.region || undefined,
+      addressLocality: s.town || undefined,
+      streetAddress: s.address || undefined,
+    },
+    geo: s.lat != null && s.lng != null ? { "@type": "GeoCoordinates", latitude: s.lat, longitude: s.lng } : undefined,
+    priceRange: minPrice ? `NT$${minPrice.toLocaleString()} 起` : undefined,
+    aggregateRating: reviews.length ? { "@type": "AggregateRating", ratingValue: Number(avg.toFixed(1)), reviewCount: reviews.length } : undefined,
+    sameAs: sameAs.length ? sameAs : undefined,
+  };
+
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <BackLink fallback="/" label="← 回探索" />
 
       <div className="shop">
