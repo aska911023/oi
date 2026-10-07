@@ -1961,3 +1961,8 @@ grant execute on function public.follow_list(uuid, text) to anon, authenticated;
 alter table public.site_settings add column if not exists contact_ig text default '';
 alter table public.site_settings add column if not exists contact_fb text default '';
 alter table public.site_settings add column if not exists brand_philosophy text default '';
+
+-- 行程貼文型態:itinerary(規劃行程) / media(只分享一則影音/IG,免規劃)
+alter table public.trips add column if not exists kind text not null default 'itinerary';
+alter table public.trips drop constraint if exists trips_kind_chk;
+alter table public.trips add constraint trips_kind_chk check (kind in ('itinerary','media'));

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import HeroCarousel from "@/components/hero-carousel";
+import MediaEmbed from "@/components/media-embed";
 import SaveTripButton from "@/components/save-trip-button";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
@@ -17,14 +18,16 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
+  const isMedia = t.kind === "media";
+  const embedUrl = (t.embed_urls || [])[0];
 
-  // 整張卡片可點進行程;但按到互動元素(連結/按鈕/輸入框/留言區)時不導航,交給它們自己處理。
+  // 整張卡片可點進行程;但按到互動元素(連結/按鈕/輸入框/留言區/影音)時不導航,交給它們自己處理。
   function cardClick(e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest("a, button, input, textarea, .ig-comments, .ig-menu")) return;
+    if ((e.target as HTMLElement).closest("a, button, input, textarea, iframe, .ig-comments, .ig-menu, .ig-media-embed")) return;
     router.push(`/trips/${t.id}`);
   }
   const author = t.owner_name || "旅人";
-  const sub = `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""}`;
+  const sub = isMedia ? "影音分享" : `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""}`;
 
   return (
     <article className="ig-post ig-clickable" onClick={cardClick}>
@@ -53,9 +56,11 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
         )}
       </header>
 
-      {photos.length > 0 && (
+      {isMedia && embedUrl ? (
+        <div className="ig-media ig-media-embed"><MediaEmbed url={embedUrl} /></div>
+      ) : photos.length > 0 ? (
         <Link href={`/trips/${t.id}`} className="ig-media"><HeroCarousel images={photos} height={430} /></Link>
-      )}
+      ) : null}
 
       <div className="ig-actions">
         <TripLikeButton tripId={t.id} count={t.like_count || 0} />
@@ -80,12 +85,14 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
         <Link href={`/trips/${t.id}`} className="ig-title">{t.title}</Link>
         {t.summary && <p className="ig-cap-sum" style={{ whiteSpace: "pre-line" }}>{t.summary}</p>}
       </div>
-      <div className="ig-tags">
-        <span>{t.headcount} 人</span>
-        {t.transport && <span>{t.transport}</span>}
-        {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
-        <span>{t.items?.length || 0} 個停靠點</span>
-      </div>
+      {!isMedia && (
+        <div className="ig-tags">
+          <span>{t.headcount} 人</span>
+          {t.transport && <span>{t.transport}</span>}
+          {t.budget != null && <span>每人 NT${t.budget.toLocaleString()}</span>}
+          <span>{t.items?.length || 0} 個停靠點</span>
+        </div>
+      )}
 
       {!open && (t.comment_count || 0) > 0 && (
         <button className="ig-viewc" onClick={() => setOpen(true)}>查看全部 {t.comment_count} 則留言</button>

@@ -1114,6 +1114,12 @@ img { display: block; max-width: 100%; }
 
 .ig-clickable { cursor: pointer; }
 
+/* 「分享影音」快捷鈕(沿用 compose-shortcut 外觀,緊貼在「分享行程」下方) */
+.compose-shortcut.cs-media { width: 100%; font: inherit; text-align: left; cursor: pointer; margin: -20px 0 30px; }
+.cs-media .cs-avatar { font-size: 20px; }
+/* 影音卡:卡片內直接嵌 YT/IG */
+.ig-media-embed { padding: 2px 14px 8px; }
+
 /* 首頁「影音 / IG 牆」區塊 */
 .blk-embeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 12px 0; align-items: start; }
 .blk-embed-item { min-width: 0; }

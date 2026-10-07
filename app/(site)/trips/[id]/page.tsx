@@ -41,7 +41,8 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
   const { data: { user } } = await sb.auth.getUser();
   const isOwner = !!user && trip.owner_id === user.id;
   const { count: likeCount } = await sb.from("trip_likes").select("*", { count: "exact", head: true }).eq("trip_id", id);
-  const dayList = Array.from({ length: trip.days }, (_, i) => i + 1);
+  const isMedia = trip.kind === "media";
+  const dayList = isMedia ? [] : Array.from({ length: trip.days }, (_, i) => i + 1);
   const itemsOfDay = (d: number) => (trip.items || []).filter((it: TripItem) => it.day === d);
 
   return (
@@ -52,11 +53,15 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
             <div className="trip-view-headmain">
               <h1 className="serif">{trip.title}</h1>
               <p className="trip-view-meta">
-                {trip.days} 天{trip.nights ? ` ${trip.nights} 夜` : ""} · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
-                {trip.budget != null ? ` · 每人 NT$${trip.budget.toLocaleString()}` : ""}{trip.region ? ` · ${trip.region}` : ""}
+                {isMedia ? "影音分享" : (
+                  <>
+                    {trip.days} 天{trip.nights ? ` ${trip.nights} 夜` : ""} · {trip.headcount} 人{trip.transport ? ` · ${trip.transport}` : ""}
+                    {trip.budget != null ? ` · 每人 NT$${trip.budget.toLocaleString()}` : ""}{trip.region ? ` · ${trip.region}` : ""}
+                  </>
+                )}
               </p>
             </div>
-            <Link href={`/plan?load=${trip.id}`} className="btn btn-primary trip-view-cta">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>
+            {!isMedia && <Link href={`/plan?load=${trip.id}`} className="btn btn-primary trip-view-cta">{isOwner ? "編輯這個行程" : "複製為我的行程規劃"}</Link>}
           </div>
 
           {trip.summary && <p className="trip-view-sum" style={{ whiteSpace: "pre-line" }}>{trip.summary}</p>}

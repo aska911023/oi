@@ -6,6 +6,7 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import TripCard from "@/components/trip-card";
 import Avatar from "@/components/avatar";
+import MediaCompose from "@/components/media-compose";
 import { TRANSPORTS, type Trip } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -94,6 +95,7 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
         <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
         <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
       </Link>
+      <MediaCompose loggedIn={loggedIn} myName={myName} myAvatar={myAvatar} />
 
       <div className="ig-feed">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
