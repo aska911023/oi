@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { hasSupabase } from "./stays";
 import { createPublicClient } from "./supabase/public";
+import { sbRetry } from "./retry";
 import { KIND_TABLE } from "./places-config";
 import type { Place, PoiKind } from "./types";
 
@@ -10,21 +11,18 @@ const PAGE = 24;
 
 async function _placeInitial(kind: PoiKind) {
   if (!hasSupabase()) return { places: [] as Place[], total: 0, regions: [] as string[] };
-  try {
-    const sb = createPublicClient();
-    const table = KIND_TABLE[kind];
-    const { data, count } = await sb.from(table).select("*", { count: "exact" })
-      .eq("published", true).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, PAGE - 1);
-    const total = count ?? 0;
-    let regions: string[] = [];
-    if (total) {
-      const { data: rg } = await sb.from(table).select("region").eq("published", true);
-      regions = Array.from(new Set((rg || []).map((r: { region: string }) => r.region)));
-    }
-    return { places: (data || []) as Place[], total, regions };
-  } catch {
-    return { places: [] as Place[], total: 0, regions: [] as string[] };
+  const sb = createPublicClient();
+  const table = KIND_TABLE[kind];
+  // 失敗重試、失敗不快取空值(保留 count 當總數)
+  const { data, count } = await sbRetry<Place[]>(() => sb.from(table).select("*", { count: "exact" })
+    .eq("published", true).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, PAGE - 1), "places:" + kind);
+  const total = count ?? 0;
+  let regions: string[] = [];
+  if (total) {
+    const { data: rg } = await sb.from(table).select("region").eq("published", true);
+    regions = Array.from(new Set((rg || []).map((r: { region: string }) => r.region)));
   }
+  return { places: data as Place[], total, regions };
 }
 
 export function getPlaceInitial(kind: PoiKind) {

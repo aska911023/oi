@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { sbMaybeRetry } from "@/lib/retry";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -41,9 +42,10 @@ const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="
 export default async function StayPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await createClient();
-  const { data: stay } = await sb.from("stays").select("*").eq("id", id).maybeSingle();
+  // 連線抖動會重試;真的查無才 404(避免正常民宿被誤判 404,連帶傷 SEO)
+  const stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", id).maybeSingle(), "stay");
   if (!stay) notFound();
-  const s = stay as Stay;
+  const s = stay;
   const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", id).eq("published", true).order("sort").order("price");
   const rooms = (roomsData as RoomType[]) || [];
   const amenities = (s.amenities || "").split("、").map((a) => a.trim()).filter(Boolean);

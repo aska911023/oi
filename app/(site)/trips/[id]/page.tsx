@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { sbMaybeRetry } from "@/lib/retry";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
 import SaveTripButton from "@/components/save-trip-button";
@@ -32,7 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function TripDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await createClient();
-  const { data } = await sb.from("trips").select("*").eq("id", id).maybeSingle();
+  // 連線抖動會重試;真的查無才 404
+  const data = await sbMaybeRetry<Trip>(() => sb.from("trips").select("*").eq("id", id).maybeSingle(), "trip");
   if (!data) notFound();
   const trip = data as Trip;
 
