@@ -8,7 +8,7 @@ import { revalidateSettings } from "@/app/actions";
 import type { SiteSettings, Block, BlockType, AlignChoice, FontChoice } from "@/lib/site-settings-types";
 
 const ALIGN: [AlignChoice, string][] = [["left", "靠左"], ["center", "置中"], ["right", "靠右"]];
-const TYPE_LABEL: Record<BlockType, string> = { heading: "標題", text: "文字", image: "圖片", carousel: "輪播", split: "圖文並排", button: "按鈕", spacer: "間距" };
+const TYPE_LABEL: Record<BlockType, string> = { heading: "標題", text: "文字", image: "圖片", carousel: "輪播", split: "圖文並排", button: "按鈕", spacer: "間距", embeds: "影音/IG" };
 const genId = () => "b" + Math.random().toString(36).slice(2, 9);
 
 function newBlock(type: BlockType): Block {
@@ -19,6 +19,7 @@ function newBlock(type: BlockType): Block {
     case "carousel": return { id: genId(), type, images: [""], width: 100 };
     case "button": return { id: genId(), type, text: "按鈕文字", href: "", align: "left" };
     case "spacer": return { id: genId(), type, height: 32 };
+    case "embeds": return { id: genId(), type, embeds: [""] };
     case "split": return { id: genId(), type, image: "", text: "在這裡寫一段介紹文字,放在圖片旁邊。", align: "right", color: "#5D706A", font: "sans", size: 16 };
   }
 }
@@ -252,6 +253,20 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
               )}
               {b.type === "spacer" && (
                 <span className="sc-num">高度<input type="number" min={8} max={200} value={b.height || 24} onChange={(e) => updateBlock(b.id, { height: Number(e.target.value) })} />px</span>
+              )}
+              {b.type === "embeds" && (
+                <>
+                  <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "0 0 10px" }}>貼上 YouTube / Instagram 貼文 / TikTok 連結,一格一個;前台會自動排成一面牆(不用自己打貼文)。</p>
+                  {(b.embeds || []).map((u, k) => (
+                    <div key={k} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                      <input value={u} placeholder="https://www.instagram.com/p/… 或 https://youtu.be/…"
+                        onChange={(e) => { const arr = [...(b.embeds || [])]; arr[k] = e.target.value; updateBlock(b.id, { embeds: arr }); }}
+                        style={{ flex: 1, border: "1px solid var(--border-strong)", borderRadius: 9, padding: "9px 11px", font: "inherit" }} />
+                      <button className="lnk danger" onClick={() => updateBlock(b.id, { embeds: (b.embeds || []).filter((_, x) => x !== k) })}>移除</button>
+                    </div>
+                  ))}
+                  <button className="btn btn-ghost btn-sm" onClick={() => updateBlock(b.id, { embeds: [...(b.embeds || []), ""] })}>＋ 加連結</button>
+                </>
               )}
               {b.type === "split" && (
                 <>

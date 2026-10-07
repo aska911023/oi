@@ -1,4 +1,5 @@
 import HeroCarousel from "@/components/hero-carousel";
+import MediaEmbed from "@/components/media-embed";
 import type { Block, FontChoice, HeroLayout } from "@/lib/site-settings-types";
 
 const fam = (f?: FontChoice) =>
@@ -44,6 +45,15 @@ function renderBlock(b: Block) {
     }
     case "spacer":
       return <div key={b.id} style={{ height: b.height || 24 }} />;
+    case "embeds": {
+      const urls = (b.embeds || []).filter(Boolean);
+      if (!urls.length) return null;
+      return (
+        <div key={b.id} className="blk-embeds">
+          {urls.map((u, i) => <div className="blk-embed-item" key={i}><MediaEmbed url={u} /></div>)}
+        </div>
+      );
+    }
     default:
       return null;
   }

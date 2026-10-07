@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, type SiteSettings, type Block, type BlockType } from 
 
 export * from "./site-settings-types";
 
-const TYPES: BlockType[] = ["heading", "text", "image", "carousel", "button", "spacer", "split"];
+const TYPES: BlockType[] = ["heading", "text", "image", "carousel", "button", "spacer", "split", "embeds"];
 
 function sanitizeBlock(raw: unknown, i: number): Block | null {
   if (!raw || typeof raw !== "object") return null;
@@ -17,6 +17,7 @@ function sanitizeBlock(raw: unknown, i: number): Block | null {
     text: typeof b.text === "string" ? b.text : undefined,
     image: typeof b.image === "string" ? b.image : undefined,
     images: Array.isArray(b.images) ? (b.images as string[]).filter((x) => typeof x === "string") : undefined,
+    embeds: Array.isArray(b.embeds) ? (b.embeds as string[]).filter((x) => typeof x === "string") : undefined,
     href: typeof b.href === "string" ? b.href : undefined,
     height: typeof b.height === "number" ? b.height : undefined,
     color: typeof b.color === "string" ? b.color : undefined,

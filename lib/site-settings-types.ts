@@ -2,7 +2,7 @@
 
 export type FontChoice = "serif" | "sans";
 export type AlignChoice = "left" | "center" | "right";
-export type BlockType = "heading" | "text" | "image" | "carousel" | "button" | "spacer" | "split";
+export type BlockType = "heading" | "text" | "image" | "carousel" | "button" | "spacer" | "split" | "embeds";
 
 export interface Block {
   id: string;
@@ -10,6 +10,7 @@ export interface Block {
   text?: string;
   image?: string;
   images?: string[];
+  embeds?: string[]; // 影音 / IG 牆:YouTube / IG / TikTok 連結清單
   href?: string;
   height?: number;
   color?: string;
