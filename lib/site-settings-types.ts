@@ -34,6 +34,9 @@ export interface SiteSettings {
   contact_email: string;
   contact_line: string;
   contact_phone: string;
+  contact_ig: string;
+  contact_fb: string;
+  brand_philosophy: string;
   footer_about: string;
   footer_copyright: string;
   footer_tagline: string;
@@ -62,6 +65,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   contact_email: "",
   contact_line: "",
   contact_phone: "",
+  contact_ig: "",
+  contact_fb: "",
+  brand_philosophy: "偶爾出走,找一處喜歡的一宿。我們相信,旅行最美的部分,常常發生在「住下來」之後。",
   footer_about: "偶爾出走,找到喜歡的一宿。\n以地區、風格與預算,探索全台民宿。",
   footer_copyright: "© 2026 偶宿數位科技有限公司 · 台灣民宿搜尋平台",
   footer_tagline: "一段旅行,一處喜歡的日常。",

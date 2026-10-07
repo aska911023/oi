@@ -10,11 +10,19 @@ export default async function ContactPage() {
       <h1>聯絡我們</h1>
       <p className="updated">偶宿 O! 客服</p>
 
+      {s.brand_philosophy && (
+        <blockquote style={{ borderLeft: "3px solid var(--green)", paddingLeft: 14, margin: "14px 0 20px", color: "var(--text-2)", fontStyle: "italic", whiteSpace: "pre-line" }}>
+          {s.brand_philosophy}
+        </blockquote>
+      )}
+
       <p style={{ whiteSpace: "pre-line" }}>{s.contact_intro}</p>
 
       <div className="box">
         <p style={{ margin: "4px 0" }}>📧 Email:<a href={`mailto:${s.contact_email || "hello@oistay.tw"}`}>{s.contact_email || "hello@oistay.tw"}</a></p>
-        {s.contact_line && <p style={{ margin: "4px 0" }}>💬 LINE:<a href={s.contact_line} target="_blank" rel="noopener noreferrer">官方帳號</a></p>}
+        {s.contact_line && <p style={{ margin: "4px 0" }}>💬 LINE@:<a href={s.contact_line} target="_blank" rel="noopener noreferrer">官方帳號</a></p>}
+        {s.contact_ig && <p style={{ margin: "4px 0" }}>📷 Instagram:<a href={s.contact_ig} target="_blank" rel="noopener noreferrer">追蹤我們</a></p>}
+        {s.contact_fb && <p style={{ margin: "4px 0" }}>👍 Facebook:<a href={s.contact_fb} target="_blank" rel="noopener noreferrer">粉絲專頁</a></p>}
         {s.contact_phone && <p style={{ margin: "4px 0" }}>📞 電話:{s.contact_phone}</p>}
       </div>
 

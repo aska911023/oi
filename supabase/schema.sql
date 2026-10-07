@@ -1956,3 +1956,8 @@ returns jsonb language sql stable security definer set search_path = public as $
   ) x;
 $$;
 grant execute on function public.follow_list(uuid, text) to anon, authenticated;
+
+-- 聯絡資訊補充欄 + 品牌理念(後台「首頁設定」可編輯)
+alter table public.site_settings add column if not exists contact_ig text default '';
+alter table public.site_settings add column if not exists contact_fb text default '';
+alter table public.site_settings add column if not exists brand_philosophy text default '';
