@@ -8,10 +8,10 @@ import Avatar from "@/components/avatar";
 interface Person { id: string; name: string | null; avatar: string | null }
 type Stats = { followers: number; following: number; is_following: boolean };
 
-export default function FollowBar({ uid }: { uid: string }) {
+export default function FollowBar({ uid, initial, viewer: viewerProp }: { uid: string; initial?: Stats; viewer?: string | null }) {
   const router = useRouter();
-  const [viewer, setViewer] = useState<string | null>(null);
-  const [s, setS] = useState<Stats>({ followers: 0, following: 0, is_following: false });
+  const [viewer, setViewer] = useState<string | null>(viewerProp ?? null);
+  const [s, setS] = useState<Stats>(initial ?? { followers: 0, following: 0, is_following: false });
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState<null | "followers" | "following">(null);
   const [people, setPeople] = useState<Person[] | null>(null);
@@ -22,6 +22,7 @@ export default function FollowBar({ uid }: { uid: string }) {
     if (data) setS(data as Stats);
   }
   useEffect(() => {
+    if (initial) return; // 伺服器已帶入初始值 → 不用再打一輪(數字立刻出現,不會慢)
     let alive = true;
     (async () => {
       const sb = createClient();

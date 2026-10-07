@@ -14,6 +14,7 @@ export default async function MyTripsPage() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login?next=/me/trips");
   const { data: profile } = await sb.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle();
+  const { data: followStats } = await sb.rpc("follow_stats", { p_uid: user.id });
   const role = profile?.role || "user";
   const myName = profile?.display_name || user.email?.split("@")[0] || "我";
   const { data } = await sb.from("trips").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false });
@@ -41,7 +42,7 @@ export default async function MyTripsPage() {
         <h1 className="serif">我的行程</h1>
         <p>管理你儲存的行程,可編輯、公開分享或刪除;也能收藏別人的行程當參考。</p>
         <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 6 }}>
-          <FollowBar uid={user.id} />
+          <FollowBar uid={user.id} initial={followStats as { followers: number; following: number; is_following: boolean } | undefined} viewer={user.id} />
           <Link href={`/u/${user.id}`} className="lnk">查看我的公開主頁 ›</Link>
         </div>
       </div>
