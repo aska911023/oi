@@ -1,9 +1,23 @@
 import { unstable_cache } from "next/cache";
 import { hasSupabase } from "./stays";
 import { createPublicClient } from "./supabase/public";
+import { sbRetry } from "./retry";
 import type { RoomCard } from "./types";
 
 const PAGE = 24;
+
+// 地區落地頁(/stays/[area])用:某地區已上架民宿房型卡 + 總數。
+export function getRoomsByRegion(region: string) {
+  return unstable_cache(async (): Promise<{ rooms: RoomCard[]; total: number }> => {
+    if (!hasSupabase()) return { rooms: [], total: 0 };
+    const sb = createPublicClient();
+    const { data } = await sbRetry<{ total?: number; rows?: RoomCard[] }>(
+      () => sb.rpc("search_rooms", { p_region: region, lim: 48, off: 0 }),
+      "search_rooms:" + region,
+    );
+    return { rooms: (data.rows || []) as RoomCard[], total: data.total ?? 0 };
+  }, ["rooms-by-region", region], { tags: ["stays"], revalidate: 300 })();
+}
 
 // 前台首頁:房型商品卡第一頁 + 總數 + 地區清單。tag 用 stays(房型存檔會 revalidate stays)。
 export const getRoomsInitial = unstable_cache(async (): Promise<{ rooms: RoomCard[]; total: number; regions: string[]; categories: string[] }> => {

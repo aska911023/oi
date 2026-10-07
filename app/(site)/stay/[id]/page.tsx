@@ -104,7 +104,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
         {toImgs(s.image, s.images).length > 0 && (
           <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} /></div>
         )}
-        <div className="card-eyebrow" style={{ marginTop: 18 }}>{s.region} · {s.town}<span className="dot" />{s.category}</div>
+        <div className="card-eyebrow" style={{ marginTop: 18 }}><Link href={`/stays/${encodeURIComponent(s.region)}`} className="lnk">{s.region}</Link> · {s.town}<span className="dot" />{s.category}</div>
         <h1 className="serif shop-title">{s.name}</h1>
         {s.description && <p className="shop-desc">{s.description}</p>}
 
