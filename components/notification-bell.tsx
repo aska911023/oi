@@ -3,14 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { tripSlug } from "@/lib/slug";
 import Avatar from "@/components/avatar";
 
 interface N { kind: string; trip_id: string | null; trip_title: string | null; actor: string; actor_id?: string | null; actor_avatar?: string | null; created_at: string }
 const SEEN_KEY = "oi_notif_seen";
 const verb = (k: string) => (k === "like" ? "按讚了你的行程" : k === "comment" ? "留言了你的行程" : k === "follow" ? "開始追蹤你" : "收藏了你的行程");
 const mark = (k: string) => (k === "like" ? "♥" : k === "comment" ? "💬" : k === "follow" ? "👤" : "🔖");
-const linkOf = (n: N) => (n.kind === "follow" ? (n.actor_id ? `/u/${n.actor_id}` : "#") : `/trips/${tripSlug(n.trip_id || "", n.trip_title)}`);
+const linkOf = (n: N) => (n.kind === "follow" ? (n.actor_id ? `/u/${n.actor_id}` : "#") : `/trips/${n.trip_id}`);
 
 function ago(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();

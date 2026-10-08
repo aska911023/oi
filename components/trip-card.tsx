@@ -4,7 +4,6 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { tripSlug } from "@/lib/slug";
 import HeroCarousel from "@/components/hero-carousel";
 import MediaEmbed from "@/components/media-embed";
 import SaveTripButton from "@/components/save-trip-button";
@@ -24,7 +23,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
   const isMedia = t.kind === "media";
   const embedUrl = (t.embed_urls || [])[0];
-  const to = `/trips/${tripSlug(t.id, t.title)}`; // 帶標題的網址(分享好看 + SEO)
+  const to = `/trips/${t.slug || t.id}`; // 帶標題的網址(分享好看 + SEO)
   const isOwner = !!viewerId && viewerId === t.owner_id;
 
   // 作者自己的貼文:到哪都給 ⋯ 管理選單(公開切換/複製連結/刪除;行程才有編輯)

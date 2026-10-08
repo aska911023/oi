@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { tripSlug } from "@/lib/slug";
 import { revalidateTrips } from "@/app/actions";
 import TripCard from "@/components/trip-card";
 import type { Trip } from "@/lib/types";
@@ -30,7 +29,7 @@ export default function MyTrips({ initial }: { initial: Trip[] }) {
   }
 
   async function copyLink(t: Trip) {
-    const url = `${window.location.origin}/trips/${tripSlug(t.id, t.title)}`;
+    const url = `${window.location.origin}/trips/${t.slug || t.id}`;
     try { await navigator.clipboard.writeText(url); alert("已複製分享連結:\n" + url); }
     catch { prompt("複製這個連結分享:", url); }
   }

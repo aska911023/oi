@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
 import { ALL_CATEGORY_LABEL, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
-import { staySlug } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -187,7 +186,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
           {rows.length === 0 && <div className="empty">找不到符合條件的房型,換個關鍵字或風格試試。</div>}
           {rows.map((r) => (
             <div className="card-wrap" key={r.id}>
-              <Link href={`/stay/${staySlug(r.stay_id, r.region, r.stay_name)}`} className="card">
+              <Link href={`/stay/${r.stay_slug || r.stay_id}`} className="card">
                 <div className={"photo" + (toImgs(r.image, r.images).length ? "" : " noimg")}>
                   {toImgs(r.image, r.images).length
                     ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} width={640} />

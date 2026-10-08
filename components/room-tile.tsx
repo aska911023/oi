@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { priceLabel } from "@/lib/data";
-import { staySlug } from "@/lib/slug";
 import type { RoomCard } from "@/lib/types";
 
 // 落地頁用的民宿房型卡(SSR、純 img,利於 SEO;樣式沿用首頁 .card)
@@ -8,7 +7,7 @@ export default function RoomTile({ r }: { r: RoomCard }) {
   const img = (r.images && r.images[0]) || r.image || "";
   return (
     <div className="card-wrap">
-      <Link href={`/stay/${staySlug(r.stay_id, r.region, r.stay_name)}`} className="card">
+      <Link href={`/stay/${r.stay_slug || r.stay_id}`} className="card">
         <div className={"photo" + (img ? "" : " noimg")}>
           {img
             ? // eslint-disable-next-line @next/next/no-img-element

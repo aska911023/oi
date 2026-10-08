@@ -1966,3 +1966,41 @@ alter table public.site_settings add column if not exists brand_philosophy text 
 alter table public.trips add column if not exists kind text not null default 'itinerary';
 alter table public.trips drop constraint if exists trips_kind_chk;
 alter table public.trips add constraint trips_kind_chk check (kind in ('itinerary','media'));
+
+
+-- ============================================================
+-- 詳情頁乾淨網址 slug(stays.slug / trips.slug),例:/stay/宜蘭-某某民宿
+-- 查詢先用 slug、找不到再用 UUID(相容舊 /stay/uuid 連結);新資料由 trigger 自動產生、重名加編號。
+-- ============================================================
+create or replace function public.make_slug(txt text) returns text language sql immutable as $$
+  select regexp_replace(regexp_replace(regexp_replace(btrim(coalesce(txt,'')), '[[:space:]_]+', '-', 'g'), '[/\?#%&]+', '', 'g'), '-+', '-', 'g');
+$$;
+alter table public.stays add column if not exists slug text;
+alter table public.trips add column if not exists slug text;
+create unique index if not exists stays_slug_uidx on public.stays(slug);
+create unique index if not exists trips_slug_uidx on public.trips(slug);
+
+create or replace function public.tg_stays_slug() returns trigger language plpgsql security definer set search_path=public as $$
+declare base text; cand text; n int := 1;
+begin
+  if new.slug is not null and new.slug <> '' then return new; end if;
+  base := coalesce(nullif(public.make_slug(coalesce(new.region,'')||'-'||coalesce(new.name,'')),''), new.id::text);
+  cand := base;
+  while exists(select 1 from public.stays where slug=cand and id<>new.id) loop n:=n+1; cand:=base||'-'||n; end loop;
+  new.slug := cand; return new;
+end; $$;
+drop trigger if exists trg_stays_slug on public.stays;
+create trigger trg_stays_slug before insert on public.stays for each row execute function public.tg_stays_slug();
+
+create or replace function public.tg_trips_slug() returns trigger language plpgsql security definer set search_path=public as $$
+declare base text; cand text; n int := 1;
+begin
+  if new.slug is not null and new.slug <> '' then return new; end if;
+  base := coalesce(nullif(public.make_slug(coalesce(new.title,'')),''), new.id::text);
+  cand := base;
+  while exists(select 1 from public.trips where slug=cand and id<>new.id) loop n:=n+1; cand:=base||'-'||n; end loop;
+  new.slug := cand; return new;
+end; $$;
+drop trigger if exists trg_trips_slug on public.trips;
+create trigger trg_trips_slug before insert on public.trips for each row execute function public.tg_trips_slug();
+-- 註:search_rooms RPC 另在 Management API 更新為回傳 s.slug as stay_slug(卡片連結用)。

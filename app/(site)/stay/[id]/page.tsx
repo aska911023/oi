@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sbMaybeRetry } from "@/lib/retry";
-import { staySlug, extractId } from "@/lib/slug";
+import { extractId } from "@/lib/slug";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -18,16 +18,18 @@ import type { Stay, RoomType } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const id = extractId((await params).id);
+  const param = (await params).id;
   const sb = await createClient();
-  const { data } = await sb.from("stays").select("name, region, town, category, description, image, images").eq("id", id).maybeSingle();
+  const cols = "slug, name, region, town, category, description, image, images";
+  let data = (await sb.from("stays").select(cols).eq("slug", param).maybeSingle()).data;
+  if (!data) { const id = extractId(param); if (id !== param) data = (await sb.from("stays").select(cols).eq("id", id).maybeSingle()).data; }
   if (!data) return { title: "找不到民宿" };
   const s = data as Partial<Stay>;
   const place = `${s.region || ""}${s.town || ""}`;
   const title = `${s.name} · ${place}${s.category || "民宿"}`;
   const description = (s.description || `位於${place}的${s.category || "民宿"}「${s.name}」。在偶宿 O! 看房型、價格與周邊景點，一鍵聯繫訂房。`).slice(0, 150);
   const img = (s.images && s.images[0]) || s.image || undefined;
-  const path = `/stay/${staySlug(id, s.region, s.name)}`;
+  const path = `/stay/${s.slug}`;
   return {
     title, description,
     alternates: { canonical: path },
@@ -42,18 +44,22 @@ const toImgs = (image?: string, images?: string[] | null) => (images && images.l
 const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
 export default async function StayPage({ params }: { params: Promise<{ id: string }> }) {
-  const id = extractId((await params).id);
+  const param = (await params).id;
   const sb = await createClient();
-  // 連線抖動會重試;真的查無才 404(避免正常民宿被誤判 404,連帶傷 SEO)
-  const stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", id).maybeSingle(), "stay");
+  // 先用乾淨 slug 查;找不到再用網址裡的 UUID(相容舊 /stay/uuid 連結)。連線抖動會重試。
+  let stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("slug", param).maybeSingle(), "stay");
+  if (!stay) {
+    const id = extractId(param);
+    if (id !== param) stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", id).maybeSingle(), "stay");
+  }
   if (!stay) notFound();
   const s = stay;
-  const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", id).eq("published", true).order("sort").order("price");
+  const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", s.id).eq("published", true).order("sort").order("price");
   const rooms = (roomsData as RoomType[]) || [];
   const amenities = (s.amenities || "").split("、").map((a) => a.trim()).filter(Boolean);
 
   // 評價
-  const { data: revData } = await sb.from("reviews").select("rating, comment, created_at, profiles(display_name)").eq("stay_id", id).order("created_at", { ascending: false });
+  const { data: revData } = await sb.from("reviews").select("rating, comment, created_at, profiles(display_name)").eq("stay_id", s.id).order("created_at", { ascending: false });
   const reviews = (revData || []) as unknown as { rating: number; comment: string; created_at: string; profiles: { display_name: string } | null }[];
   const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
@@ -82,7 +88,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
     name: s.name,
     description: s.description || undefined,
     image: ldImgs.length ? ldImgs : undefined,
-    url: `https://www.oi-stay.com/stay/${staySlug(s.id, s.region, s.name)}`,
+    url: `https://www.oi-stay.com/stay/${s.slug || s.id}`,
     address: {
       "@type": "PostalAddress",
       addressCountry: "TW",

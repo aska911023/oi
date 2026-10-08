@@ -12,6 +12,7 @@ export type StayCategory =
 
 export interface Stay {
   id: string;
+  slug?: string; // 乾淨網址用(/stay/宜蘭-某某民宿)
   name: string;
   region: string; // 縣市
   town: string; // 鄉鎮市區
@@ -99,6 +100,7 @@ export interface RoomCard {
   save_count?: number; // 收藏人數(社群證明)
   tags?: string[];
   stay_id: string;
+  stay_slug?: string; // 乾淨網址用(/stay/宜蘭-某某民宿)
   stay_name: string;
   region: string;
   town: string;
@@ -220,6 +222,7 @@ export interface Trip {
   embed_urls?: string[]; // 影片(YouTube / IG / TikTok,可多個)
   items: TripItem[];
   is_public: boolean;
+  slug?: string; // 乾淨網址用(/trips/宜蘭三天兩夜)
   kind?: "itinerary" | "media"; // 貼文型態:規劃行程 / 只分享影音
   comment_policy?: "all" | "followers" | "off"; // 留言權限:所有人/只有粉絲/關閉
   share_slug?: string | null;
