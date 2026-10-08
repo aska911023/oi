@@ -32,7 +32,7 @@ const HEAD_BUCKETS = [
   { v: "5+", label: "5 人以上" },
 ];
 
-export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "", myAvatar = null }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string; myAvatar?: string | null }) {
+export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "", myAvatar = null, viewerId = null }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string; myAvatar?: string | null; viewerId?: string | null }) {
   const [kw, setKw] = useState("");
   const [dayB, setDayB] = useState("all");
   const [budgetB, setBudgetB] = useState("all");
@@ -99,7 +99,7 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
 
       <div className="ig-feed">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}
-        {results.map((t) => <TripCard key={t.id} trip={t} />)}
+        {results.map((t) => <TripCard key={t.id} trip={t} viewerId={viewerId} />)}
       </div>
       {canLoadMore && (
         <div style={{ textAlign: "center", marginTop: 30 }}>

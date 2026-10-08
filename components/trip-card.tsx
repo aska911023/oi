@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import HeroCarousel from "@/components/hero-carousel";
 import MediaEmbed from "@/components/media-embed";
 import SaveTripButton from "@/components/save-trip-button";
@@ -13,13 +14,48 @@ import Avatar from "@/components/avatar";
 import type { Trip } from "@/lib/types";
 
 // IG 貼文式行程卡:頭像+暱稱 → 大圖 → 動作列 → 標題/摘要 → 留言。看別人/看自己共用。
-export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSlot?: ReactNode }) {
+export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip; manageSlot?: ReactNode; viewerId?: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [removed, setRemoved] = useState(false);
+  const [pub, setPub] = useState(!!t.is_public);
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
   const isMedia = t.kind === "media";
   const embedUrl = (t.embed_urls || [])[0];
+  const isOwner = !!viewerId && viewerId === t.owner_id;
+
+  // 作者自己的貼文:到哪都給 ⋯ 管理選單(公開切換/複製連結/刪除;行程才有編輯)
+  async function ownerToggle() {
+    const sb = createClient();
+    await sb.from("trips").update({ is_public: !pub }).eq("id", t.id);
+    setPub((p) => !p);
+    router.refresh();
+  }
+  async function ownerCopy() {
+    const url = `${window.location.origin}/trips/${t.id}`;
+    try { await navigator.clipboard.writeText(url); alert("已複製分享連結:\n" + url); }
+    catch { prompt("複製這個連結分享:", url); }
+  }
+  async function ownerRemove() {
+    if (!confirm(`確定刪除「${t.title}」?此動作無法復原。`)) return;
+    const sb = createClient();
+    const { error } = await sb.from("trips").delete().eq("id", t.id);
+    if (error) { alert("刪除失敗:" + error.message); return; }
+    setRemoved(true);
+    router.refresh();
+  }
+  const ownerMenu = (
+    <>
+      {pub ? <span className="pill live">公開</span> : <span className="pill draft">私人</span>}
+      {!isMedia && <Link className="lnk" href={`/plan?load=${t.id}`}>編輯</Link>}
+      <button className="lnk" onClick={ownerToggle}>{pub ? "取消公開" : "公開"}</button>
+      {pub && <button className="lnk" onClick={ownerCopy}>複製連結</button>}
+      <button className="lnk danger" onClick={ownerRemove}>刪除</button>
+    </>
+  );
+  const slot = manageSlot ?? (isOwner ? ownerMenu : null);
+  if (removed) return null;
 
   // 整張卡片可點進行程;但按到互動元素(連結/按鈕/輸入框/留言區/影音)時不導航,交給它們自己處理。
   function cardClick(e: React.MouseEvent) {
@@ -43,13 +79,13 @@ export default function TripCard({ trip: t, manageSlot }: { trip: Trip; manageSl
             <div className="ig-user"><div className="ig-name">{author}</div><div className="ig-sub">{sub}</div></div>
           </>
         )}
-        {manageSlot && (
+        {slot && (
           <div className="ig-menu-wrap">
             <button type="button" className="ig-menu-btn" aria-label="更多" onClick={() => setMenuOpen((o) => !o)}>⋯</button>
             {menuOpen && (
               <>
                 <div className="ig-menu-backdrop" onClick={() => setMenuOpen(false)} />
-                <div className="ig-menu" onClick={() => setMenuOpen(false)}>{manageSlot}</div>
+                <div className="ig-menu" onClick={() => setMenuOpen(false)}>{slot}</div>
               </>
             )}
           </div>

@@ -34,7 +34,7 @@ export default async function UserTripsPage({ params }: { params: Promise<{ id: 
         <div className="empty" style={{ marginTop: 20 }}>這位旅人還沒有公開的行程。</div>
       ) : (
         <div className="ig-feed" style={{ marginTop: 24 }}>
-          {rows.map((t) => <TripCard key={t.id} trip={t} />)}
+          {rows.map((t) => <TripCard key={t.id} trip={t} viewerId={user?.id ?? null} />)}
         </div>
       )}
 
