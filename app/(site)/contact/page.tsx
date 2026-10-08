@@ -3,6 +3,18 @@ import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
+// LINE 填網址就用網址;填 @ID(或純 ID)自動轉成加好友連結
+const lineHref = (v: string) => {
+  const t = (v || "").trim();
+  if (/^https?:\/\//i.test(t)) return t;
+  return `https://line.me/R/ti/p/@${t.replace(/^@/, "")}`;
+};
+// IG/FB 等:沒帶 http 就補上 https://(避免變成壞的相對連結)
+const httpHref = (v: string) => {
+  const t = (v || "").trim();
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
+
 export default async function ContactPage() {
   const s = await getSiteSettings();
   return (
