@@ -28,10 +28,7 @@ export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean
 export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
 interface LogRow { id: string; actor_name: string | null; action: string; target_type: string | null; target_name: string | null; detail: Record<string, unknown> | null; created_at: string }
 
-type SortKey = "new" | "old" | "name" | "region" | "status" | "tier";
-const SORT_LABEL: Record<SortKey, string> = {
-  new: "建立時間(新→舊)", old: "建立時間(舊→新)", name: "名稱 A→Z", region: "地區", status: "狀態", tier: "方案(曝光高→低)",
-};
+type SortCol = "created" | "name" | "region" | "category" | "status" | "owner";
 const ACTION_LABEL: Record<string, string> = {
   publish: "上架", unpublish: "下架", approve: "核准", reject: "退回審核",
   set_tier: "改方案", delete: "刪除", create: "新增", edit: "編輯",
@@ -88,7 +85,15 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
-  const [sort, setSort] = useState<SortKey>("new");
+  const [sortCol, setSortCol] = useState<SortCol>("created");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  // 點欄位標題排序:未選→升冪、升冪→降冪、降冪→回預設(建立時間新→舊)
+  function clickSort(col: SortCol) {
+    if (sortCol !== col) { setSortCol(col); setSortDir("asc"); }
+    else if (sortDir === "asc") setSortDir("desc");
+    else { setSortCol("created"); setSortDir("desc"); }
+  }
+  const sortInd = (col: SortCol) => (sortCol === col ? (sortDir === "asc" ? " ↑" : " ↓") : "");
   const [form, setForm] = useState<Form | null>(null);
   const [assign, setAssign] = useState<Stay | null>(null);
   const [busy, setBusy] = useState(false);
@@ -127,19 +132,21 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   // 排序:list 本身已是「建立時間新→舊」,其餘各鍵在 filtered 上重排。
   const sorted = useMemo(() => {
     const arr = [...filtered];
-    const tierRank = (t?: string | null) => planByKey[t || "free"]?.priority ?? 0;
     const statusRank = (s: Stay) => (s.approved === false ? 0 : s.published ? 2 : 1); // 待審核→草稿→已上架
     const byName = (a: Stay, b: Stay) => a.name.localeCompare(b.name, "zh-Hant");
-    switch (sort) {
-      case "old": arr.reverse(); break;
-      case "name": arr.sort(byName); break;
-      case "region": arr.sort((a, b) => (a.region + a.town).localeCompare(b.region + b.town, "zh-Hant") || byName(a, b)); break;
-      case "status": arr.sort((a, b) => statusRank(a) - statusRank(b) || byName(a, b)); break;
-      case "tier": arr.sort((a, b) => tierRank(b.ad_tier) - tierRank(a.ad_tier) || byName(a, b)); break;
-      default: break; // new = 預設
+    let cmp: ((a: Stay, b: Stay) => number) | null = null;
+    switch (sortCol) {
+      case "name": cmp = byName; break;
+      case "region": cmp = (a, b) => (a.region + a.town).localeCompare(b.region + b.town, "zh-Hant") || byName(a, b); break;
+      case "category": cmp = (a, b) => (a.category || "").localeCompare(b.category || "", "zh-Hant") || byName(a, b); break;
+      case "status": cmp = (a, b) => statusRank(a) - statusRank(b) || byName(a, b); break;
+      case "owner": cmp = (a, b) => (ownerName(a.owner_id) || "平台自管").localeCompare(ownerName(b.owner_id) || "平台自管", "zh-Hant") || byName(a, b); break;
+      default: cmp = null; // created = 預設(list 已是建立時間新→舊)
     }
+    if (cmp) { arr.sort(cmp); if (sortDir === "desc") arr.reverse(); }
+    else if (sortDir === "asc") arr.reverse(); // 建立時間舊→新
     return arr;
-  }, [filtered, sort, planByKey]);
+  }, [filtered, sortCol, sortDir, planByKey]);
 
   async function refresh() {
     const sb = createClient();
@@ -246,9 +253,6 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
             </button>
           ))}
         </div>
-        <select className="sort-sel" value={sort} onChange={(e) => setSort(e.target.value as SortKey)} title="排序" aria-label="排序">
-          {(Object.keys(SORT_LABEL) as SortKey[]).map((k) => <option key={k} value={k}>↕ {SORT_LABEL[k]}</option>)}
-        </select>
         {isAdminView && <button className="btn btn-ghost" onClick={openLogs}>🕘 操作紀錄</button>}
         <StaysImport existingNames={list.map((s) => s.name)} onDone={refresh} />
         <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>＋ 新增民宿</button>
@@ -258,8 +262,15 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
         <table className="atable">
           <thead>
             <tr>
-              <th></th><th>名稱</th><th>地區</th><th>風格</th><th>狀態</th>
-              {isAdminView && <><th>業主</th><th>洽談</th><th>內部備註</th></>}
+              <th></th>
+              <th className="th-sort" onClick={() => clickSort("name")}>名稱{sortInd("name")}</th>
+              <th className="th-sort" onClick={() => clickSort("region")}>地區{sortInd("region")}</th>
+              <th className="th-sort" onClick={() => clickSort("category")}>風格{sortInd("category")}</th>
+              <th className="th-sort" onClick={() => clickSort("status")}>狀態{sortInd("status")}</th>
+              {isAdminView && <>
+                <th className="th-sort" onClick={() => clickSort("owner")}>業主{sortInd("owner")}</th>
+                <th>洽談</th><th>內部備註</th>
+              </>}
               <th>操作</th>
             </tr>
           </thead>
