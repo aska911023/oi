@@ -10,6 +10,7 @@ export interface Block {
   text?: string;
   image?: string;
   images?: string[];
+  links?: string[];  // 輪播:每張圖對應的捷徑連結(可留空)
   embeds?: string[]; // 影音 / IG 牆:YouTube / IG / TikTok 連結清單
   href?: string;
   height?: number;

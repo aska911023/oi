@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-export default function HeroCarousel({ images, caption, height }: { images: string[]; caption?: string; height?: number }) {
+export default function HeroCarousel({ images, caption, height, links }: { images: string[]; caption?: string; height?: number; links?: string[] }) {
   const imgs = images && images.length ? images : [""];
   const [i, setI] = useState(0);
+  const href = links?.[i]?.trim();
 
   useEffect(() => {
     if (imgs.length <= 1) return;
@@ -18,6 +19,9 @@ export default function HeroCarousel({ images, caption, height }: { images: stri
         // eslint-disable-next-line @next/next/no-img-element
         <img key={k} src={src} alt="民宿情境" className={"hc-slide" + (k === i ? " on" : "")} />
       ))}
+      {href && (
+        <a className="hc-linkover" href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" aria-label="前往" />
+      )}
       {caption && <span>{caption}</span>}
       {imgs.length > 1 && (
         <div className="hc-dots">

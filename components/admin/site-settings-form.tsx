@@ -241,9 +241,14 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
               {b.type === "carousel" && (
                 <>
                   {(b.images || []).map((img, k) => (
-                    <div key={k} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                      <ImgField id={b.id + "-" + k} value={img} onChange={(v) => { const imgs = [...(b.images || [])]; imgs[k] = v; updateBlock(b.id, { images: imgs }); }} />
-                      <button className="lnk danger" onClick={() => updateBlock(b.id, { images: (b.images || []).filter((_, x) => x !== k) })}>移除</button>
+                    <div key={k} style={{ marginBottom: 10, borderBottom: "1px dashed var(--border)", paddingBottom: 10 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <ImgField id={b.id + "-" + k} value={img} onChange={(v) => { const imgs = [...(b.images || [])]; imgs[k] = v; updateBlock(b.id, { images: imgs }); }} />
+                        <button className="lnk danger" onClick={() => updateBlock(b.id, { images: (b.images || []).filter((_, x) => x !== k), links: (b.links || []).filter((_, x) => x !== k) })}>移除</button>
+                      </div>
+                      <input value={(b.links || [])[k] || ""} placeholder="點這張圖跳到的連結(選填,例 /stays/宜蘭 或 https://…)"
+                        onChange={(e) => { const lk = [...(b.links || [])]; lk[k] = e.target.value; updateBlock(b.id, { links: lk }); }}
+                        style={{ width: "100%", marginTop: 6, border: "1px solid var(--border-strong)", borderRadius: 8, padding: "7px 10px", font: "inherit", fontSize: 13 }} />
                     </div>
                   ))}
                   {(b.images || []).length < 4 && <button className="btn btn-ghost btn-sm" onClick={() => updateBlock(b.id, { images: [...(b.images || []), ""] })}>＋ 加照片</button>}

@@ -25,12 +25,15 @@ function renderBlock(b: Block) {
           } />
         </div>
       ) : null;
-    case "carousel":
+    case "carousel": {
+      // 保持圖片與連結對齊(濾掉空圖時連結也一起濾)
+      const pairs = (b.images || []).map((img, k) => ({ img, link: (b.links || [])[k] })).filter((p) => p.img);
       return (
         <div key={b.id} className="blk-carousel" style={{ maxWidth: `${b.width || 100}%` }}>
-          <HeroCarousel images={(b.images || []).filter(Boolean)} height={b.height} />
+          <HeroCarousel images={pairs.map((p) => p.img)} links={pairs.map((p) => p.link || "")} height={b.height} />
         </div>
       );
+    }
     case "button":
       return b.text ? (
         <div key={b.id} style={{ textAlign: b.align || "left" }}>
