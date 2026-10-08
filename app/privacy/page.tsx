@@ -1,12 +1,14 @@
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
+import { getViewer } from "@/lib/viewer";
 
 export const metadata = { title: "隱私權政策 · 偶宿 O!" };
 
-export default function Privacy() {
+export default async function Privacy() {
+  const viewer = await getViewer();
   return (
     <>
-      <SiteHeader />
+      <SiteHeader viewer={viewer} />
       <article className="legal">
         <h1>隱私權與個人資料保護政策</h1>
         <p className="updated">最後更新:2026 年 9 月 · 適用於偶宿 O!(偶宿數位科技有限公司)</p>

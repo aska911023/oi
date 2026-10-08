@@ -1,25 +1,14 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
 import NotificationBell from "@/components/notification-bell";
 import Avatar from "@/components/avatar";
+import type { Viewer } from "@/lib/viewer";
 
-export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
-  const sb = await createClient();
-  const { data: { user } } = await sb.auth.getUser();
+export default async function SiteHeader({ viewer, onGreen = false }: { viewer: Viewer; onGreen?: boolean }) {
   const settings = await getSiteSettings();
-
-  let name = "";
-  let role = "user";
-  let avatarUrl: string | null = null;
-  if (user) {
-    const { data } = await sb.from("profiles").select("display_name, role, avatar_url").eq("id", user.id).maybeSingle();
-    name = data?.display_name || user.email?.split("@")[0] || "";
-    role = data?.role || "user";
-    avatarUrl = data?.avatar_url || null;
-  }
+  const { loggedIn, role, name, avatarUrl } = viewer;
 
   return (
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
@@ -30,9 +19,10 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
           <Link href="/contact">聯絡我們</Link>
-          {user ? (
+          {loggedIn ? (
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
+              {(role === "partner" || role === "admin") && <Link href="/vendor">業者後台</Link>}
               <NotificationBell />
               <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={30} /> 歡迎,{name}</Link>
             </>
@@ -40,7 +30,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
             <Link href="/login" className="cta">登入 / 註冊</Link>
           )}
         </nav>
-        <MobileMenu loggedIn={!!user} name={name} isAdmin={role === "admin"} />
+        <MobileMenu loggedIn={loggedIn} name={name} isAdmin={role === "admin"} isPartner={role === "partner" || role === "admin"} />
       </div>
     </header>
   );

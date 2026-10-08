@@ -1,12 +1,14 @@
 import Link from "next/link";
 import SiteHeader from "@/components/site-header";
+import { getViewer } from "@/lib/viewer";
 
 export const metadata = { title: "服務條款 · 偶宿 O!" };
 
-export default function Terms() {
+export default async function Terms() {
+  const viewer = await getViewer();
   return (
     <>
-      <SiteHeader />
+      <SiteHeader viewer={viewer} />
       <article className="legal">
         <h1>服務條款</h1>
         <p className="updated">最後更新:2026 年 9 月 · 偶宿 O!(偶宿數位科技有限公司)</p>

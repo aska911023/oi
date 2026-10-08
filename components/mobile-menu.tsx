@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 
-export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: boolean; name: string; isAdmin: boolean }) {
+export default function MobileMenu({ loggedIn, name, isAdmin, isPartner = false }: { loggedIn: boolean; name: string; isAdmin: boolean; isPartner?: boolean }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -38,6 +38,7 @@ export default function MobileMenu({ loggedIn, name, isAdmin }: { loggedIn: bool
             <>
               <Link href="/me/trips" onClick={close}>我的行程</Link>
               {isAdmin && <Link href="/admin" onClick={close}>管理後台</Link>}
+              {isPartner && <Link href="/vendor" onClick={close}>業者後台</Link>}
               <Link href="/account" onClick={close}>我的帳號</Link>
             </>
           ) : (

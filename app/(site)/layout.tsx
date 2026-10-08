@@ -5,9 +5,11 @@ import EntryGate from "@/components/entry-gate";
 import PageViewTracker from "@/components/page-view-tracker";
 import ScrollTop from "@/components/scroll-top";
 import CompareBar from "@/components/compare-bar";
+import RoleViewSwitcher from "@/components/role-view-switcher";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
+import { getViewer } from "@/lib/viewer";
 import { POI_KINDS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +17,15 @@ export const dynamic = "force-dynamic";
 // 共用外殼:header / 主題 / footer 常駐,導航時只換 children(不再每頁重查登入)
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
+  const viewer = await getViewer();
   return (
     <CompareProvider>
       <SiteTheme s={settings} />
       <ScrollTop />
       <PageViewTracker />
       <EntryGate logoSrc={settings.logo_image || undefined} />
-      <SiteHeader />
+      <RoleViewSwitcher isRealAdmin={viewer.isRealAdmin} viewAs={viewer.viewAs} />
+      <SiteHeader viewer={viewer} />
       {children}
       <footer className="footer">
         <div className="shell footer-grid">
