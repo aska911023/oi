@@ -1,9 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Explore from "@/components/explore";
 import { getRoomsInitial } from "@/lib/rooms";
 import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
+
+// 首頁分享卡(og:title / og:description)吃後台「首頁設定」可編輯的欄位
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSiteSettings();
+  const title = s.share_title || "偶宿 O! · 台灣民宿搜尋";
+  const description = s.share_desc || "彙整全台民宿,包棟/親子/海景一次搜尋,看房型價格與周邊景點。";
+  return {
+    title,
+    description,
+    alternates: { canonical: "/" },
+    openGraph: { title, description, url: "https://www.oi-stay.com", type: "website", siteName: "偶宿 O!", locale: "zh_TW" },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function Home() {
   const { rooms, total, regions, categories } = await getRoomsInitial();

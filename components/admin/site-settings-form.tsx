@@ -103,6 +103,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size,
       contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone,
       contact_ig: s.contact_ig, contact_fb: s.contact_fb, brand_philosophy: s.brand_philosophy,
+      share_title: s.share_title, share_desc: s.share_desc,
       footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline,
       about_body: s.about_body, contact_intro: s.contact_intro, comment_banned_words: s.comment_banned_words, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
@@ -332,6 +333,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           <div className="field" style={{ margin: 0 }}><label>Facebook 連結</label><input value={s.contact_fb} onChange={(e) => set("contact_fb", e.target.value)} placeholder="https://facebook.com/…" /></div>
         </div>
         <div className="field"><label>品牌理念(顯示在聯絡我們頁上方)</label><textarea rows={3} value={s.brand_philosophy} onChange={(e) => set("brand_philosophy", e.target.value)} placeholder="一句話講你們的理念…" /></div>
+        <div className="field"><label>分享卡標題(貼網址到 LINE / FB 時顯示的大標)</label><input value={s.share_title} onChange={(e) => set("share_title", e.target.value)} placeholder="偶宿 O! · 台灣民宿搜尋" /></div>
+        <div className="field"><label>分享卡說明(標題下方的小字)</label><textarea rows={2} value={s.share_desc} onChange={(e) => set("share_desc", e.target.value)} placeholder="一句話介紹,貼連結分享時會顯示…" /></div>
         <div className="field"><label>品牌故事頁內容(可換行,空一行分段)</label><textarea rows={5} value={s.about_body} onChange={(e) => set("about_body", e.target.value)} /></div>
         <div className="field"><label>聯絡我們頁 — 開頭說明</label><textarea rows={2} value={s.contact_intro} onChange={(e) => set("contact_intro", e.target.value)} /></div>
         <div className="field"><label>頁尾 — 品牌簡介(可換行)</label><textarea rows={2} value={s.footer_about} onChange={(e) => set("footer_about", e.target.value)} /></div>

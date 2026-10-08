@@ -38,6 +38,8 @@ export interface SiteSettings {
   contact_ig: string;
   contact_fb: string;
   brand_philosophy: string;
+  share_title: string; // 分享卡標題(og:title)
+  share_desc: string;  // 分享卡說明(og:description)
   footer_about: string;
   footer_copyright: string;
   footer_tagline: string;
@@ -69,6 +71,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   contact_ig: "",
   contact_fb: "",
   brand_philosophy: "偶爾出走,找一處喜歡的一宿。我們相信,旅行最美的部分,常常發生在「住下來」之後。",
+  share_title: "偶宿 O! · 台灣民宿搜尋",
+  share_desc: "彙整全台民宿 —— 宜蘭、花蓮、北海岸的包棟、親子、海景民宿一次搜尋,看房型、價格與周邊景點。不經手訂房,直接帶你聯繫民宿。",
   footer_about: "偶爾出走,找到喜歡的一宿。\n以地區、風格與預算,探索全台民宿。",
   footer_copyright: "© 2026 偶宿數位科技有限公司 · 台灣民宿搜尋平台",
   footer_tagline: "一段旅行,一處喜歡的日常。",

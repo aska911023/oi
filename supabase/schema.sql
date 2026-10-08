@@ -2060,3 +2060,7 @@ end;
 $$;
 revoke all on function public.traffic_stats(int) from public;
 grant execute on function public.traffic_stats(int) to authenticated;
+
+-- 分享卡(og:title / og:description)後台可編輯
+alter table public.site_settings add column if not exists share_title text default '';
+alter table public.site_settings add column if not exists share_desc text default '';

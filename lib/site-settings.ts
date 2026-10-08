@@ -50,6 +50,8 @@ export const getSiteSettings = unstable_cache(async function getSiteSettings(): 
       if (typeof d.contact_ig === "string") s.contact_ig = d.contact_ig;
       if (typeof d.contact_fb === "string") s.contact_fb = d.contact_fb;
       if (typeof d.brand_philosophy === "string" && d.brand_philosophy) s.brand_philosophy = d.brand_philosophy;
+      if (typeof d.share_title === "string" && d.share_title) s.share_title = d.share_title;
+      if (typeof d.share_desc === "string" && d.share_desc) s.share_desc = d.share_desc;
       if (typeof d.footer_about === "string" && d.footer_about) s.footer_about = d.footer_about;
       if (typeof d.footer_copyright === "string" && d.footer_copyright) s.footer_copyright = d.footer_copyright;
       if (typeof d.footer_tagline === "string" && d.footer_tagline) s.footer_tagline = d.footer_tagline;
