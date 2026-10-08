@@ -2064,3 +2064,7 @@ grant execute on function public.traffic_stats(int) to authenticated;
 -- 分享卡(og:title / og:description)後台可編輯
 alter table public.site_settings add column if not exists share_title text default '';
 alter table public.site_settings add column if not exists share_desc text default '';
+
+-- 頁尾 logo 可與頁首分開(留空沿用頁首)
+alter table public.site_settings add column if not exists footer_logo_image text default '';
+alter table public.site_settings add column if not exists footer_logo_size int default 42;

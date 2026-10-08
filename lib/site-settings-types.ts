@@ -32,6 +32,8 @@ export interface SiteSettings {
   hero_split_ratio: number; // 左文欄佔比 %(20–80),兩邊一致
   logo_image: string;
   logo_size: number;
+  footer_logo_image: string; // 頁尾 logo(留空沿用頁首)
+  footer_logo_size: number;
   contact_email: string;
   contact_line: string;
   contact_phone: string;
@@ -81,5 +83,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   comment_banned_words: "",
   logo_image: "",
   logo_size: 42,
+  footer_logo_image: "",
+  footer_logo_size: 42,
   blocks: DEFAULT_BLOCKS,
 };

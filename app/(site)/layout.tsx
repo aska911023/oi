@@ -26,7 +26,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <footer className="footer">
         <div className="shell footer-grid">
           <div className="footer-brand">
-            <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
+            <Logo src={settings.footer_logo_image || settings.logo_image || undefined} size={settings.footer_logo_image ? settings.footer_logo_size : settings.logo_size} />
             <p style={{ whiteSpace: "pre-line" }}>{settings.footer_about}</p>
           </div>
           <div className="footer-col">

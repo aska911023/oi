@@ -101,6 +101,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
     const { error } = await sb.from("site_settings").update({
       color_primary: s.color_primary, color_accent: s.color_accent, bg_color: s.bg_color,
       search_hint: s.search_hint, hero_layout: s.hero_layout, hero_split_ratio: s.hero_split_ratio, logo_image: s.logo_image, logo_size: s.logo_size,
+      footer_logo_image: s.footer_logo_image, footer_logo_size: s.footer_logo_size,
       contact_email: s.contact_email, contact_line: s.contact_line, contact_phone: s.contact_phone,
       contact_ig: s.contact_ig, contact_fb: s.contact_fb, brand_philosophy: s.brand_philosophy,
       share_title: s.share_title, share_desc: s.share_desc,
@@ -342,7 +343,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           <div className="field" style={{ margin: 0 }}><label>頁尾 — 版權文字</label><input value={s.footer_copyright} onChange={(e) => set("footer_copyright", e.target.value)} /></div>
           <div className="field" style={{ margin: 0 }}><label>頁尾 — 標語</label><input value={s.footer_tagline} onChange={(e) => set("footer_tagline", e.target.value)} /></div>
         </div>
-        <div className="field"><label>網站 Logo(左上角;留空用預設 O!)</label>
+        <div className="field"><label>頁首 Logo(左上角;留空用預設 O!)</label>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             {s.logo_image && <img src={s.logo_image} alt="logo" style={{ height: s.logo_size }} />}
             <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
@@ -355,6 +356,21 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
           </div>
           <div className="style-controls" style={{ marginTop: 8 }}>
             <span className="sc-num">Logo 大小<input type="number" min={20} max={120} value={s.logo_size} onChange={(e) => set("logo_size", Number(e.target.value))} />px</span>
+          </div>
+        </div>
+        <div className="field"><label>頁尾 Logo(網站最下方;留空則沿用頁首 Logo)</label>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            {s.footer_logo_image && <img src={s.footer_logo_image} alt="footer logo" style={{ height: s.footer_logo_size }} />}
+            <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+              {uploadingId === "footer-logo" ? "上傳中…" : s.footer_logo_image ? "更換" : "選檔上傳"}
+              <input type="file" accept="image/*" style={{ display: "none" }} disabled={uploadingId !== null}
+                onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; setUploadingId("footer-logo"); const u = await uploadImage(f); setUploadingId(null); if (u) set("footer_logo_image", u); }} />
+            </label>
+            <input value={s.footer_logo_image} onChange={(e) => set("footer_logo_image", e.target.value)} placeholder="或貼網址(留空沿用頁首)" style={{ flex: 1, minWidth: 180 }} />
+            {s.footer_logo_image && <button className="lnk danger" onClick={() => set("footer_logo_image", "")}>移除</button>}
+          </div>
+          <div className="style-controls" style={{ marginTop: 8 }}>
+            <span className="sc-num">Logo 大小<input type="number" min={20} max={160} value={s.footer_logo_size} onChange={(e) => set("footer_logo_size", Number(e.target.value))} />px</span>
           </div>
         </div>
       </div>

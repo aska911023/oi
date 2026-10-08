@@ -44,6 +44,8 @@ export const getSiteSettings = unstable_cache(async function getSiteSettings(): 
       if (typeof d.hero_split_ratio === "number" && d.hero_split_ratio >= 20 && d.hero_split_ratio <= 80) s.hero_split_ratio = d.hero_split_ratio;
       if (typeof d.logo_image === "string") s.logo_image = d.logo_image;
       if (typeof d.logo_size === "number" && d.logo_size > 0) s.logo_size = d.logo_size;
+      if (typeof d.footer_logo_image === "string") s.footer_logo_image = d.footer_logo_image;
+      if (typeof d.footer_logo_size === "number" && d.footer_logo_size > 0) s.footer_logo_size = d.footer_logo_size;
       if (typeof d.contact_email === "string") s.contact_email = d.contact_email;
       if (typeof d.contact_line === "string") s.contact_line = d.contact_line;
       if (typeof d.contact_phone === "string") s.contact_phone = d.contact_phone;
