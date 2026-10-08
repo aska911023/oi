@@ -14,7 +14,7 @@ const OPTIONS: { v: ViewRole | "self"; label: string }[] = [
   { v: "guest", label: "訪客(未登入)" },
 ];
 
-export default function RoleViewSwitcher({ isRealAdmin, viewAs }: { isRealAdmin: boolean; viewAs: ViewRole | null }) {
+export default function RoleViewSwitcher({ isRealAdmin, viewAs, compact = false }: { isRealAdmin: boolean; viewAs: ViewRole | null; compact?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   if (!isRealAdmin) return null;
@@ -24,6 +24,17 @@ export default function RoleViewSwitcher({ isRealAdmin, viewAs }: { isRealAdmin:
     else document.cookie = `oi_view_as=${v}; path=/; max-age=86400`;
     setOpen(false);
     router.refresh();
+  }
+
+  // 前台只在「預覽中」顯示一條結束列(切換鈕本體收在後台)
+  if (compact) {
+    if (!viewAs) return null;
+    return (
+      <div className="roleview-banner">
+        <span>👁 以「{LABEL[viewAs]}」身分檢視中</span>
+        <button onClick={() => pick("self")}>結束預覽</button>
+      </div>
+    );
   }
 
   return (

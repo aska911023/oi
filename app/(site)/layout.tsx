@@ -24,7 +24,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <ScrollTop />
       <PageViewTracker />
       <EntryGate logoSrc={settings.logo_image || undefined} />
-      <RoleViewSwitcher isRealAdmin={viewer.isRealAdmin} viewAs={viewer.viewAs} />
+      <RoleViewSwitcher isRealAdmin={viewer.isRealAdmin} viewAs={viewer.viewAs} compact />
       <SiteHeader viewer={viewer} />
       {children}
       <footer className="footer">

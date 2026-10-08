@@ -1128,6 +1128,10 @@ img { display: block; max-width: 100%; }
 .roleview-menu button:hover { background: var(--green-soft); }
 .roleview-menu button.on { background: var(--green-soft); color: var(--green); font-weight: 700; }
 .roleview-note { font-size: 11px; color: var(--muted); padding: 8px 10px 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+/* 前台預覽中的結束列 */
+.roleview-banner { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 95; background: #c2410c; color: #fff; border-radius: 24px; padding: 8px 10px 8px 18px; display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 700; box-shadow: var(--shadow-lg); }
+.roleview-banner button { background: rgba(255,255,255,.22); color: #fff; border: 0; border-radius: 16px; padding: 6px 13px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.roleview-banner button:hover { background: rgba(255,255,255,.34); }
 
 /* 後台流量總覽:兩欄(來源 / 熱門頁),窄螢幕堆疊 */
 @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr !important; } }

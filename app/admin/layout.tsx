@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -6,6 +7,8 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import SiteTheme from "@/components/site-theme";
 import AdminTabs from "@/components/admin/admin-tabs";
+import RoleViewSwitcher from "@/components/role-view-switcher";
+import type { ViewRole } from "@/lib/viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +32,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile?.role !== "admin") redirect("/");
 
   const settings = await getSiteSettings();
+  const rawView = (await cookies()).get("oi_view_as")?.value;
+  const viewAs = (["partner", "user", "guest"].includes(rawView || "") ? rawView : null) as ViewRole | null;
 
   return (
     <>
       <SiteTheme s={settings} />
+      <RoleViewSwitcher isRealAdmin viewAs={viewAs} />
       <header className="topbar solid">
         <div className="shell">
           <Logo href="/admin" src={settings.logo_image || undefined} size={settings.logo_size} />
