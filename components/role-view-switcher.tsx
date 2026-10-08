@@ -21,14 +21,13 @@ export default function RoleViewSwitcher({ isRealAdmin, viewAs, compact = false 
 
   function pick(v: ViewRole | "self") {
     setOpen(false);
+    // 用整頁跳轉(非 router.push)—— cookie 影響的是伺服器端渲染,整頁導航才會重讀 cookie、確實套上角色
     if (v === "self") {
-      // 結束預覽 → 清掉並跳回總後台
       document.cookie = "oi_view_as=; path=/; max-age=0";
-      router.push("/admin");
+      window.location.href = "/admin"; // 結束預覽 → 回總後台
     } else {
-      // 選了角色 → 直接去前台首頁看
       document.cookie = `oi_view_as=${v}; path=/; max-age=86400`;
-      router.push("/");
+      window.location.href = "/"; // 選了角色 → 前台首頁(確實套上)
     }
   }
 
