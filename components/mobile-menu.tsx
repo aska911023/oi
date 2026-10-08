@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import Avatar from "@/components/avatar";
 
-export default function MobileMenu({ loggedIn, name, isAdmin, isPartner = false }: { loggedIn: boolean; name: string; isAdmin: boolean; isPartner?: boolean }) {
+export default function MobileMenu({ loggedIn, name, avatarUrl = null, isAdmin, isPartner = false }: { loggedIn: boolean; name: string; avatarUrl?: string | null; isAdmin: boolean; isPartner?: boolean }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -23,7 +24,9 @@ export default function MobileMenu({ loggedIn, name, isAdmin, isPartner = false 
       <div className="m-backdrop" onClick={close} />
       <div className="m-panel">
         <div className="m-panel-head">
-          <span>{loggedIn ? `歡迎,${name}` : "偶宿 O!"}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {loggedIn ? <><Avatar src={avatarUrl} name={name} size={30} /> 歡迎,{name}</> : "偶宿 O!"}
+          </span>
           <button className="m-close" onClick={close} aria-label="關閉選單">✕</button>
         </div>
         <nav className="m-links">

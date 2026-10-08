@@ -115,7 +115,7 @@ img { display: block; max-width: 100%; }
 /* ── discovery hero(白底綠字・簡潔) ── */
 .disc { padding: 26px 0 6px; }
 .disc-grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 44px; align-items: center; }
-@media (max-width: 860px) { .disc-grid { grid-template-columns: 1fr; gap: 20px; } .disc-img { display: none; } }
+@media (max-width: 860px) { .disc-grid { grid-template-columns: 1fr; gap: 20px; } }
 .disc-copy .eyebrow { margin-bottom: 14px; }
 .disc-copy h1 { font-family: var(--serif); font-size: clamp(28px, 4.4vw, 44px); font-weight: 800; line-height: 1.35; letter-spacing: .5px; color: var(--ink); margin: 0 0 10px; }
 .disc-copy > p { font-size: 15.5px; color: var(--text-2); margin: 0; max-width: 460px; }

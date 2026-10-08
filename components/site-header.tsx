@@ -30,7 +30,7 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
             <Link href="/login" className="cta">登入 / 註冊</Link>
           )}
         </nav>
-        <MobileMenu loggedIn={loggedIn} name={name} isAdmin={role === "admin"} isPartner={role === "partner" || role === "admin"} />
+        <MobileMenu loggedIn={loggedIn} name={name} avatarUrl={avatarUrl} isAdmin={role === "admin"} isPartner={role === "partner" || role === "admin"} />
       </div>
     </header>
   );
