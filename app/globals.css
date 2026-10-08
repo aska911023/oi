@@ -1114,6 +1114,9 @@ img { display: block; max-width: 100%; }
 
 .ig-clickable { cursor: pointer; }
 
+/* 後台流量總覽:兩欄(來源 / 熱門頁),窄螢幕堆疊 */
+@media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr !important; } }
+
 /* 「分享影音」快捷鈕(沿用 compose-shortcut 外觀,緊貼在「分享行程」下方) */
 .compose-shortcut.cs-media { width: 100%; font: inherit; text-align: left; cursor: pointer; margin: -20px 0 30px; }
 .cs-media .cs-avatar { font-size: 20px; }

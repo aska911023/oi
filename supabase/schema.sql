@@ -2004,3 +2004,59 @@ end; $$;
 drop trigger if exists trg_trips_slug on public.trips;
 create trigger trg_trips_slug before insert on public.trips for each row execute function public.tg_trips_slug();
 -- 註:search_rooms RPC 另在 Management API 更新為回傳 s.slug as stay_slug(卡片連結用)。
+
+
+-- ============================================================
+-- 全站流量埋點(page_views)+ 來源分類 + 統計(給 /admin/analytics 的「流量總覽」)
+-- 寫入只走 DEFINER RPC log_page_view(來源在此分類);只有 admin 讀;traffic_stats 給後台彙總。
+-- ============================================================
+create table if not exists public.page_views (
+  id bigint generated always as identity primary key,
+  path text, source text, referrer text, session_id text,
+  created_at timestamptz not null default now()
+);
+create index if not exists page_views_created_idx on public.page_views(created_at desc);
+alter table public.page_views enable row level security;
+drop policy if exists page_views_sel on public.page_views;
+create policy page_views_sel on public.page_views for select using (public.is_admin());
+revoke all on public.page_views from anon, authenticated;
+grant select on public.page_views to authenticated;
+
+create or replace function public.log_page_view(p_path text, p_ref text default '', p_session text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_src text := 'direct'; v_host text;
+begin
+  if p_path ~ '^/(admin|vendor|account|me|login)' then return; end if;
+  v_host := lower(coalesce(p_ref,''));
+  if v_host = '' or v_host like '%oi-stay.com%' then v_src := 'direct';
+  elsif v_host ~ '(google|bing|yahoo|duckduckgo|baidu|yandex|ecosia)' then v_src := 'search';
+  elsif v_host ~ '(instagram|facebook|fb\.com|fb\.me|t\.co|twitter|x\.com|line\.|tiktok|youtube|youtu\.be|threads|pinterest)' then v_src := 'social';
+  else v_src := 'referral';
+  end if;
+  insert into public.page_views(path, source, referrer, session_id)
+  values (left(p_path,300), v_src, left(p_ref,500), left(p_session,100));
+end;
+$$;
+revoke all on function public.log_page_view(text,text,text) from public;
+grant execute on function public.log_page_view(text,text,text) to anon, authenticated;
+
+create or replace function public.traffic_stats(p_days int default 30)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare since timestamptz := now() - (p_days || ' days')::interval; result jsonb;
+begin
+  if not public.is_admin() then raise exception 'forbidden'; end if;
+  select jsonb_build_object(
+    'views', (select count(*) from page_views where created_at >= since),
+    'sessions', (select count(distinct session_id) from page_views where created_at >= since),
+    'by_source', (select coalesce(jsonb_agg(jsonb_build_object('source',source,'sessions',s) order by s desc),'[]'::jsonb)
+                  from (select source, count(distinct session_id) s from page_views where created_at >= since group by source) a),
+    'top_pages', (select coalesce(jsonb_agg(jsonb_build_object('path',path,'views',v) order by v desc),'[]'::jsonb)
+                  from (select path, count(*) v from page_views where created_at >= since group by path order by count(*) desc limit 15) b),
+    'daily', (select coalesce(jsonb_agg(jsonb_build_object('day',d,'views',v) order by d),'[]'::jsonb)
+              from (select date_trunc('day',created_at)::date d, count(*) v from page_views where created_at >= since group by 1) c)
+  ) into result;
+  return result;
+end;
+$$;
+revoke all on function public.traffic_stats(int) from public;
+grant execute on function public.traffic_stats(int) to authenticated;
