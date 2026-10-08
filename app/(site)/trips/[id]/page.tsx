@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sbMaybeRetry } from "@/lib/retry";
-import { extractId } from "@/lib/slug";
+import { decodeParam, extractUuid } from "@/lib/slug";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
 import SaveTripButton from "@/components/save-trip-button";
@@ -14,11 +14,11 @@ import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const param = (await params).id;
+  const param = decodeParam((await params).id);
   const sb = await createClient();
   const cols = "slug, title, days, nights, region, headcount, summary, is_public";
   let data = (await sb.from("trips").select(cols).eq("slug", param).maybeSingle()).data;
-  if (!data) { const id = extractId(param); if (id !== param) data = (await sb.from("trips").select(cols).eq("id", id).maybeSingle()).data; }
+  if (!data) { const uuid = extractUuid(param); if (uuid) data = (await sb.from("trips").select(cols).eq("id", uuid).maybeSingle()).data; }
   if (!data) return { title: "找不到行程" };
   const t = data as Partial<Trip>;
   if (!t.is_public) return { title: t.title || "行程", robots: { index: false } }; // 私人行程不收錄
@@ -35,13 +35,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function TripDetail({ params }: { params: Promise<{ id: string }> }) {
-  const param = (await params).id;
+  const param = decodeParam((await params).id);
   const sb = await createClient();
   // 先用乾淨 slug 查;找不到再用 UUID(相容舊連結)。連線抖動會重試。
   let data = await sbMaybeRetry<Trip>(() => sb.from("trips").select("*").eq("slug", param).maybeSingle(), "trip");
   if (!data) {
-    const id = extractId(param);
-    if (id !== param) data = await sbMaybeRetry<Trip>(() => sb.from("trips").select("*").eq("id", id).maybeSingle(), "trip");
+    const uuid = extractUuid(param);
+    if (uuid) data = await sbMaybeRetry<Trip>(() => sb.from("trips").select("*").eq("id", uuid).maybeSingle(), "trip");
   }
   if (!data) notFound();
   const trip = data as Trip;

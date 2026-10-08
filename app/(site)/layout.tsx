@@ -3,6 +3,7 @@ import SiteHeader from "@/components/site-header";
 import SiteTheme from "@/components/site-theme";
 import EntryGate from "@/components/entry-gate";
 import PageViewTracker from "@/components/page-view-tracker";
+import ScrollTop from "@/components/scroll-top";
 import CompareBar from "@/components/compare-bar";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
@@ -17,6 +18,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <CompareProvider>
       <SiteTheme s={settings} />
+      <ScrollTop />
       <PageViewTracker />
       <EntryGate logoSrc={settings.logo_image || undefined} />
       <SiteHeader />

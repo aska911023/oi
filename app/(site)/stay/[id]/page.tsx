@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sbMaybeRetry } from "@/lib/retry";
-import { extractId } from "@/lib/slug";
+import { decodeParam, extractUuid } from "@/lib/slug";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -18,11 +18,11 @@ import type { Stay, RoomType } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const param = (await params).id;
+  const param = decodeParam((await params).id);
   const sb = await createClient();
   const cols = "slug, name, region, town, category, description, image, images";
   let data = (await sb.from("stays").select(cols).eq("slug", param).maybeSingle()).data;
-  if (!data) { const id = extractId(param); if (id !== param) data = (await sb.from("stays").select(cols).eq("id", id).maybeSingle()).data; }
+  if (!data) { const uuid = extractUuid(param); if (uuid) data = (await sb.from("stays").select(cols).eq("id", uuid).maybeSingle()).data; }
   if (!data) return { title: "找不到民宿" };
   const s = data as Partial<Stay>;
   const place = `${s.region || ""}${s.town || ""}`;
@@ -44,13 +44,13 @@ const toImgs = (image?: string, images?: string[] | null) => (images && images.l
 const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
 export default async function StayPage({ params }: { params: Promise<{ id: string }> }) {
-  const param = (await params).id;
+  const param = decodeParam((await params).id);
   const sb = await createClient();
   // 先用乾淨 slug 查;找不到再用網址裡的 UUID(相容舊 /stay/uuid 連結)。連線抖動會重試。
   let stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("slug", param).maybeSingle(), "stay");
   if (!stay) {
-    const id = extractId(param);
-    if (id !== param) stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", id).maybeSingle(), "stay");
+    const uuid = extractUuid(param);
+    if (uuid) stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", uuid).maybeSingle(), "stay");
   }
   if (!stay) notFound();
   const s = stay;
