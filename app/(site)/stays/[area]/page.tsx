@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getRoomsByRegion } from "@/lib/rooms";
-import { GEOGRAPHIC_AREAS, priceLabel } from "@/lib/data";
-import type { RoomCard } from "@/lib/types";
+import { getRoomsByRegion, STAY_THEMES } from "@/lib/rooms";
+import { GEOGRAPHIC_AREAS } from "@/lib/data";
+import RoomTile from "@/components/room-tile";
 
 export const dynamic = "force-dynamic";
 
@@ -24,32 +24,6 @@ export async function generateMetadata({ params }: { params: Promise<{ area: str
     openGraph: { title: `${title}｜偶宿 O!`, description, url: href(region), type: "website" },
     robots: total > 0 ? undefined : { index: false }, // 沒有民宿的地區不收錄,避免薄頁
   };
-}
-
-function Card({ r }: { r: RoomCard }) {
-  const img = (r.images && r.images[0]) || r.image || "";
-  return (
-    <div className="card-wrap">
-      <Link href={`/stay/${r.stay_id}`} className="card">
-        <div className={"photo" + (img ? "" : " noimg")}>
-          {img
-            ? // eslint-disable-next-line @next/next/no-img-element
-              <img src={img} alt={`${r.stay_name} — ${r.region}${r.town}${r.category}`} loading="lazy" />
-            : <div className="photo-ph" />}
-          <div className="card-badges">
-            {r.kind === "whole" && <span className="cbadge cbadge-whole">包棟</span>}
-            {r.ad_tier && r.ad_tier !== "free" && <span className="cbadge cbadge-feat">精選</span>}
-          </div>
-        </div>
-        <div className="card-body">
-          <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
-          <h3>{r.stay_name}</h3>
-          <div className="card-desc">{r.room_name}</div>
-          <div className="card-bottom"><strong>{priceLabel(r.price)} <small>/ 晚起</small></strong></div>
-        </div>
-      </Link>
-    </div>
-  );
 }
 
 function faqOf(region: string, total: number) {
@@ -85,9 +59,16 @@ export default async function RegionStaysPage({ params }: { params: Promise<{ ar
         <div className="empty">{region}目前還沒有上架的民宿。<Link href="/" style={{ color: "var(--green)", textDecoration: "underline" }}>看看其他地區 →</Link></div>
       ) : (
         <div className="cards">
-          {rooms.map((r) => <Card key={r.id} r={r} />)}
+          {rooms.map((r) => <RoomTile key={r.id} r={r} />)}
         </div>
       )}
+
+      <section style={{ marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 26 }}>
+        <h2 className="serif" style={{ fontSize: 20, marginBottom: 14 }}>依類型找 {region} 民宿</h2>
+        <div className="region-links">
+          {STAY_THEMES.map((t) => <Link key={t.cat} href={`/stays/${encodeURIComponent(region)}/${encodeURIComponent(t.cat)}`} className="region-link">{region}{t.name}</Link>)}
+        </div>
+      </section>
 
       <section className="faq-sec" style={{ marginTop: 46, borderTop: "1px solid var(--border)", paddingTop: 26 }}>
         <h2 className="serif" style={{ fontSize: 20, marginBottom: 14 }}>{region}民宿 常見問題</h2>
