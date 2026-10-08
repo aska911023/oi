@@ -29,14 +29,24 @@ export default function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const boxRef = useRef<HTMLDivElement>(null);
 
+  // 已讀門檻用 epoch(毫秒)數字比較,避免不同來源時間戳字串格式不一致造成誤判。
+  // 相容舊版存的 ISO 字串(解析成 epoch)。
+  function getSeen(): number {
+    try {
+      const raw = localStorage.getItem(SEEN_KEY);
+      if (!raw) return 0;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : (new Date(raw).getTime() || 0);
+    } catch { return 0; }
+  }
+
   async function load() {
     try {
       const { data } = await createClient().rpc("my_notifications", { lim: 30 });
       const rows = (data as N[]) || [];
       setList(rows);
-      let seen = "";
-      try { seen = localStorage.getItem(SEEN_KEY) || ""; } catch { /* ignore */ }
-      setUnread(rows.filter((r) => !seen || r.created_at > seen).length);
+      const seen = getSeen();
+      setUnread(rows.filter((r) => new Date(r.created_at).getTime() > seen).length);
     } catch { /* ignore */ }
   }
 
@@ -56,8 +66,10 @@ export default function NotificationBell() {
   function toggle() {
     const next = !open;
     setOpen(next);
-    if (next && list.length) {
-      try { localStorage.setItem(SEEN_KEY, list[0].created_at); } catch { /* ignore */ }
+    if (next) {
+      // 開啟 = 把目前所有通知標記為已讀(存最新一則的 epoch,沒有就用現在時間)
+      const newest = list.length ? new Date(list[0].created_at).getTime() : Date.now();
+      try { localStorage.setItem(SEEN_KEY, String(newest)); } catch { /* ignore */ }
       setUnread(0);
     }
   }
