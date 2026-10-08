@@ -20,9 +20,9 @@ const TRAP_PATH = "/api/_t";     // 蜜罐路徑(footer 隱藏連結指向這;�
 const hits = new Map<string, number[]>();   // ip -> 近期請求時間戳
 const banned = new Map<string, number>();   // ip -> 解封 epoch ms
 
-// 放行的正牌搜尋引擎/社群預覽(要讓它們爬才有曝光與分享卡)
+// 放行的正牌搜尋引擎/社群預覽/AI 爬蟲(要讓它們爬才有曝光、分享卡與 AI 引用 GEO)
 const GOOD_BOTS =
-  /(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex(bot)?|applebot|facebookexternalhit|twitterbot|linebot|line-poker|whatsapp|telegrambot|pinterest|discordbot)/i;
+  /(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex(bot)?|applebot|facebookexternalhit|twitterbot|linebot|line-poker|whatsapp|telegrambot|pinterest|discordbot|gptbot|oai-searchbot|chatgpt-user|perplexitybot|claudebot|anthropic-ai|claude-web|ccbot|bytespider)/i;
 
 // 明顯的程式/抓取器 UA(非瀏覽器)
 const BAD_UA =
@@ -85,6 +85,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // robots / sitemap / llms 是給爬蟲與工具讀的公開 meta 檔,不經過反爬蟲
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

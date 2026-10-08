@@ -1124,6 +1124,14 @@ img { display: block; max-width: 100%; }
 .blk-embeds { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 12px 0; align-items: start; }
 .blk-embed-item { min-width: 0; }
 
+/* 地區落地頁常見問題(FAQ) */
+.faq-sec { max-width: 760px; }
+.faq-item { border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; margin-bottom: 10px; background: #fff; }
+.faq-item summary { cursor: pointer; padding: 14px 0; font-weight: 700; color: var(--ink); list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after { content: "＋"; color: var(--green); font-weight: 700; }
+.faq-item[open] summary::after { content: "－"; }
+.faq-item p { margin: 0 0 16px; color: var(--text-2); line-height: 1.7; font-size: 14.5px; }
 /* 地區落地頁的「其他地區」連結 */
 .region-links { display: flex; flex-wrap: wrap; gap: 10px; }
 .region-link { font-size: 14px; color: var(--text-2); background: var(--green-soft); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; transition: border-color .15s, color .15s; }
