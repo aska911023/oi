@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sbMaybeRetry } from "@/lib/retry";
+import { tripSlug, extractId } from "@/lib/slug";
 import TripLikeButton from "@/components/trip-like-button";
 import ShareLinkButton from "@/components/share-link-button";
 import SaveTripButton from "@/components/save-trip-button";
@@ -13,7 +14,7 @@ import { TRIP_ITEM_LABEL, type Trip, type TripItem } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
+  const id = extractId((await params).id);
   const sb = await createClient();
   const { data } = await sb.from("trips").select("title, days, nights, region, headcount, summary, is_public").eq("id", id).maybeSingle();
   if (!data) return { title: "找不到行程" };
@@ -22,16 +23,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const meta = `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""} · ${t.headcount} 人`;
   const title = `${t.title}(${meta})`;
   const description = (t.summary || `${meta}的旅遊行程「${t.title}」。在偶宿 O! 看完整每日安排、住宿與景點，一鍵複製成自己的行程。`).slice(0, 150);
+  const path = `/trips/${tripSlug(id, t.title)}`;
   return {
     title, description,
-    alternates: { canonical: `/trips/${id}` },
-    openGraph: { title, description, url: `/trips/${id}`, type: "article" },
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path, type: "article" },
     twitter: { card: "summary_large_image", title, description },
   };
 }
 
 export default async function TripDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const id = extractId((await params).id);
   const sb = await createClient();
   // 連線抖動會重試;真的查無才 404
   const data = await sbMaybeRetry<Trip>(() => sb.from("trips").select("*").eq("id", id).maybeSingle(), "trip");
@@ -69,7 +71,7 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
           <div className="trip-view-actions">
             <span className="trip-actions" style={{ marginTop: 0, paddingTop: 0, borderTop: "none" }}>
               <TripLikeButton tripId={trip.id} count={likeCount || 0} />
-              <ShareLinkButton path={`/trips/${trip.id}`} tripId={trip.id} />
+              <ShareLinkButton path={`/trips/${tripSlug(trip.id, trip.title)}`} tripId={trip.id} />
               <SaveTripButton tripId={trip.id} />
             </span>
           </div>

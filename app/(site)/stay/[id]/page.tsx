@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { sbMaybeRetry } from "@/lib/retry";
+import { staySlug, extractId } from "@/lib/slug";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -17,7 +18,7 @@ import type { Stay, RoomType } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
+  const id = extractId((await params).id);
   const sb = await createClient();
   const { data } = await sb.from("stays").select("name, region, town, category, description, image, images").eq("id", id).maybeSingle();
   if (!data) return { title: "找不到民宿" };
@@ -26,10 +27,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = `${s.name} · ${place}${s.category || "民宿"}`;
   const description = (s.description || `位於${place}的${s.category || "民宿"}「${s.name}」。在偶宿 O! 看房型、價格與周邊景點，一鍵聯繫訂房。`).slice(0, 150);
   const img = (s.images && s.images[0]) || s.image || undefined;
+  const path = `/stay/${staySlug(id, s.region, s.name)}`;
   return {
     title, description,
-    alternates: { canonical: `/stay/${id}` },
-    openGraph: { title, description, url: `/stay/${id}`, type: "website", images: img ? [img] : undefined },
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path, type: "website", images: img ? [img] : undefined },
     twitter: { card: "summary_large_image", title, description, images: img ? [img] : undefined },
   };
 }
@@ -40,7 +42,7 @@ const toImgs = (image?: string, images?: string[] | null) => (images && images.l
 const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
 export default async function StayPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const id = extractId((await params).id);
   const sb = await createClient();
   // 連線抖動會重試;真的查無才 404(避免正常民宿被誤判 404,連帶傷 SEO)
   const stay = await sbMaybeRetry<Stay>(() => sb.from("stays").select("*").eq("id", id).maybeSingle(), "stay");
@@ -80,7 +82,7 @@ export default async function StayPage({ params }: { params: Promise<{ id: strin
     name: s.name,
     description: s.description || undefined,
     image: ldImgs.length ? ldImgs : undefined,
-    url: `https://www.oi-stay.com/stay/${s.id}`,
+    url: `https://www.oi-stay.com/stay/${staySlug(s.id, s.region, s.name)}`,
     address: {
       "@type": "PostalAddress",
       addressCountry: "TW",

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { tripSlug } from "@/lib/slug";
 import HeroCarousel from "@/components/hero-carousel";
 import MediaEmbed from "@/components/media-embed";
 import SaveTripButton from "@/components/save-trip-button";
@@ -23,6 +24,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
   const photos = (t.items || []).map((it) => it.image).filter(Boolean) as string[];
   const isMedia = t.kind === "media";
   const embedUrl = (t.embed_urls || [])[0];
+  const to = `/trips/${tripSlug(t.id, t.title)}`; // 帶標題的網址(分享好看 + SEO)
   const isOwner = !!viewerId && viewerId === t.owner_id;
 
   // 作者自己的貼文:到哪都給 ⋯ 管理選單(公開切換/複製連結/刪除;行程才有編輯)
@@ -33,7 +35,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
     router.refresh();
   }
   async function ownerCopy() {
-    const url = `${window.location.origin}/trips/${t.id}`;
+    const url = `${window.location.origin}${to}`;
     try { await navigator.clipboard.writeText(url); alert("已複製分享連結:\n" + url); }
     catch { prompt("複製這個連結分享:", url); }
   }
@@ -60,7 +62,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
   // 整張卡片可點進行程;但按到互動元素(連結/按鈕/輸入框/留言區/影音)時不導航,交給它們自己處理。
   function cardClick(e: React.MouseEvent) {
     if ((e.target as HTMLElement).closest("a, button, input, textarea, iframe, .ig-comments, .ig-menu, .ig-media-embed")) return;
-    router.push(`/trips/${t.id}`);
+    router.push(to);
   }
   const author = t.owner_name || "旅人";
   const sub = isMedia ? "影音分享" : `${t.days} 天${t.nights ? ` ${t.nights} 夜` : ""}${t.region ? " · " + t.region : ""}`;
@@ -95,7 +97,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
       {isMedia && embedUrl ? (
         <div className="ig-media ig-media-embed"><MediaEmbed url={embedUrl} /></div>
       ) : photos.length > 0 ? (
-        <Link href={`/trips/${t.id}`} className="ig-media"><HeroCarousel images={photos} height={430} /></Link>
+        <Link href={to} className="ig-media"><HeroCarousel images={photos} height={430} /></Link>
       ) : null}
 
       <div className="ig-actions">
@@ -104,7 +106,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z" /></svg>
           {(t.comment_count || 0) > 0 && <span className="trip-act-n">{t.comment_count}</span>}
         </button>
-        <ShareLinkButton path={`/trips/${t.id}`} tripId={t.id} />
+        <ShareLinkButton path={to} tripId={t.id} />
         <span style={{ marginLeft: "auto" }}><SaveTripButton tripId={t.id} /></span>
       </div>
 
@@ -118,7 +120,7 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
       })()}
 
       <div className="ig-caption">
-        <Link href={`/trips/${t.id}`} className="ig-title">{t.title}</Link>
+        <Link href={to} className="ig-title">{t.title}</Link>
         {t.summary && <p className="ig-cap-sum" style={{ whiteSpace: "pre-line" }}>{t.summary}</p>}
       </div>
       {!isMedia && (

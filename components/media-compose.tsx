@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { tripSlug } from "@/lib/slug";
 
 // 一般使用者的「分享影音/IG」:貼連結 + 標題就發,存成 trips(kind=media),
 // 讚/留言/追蹤/通知全部沿用既有行程那套。不用規劃天數/景點。
@@ -39,7 +40,7 @@ export default function MediaCompose({ loggedIn, myName, myAvatar }: { loggedIn:
     setBusy(false);
     if (error) { alert("分享失敗:" + error.message); return; }
     setOpen(false);
-    router.push(`/trips/${data.id}`);
+    router.push(`/trips/${tripSlug(data.id, title.trim())}`);
     router.refresh();
   }
 
