@@ -20,10 +20,16 @@ export default function RoleViewSwitcher({ isRealAdmin, viewAs, compact = false 
   if (!isRealAdmin) return null;
 
   function pick(v: ViewRole | "self") {
-    if (v === "self") document.cookie = "oi_view_as=; path=/; max-age=0";
-    else document.cookie = `oi_view_as=${v}; path=/; max-age=86400`;
     setOpen(false);
-    router.refresh();
+    if (v === "self") {
+      // 結束預覽 → 清掉並跳回總後台
+      document.cookie = "oi_view_as=; path=/; max-age=0";
+      router.push("/admin");
+    } else {
+      // 選了角色 → 直接去前台首頁看
+      document.cookie = `oi_view_as=${v}; path=/; max-age=86400`;
+      router.push("/");
+    }
   }
 
   // 前台只在「預覽中」顯示一條結束列(切換鈕本體收在後台)
