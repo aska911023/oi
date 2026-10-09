@@ -28,10 +28,11 @@ export default async function Home() {
     <main>
       <Explore rooms={rooms} total={total} regions={regions} categories={categories} blocks={settings.blocks} searchHint={settings.search_hint} heroLayout={settings.hero_layout} heroSplitRatio={settings.hero_split_ratio} />
       {regions.length > 0 && (
-        <section className="shell" style={{ paddingBottom: 54 }}>
-          <h2 className="serif" style={{ fontSize: 20, marginBottom: 14 }}>探索各地區民宿</h2>
+        <section className="shell dest-home" style={{ paddingBottom: 54 }}>
+          <h2 className="serif" style={{ fontSize: 22, marginBottom: 4 }}>熱門目的地</h2>
+          <p style={{ color: "var(--text-2)", marginBottom: 16, fontSize: 14.5 }}>點一個城市 → 看它的住宿、景點、美食、停車與地圖。</p>
           <div className="region-links">
-            {regions.map((r) => <Link key={r} href={`/stays/${encodeURIComponent(r)}`} className="region-link">{r}民宿</Link>)}
+            {regions.map((r) => <Link key={r} href={`/${encodeURIComponent(r)}`} className="region-link">{r}</Link>)}
           </div>
         </section>
       )}

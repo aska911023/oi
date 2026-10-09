@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
+import DestinationsNav from "@/components/destinations-nav";
+import SearchAutocomplete from "@/components/search-autocomplete";
 import NotificationBell from "@/components/notification-bell";
 import Avatar from "@/components/avatar";
 import type { Viewer } from "@/lib/viewer";
@@ -14,7 +16,9 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
       <div className="shell">
         <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
+        <div className="topsearch"><SearchAutocomplete /></div>
         <nav className="topnav">
+          <DestinationsNav />
           <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>

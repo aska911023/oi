@@ -1174,3 +1174,42 @@ img { display: block; max-width: 100%; }
 .map-sec { margin: 8px 0 26px; }
 .map-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 13px; color: var(--text-2); }
 .map-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+/* ── 目的地下拉(header)── */
+.destnav { position: relative; display: inline-block; }
+.destnav-btn { background: none; border: none; cursor: pointer; font: inherit; color: inherit; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+.destnav-caret { font-size: 10px; opacity: .7; }
+.destnav-backdrop { position: fixed; inset: 0; z-index: 40; }
+.destnav-menu { position: absolute; top: calc(100% + 14px); left: 0; z-index: 50; display: grid; grid-template-columns: repeat(5, minmax(70px, 1fr)); gap: 6px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 16px 20px; }
+.destnav-col { display: flex; flex-direction: column; gap: 2px; }
+.destnav-h { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+.destnav-link { font-size: 14px; color: var(--text); padding: 3px 0; white-space: nowrap; }
+.destnav-link:hover { color: var(--green); }
+
+/* 首頁熱門目的地:大一點的城市鈕 */
+.dest-home .region-link { font-size: 15px; padding: 9px 18px; }
+
+/* ── 手機底部導航 ── */
+.bottomnav { display: none; }
+@media (max-width: 860px) {
+  .bottomnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -4px 20px rgba(18, 40, 33, .07); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .bn-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 11px; text-decoration: none; padding: 2px 0; }
+  .bn-item.on { color: var(--green); }
+  .bn-ic svg { width: 22px; height: 22px; display: block; }
+  body { padding-bottom: 60px; }
+}
+
+/* ── 搜尋 autocomplete ── */
+.topsearch { display: none; }
+@media (min-width: 980px) { .topsearch { display: block; margin: 0 auto 0 28px; } }
+.sac { position: relative; width: 100%; }
+.topsearch .sac { max-width: 260px; }
+.sac-ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; }
+.sac-input { width: 100%; height: 40px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); color: var(--text); font-size: 14px; outline: none; transition: border-color .15s; }
+.sac-input:focus { border-color: var(--green); }
+.sac-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 55; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; max-height: 60vh; overflow-y: auto; }
+.sac-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--text); }
+.sac-row:hover, .sac-row.on { background: var(--green-soft); }
+.sac-label { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sac-sub { font-size: 12px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.sac-empty { padding: 14px 12px; color: var(--muted); font-size: 14px; }

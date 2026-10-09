@@ -5,6 +5,7 @@ import EntryGate from "@/components/entry-gate";
 import PageViewTracker from "@/components/page-view-tracker";
 import ScrollTop from "@/components/scroll-top";
 import CompareBar from "@/components/compare-bar";
+import BottomNav from "@/components/bottom-nav";
 import RoleViewSwitcher from "@/components/role-view-switcher";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
@@ -24,7 +25,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     "@context": "https://schema.org",
     "@graph": [
       { "@type": "Organization", "@id": "https://www.oi-stay.com/#org", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", logo: settings.logo_image || "https://www.oi-stay.com/icon.png", ...(socials.length ? { sameAs: socials } : {}) },
-      { "@type": "WebSite", "@id": "https://www.oi-stay.com/#website", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", inLanguage: "zh-TW", publisher: { "@id": "https://www.oi-stay.com/#org" } },
+      { "@type": "WebSite", "@id": "https://www.oi-stay.com/#website", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", inLanguage: "zh-TW", publisher: { "@id": "https://www.oi-stay.com/#org" }, potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: "https://www.oi-stay.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
     ],
   };
   return (
@@ -72,6 +73,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <a href="/api/_t" className="hp-trap" aria-hidden="true" tabIndex={-1} rel="nofollow noindex">請勿點擊</a>
       </footer>
       <CompareBar />
+      <BottomNav />
     </CompareProvider>
   );
 }
