@@ -11,6 +11,7 @@ import PhotoCarousel from "@/components/photo-carousel";
 import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
+import AddToTrip from "@/components/add-to-trip";
 
 const PAGE = 24;
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
@@ -271,6 +272,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
                     {copy.cta} {I.out}
                   </a>
                 )}
+                <AddToTrip type={kindState} refId={active.id} name={active.name} region={active.region} />
                 <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
               </div>
 
