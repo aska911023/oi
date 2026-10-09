@@ -9,6 +9,7 @@ import { POI_KINDS, type RentalShop, type RentalPlan } from "@/lib/types";
 import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
+import AddToTrip from "@/components/add-to-trip";
 
 const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
 
@@ -189,6 +190,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
                 <a className="btn btn-primary" href={mapHref(active)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 150 }}>{I.map} 取車地點</a>
                 {active.website && <a className="btn btn-ghost" href={active.website} target="_blank" rel="noopener noreferrer">官網 {I.out}</a>}
                 {active.line_url && <a className="btn btn-ghost" href={active.line_url} target="_blank" rel="noopener noreferrer">LINE 預約</a>}
+                <AddToTrip type="rental" refId={active.id} name={active.name} region={active.region} />
                 <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
               </div>
 

@@ -5,9 +5,10 @@ import { useState } from "react";
 // entity 頁的「加入行程」:寫進 localStorage 草稿,/plan 開新行程時自動帶入。
 // 不需登入也能先丟進草稿;到規劃頁再整理/存檔。
 const KEY = "oi_trip_draft";
-type DraftItem = { type: "stay" | "attraction" | "food" | "parking"; refId: string; name: string; region?: string };
+type TripDraftType = "stay" | "attraction" | "food" | "parking" | "rental" | "station";
+type DraftItem = { type: TripDraftType; refId: string; name: string; region?: string };
 
-export default function AddToTrip({ type, refId, name, region }: DraftItem) {
+export default function AddToTrip({ type, refId, name, region, compact = false }: DraftItem & { compact?: boolean }) {
   const [added, setAdded] = useState(false);
 
   function add() {
@@ -19,6 +20,15 @@ export default function AddToTrip({ type, refId, name, region }: DraftItem) {
       window.dispatchEvent(new Event("oi-trip-draft")); // 通知浮動草稿籃更新
       setAdded(true);
     } catch { /* ignore */ }
+  }
+
+  if (compact) {
+    return (
+      <button type="button" className={"att-compact" + (added ? " on" : "")} onClick={add} disabled={added}
+        title={added ? "已加入行程" : "加入行程"} aria-label={added ? "已加入行程" : "加入行程"}>
+        {added ? "✓" : "＋ 行程"}
+      </button>
+    );
   }
 
   return (

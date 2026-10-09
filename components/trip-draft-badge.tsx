@@ -7,7 +7,7 @@ import Link from "next/link";
 // 草稿存 localStorage oi_trip_draft;靠自訂事件 oi-trip-draft 即時同步。
 const KEY = "oi_trip_draft";
 type DraftItem = { type: string; refId: string; name: string; region?: string };
-const LABEL: Record<string, string> = { stay: "住宿", attraction: "景點", food: "美食", parking: "停車" };
+const LABEL: Record<string, string> = { stay: "住宿", attraction: "景點", food: "美食", parking: "停車", rental: "租車", station: "車站" };
 
 function read(): DraftItem[] {
   try { const r = localStorage.getItem(KEY); const a = r ? JSON.parse(r) : []; return Array.isArray(a) ? a : []; } catch { return []; }

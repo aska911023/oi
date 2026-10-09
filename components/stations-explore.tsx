@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { POI_KINDS, type Station } from "@/lib/types";
+import AddToTrip from "@/components/add-to-trip";
 
 const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
 
@@ -59,11 +60,14 @@ export default function StationsExplore({ stations }: { stations: Station[] }) {
         <div className="station-grid">
           {results.length === 0 && <div className="empty">沒有符合的車站。</div>}
           {results.map((s) => (
-            <a key={s.id} className="station-chip" href={mapHref(s)} target="_blank" rel="noopener noreferrer">
-              <span className={"st-badge " + s.kind}>{s.kind === "hsr" ? "高鐵" : "台鐵"}</span>
-              <span className="st-name">{s.name}</span>
-              <small>{s.region}</small>
-            </a>
+            <div key={s.id} className="station-chip">
+              <a className="st-link" href={mapHref(s)} target="_blank" rel="noopener noreferrer">
+                <span className={"st-badge " + s.kind}>{s.kind === "hsr" ? "高鐵" : "台鐵"}</span>
+                <span className="st-name">{s.name}</span>
+                <small>{s.region}</small>
+              </a>
+              <AddToTrip type="station" refId={s.id} name={(s.kind === "hsr" ? "高鐵" : "台鐵") + s.name} region={s.region} compact />
+            </div>
           ))}
         </div>
         <p className="sample-note">點車站可在 Google 地圖開啟。</p>
