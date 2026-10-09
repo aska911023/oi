@@ -12,6 +12,7 @@ import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import AddToTrip from "@/components/add-to-trip";
+import PlacesMap, { type MapPoint } from "@/components/places-map";
 
 const PAGE = 24;
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
@@ -33,9 +34,11 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ places, total = 0, kind, regions = [], lockedRegion }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[]; lockedRegion?: string }) {
+export default function PlacesExplore({ places, total = 0, kind, regions = [], lockedRegion, mapPoints }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[]; lockedRegion?: string; mapPoints?: MapPoint[] }) {
   const cityMode = !!lockedRegion; // 城市頁:鎖定縣市、隱藏跨區篩選/分類tab/通用標題(標題由伺服器頁出)
+  const hasMap = !!(mapPoints && mapPoints.length); // 左列表右地圖聯動
   const [kw, setKw] = useState("");
+  const [hoverId, setHoverId] = useState<string | null>(null);
   const [region, setRegion] = useState(lockedRegion || "all");
   const [tags, setTags] = useState<string[]>([]);
   const [active, setActive] = useState<Place | null>(null);
@@ -169,11 +172,14 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
           <div className="st"><h2 className="serif">{copy.title}</h2><span className="count">{rpcTotal} 筆</span></div>
         </div>
 
+        <div className={"places-body" + (hasMap ? " split" : "")}>
         <div className="cards">
           {results.length === 0 && <div className="empty">{copy.empty}</div>}
           {results.map((p) => (
             <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
-              onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}>
+              onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}
+              onMouseEnter={hasMap ? () => setHoverId(p.id) : undefined}
+              onMouseLeave={hasMap ? () => setHoverId(null) : undefined}>
               <div className={"photo" + (toImgs(p.image, p.images).length ? "" : " noimg")}>
                 {toImgs(p.image, p.images).length ? <PhotoCarousel images={toImgs(p.image, p.images)} alt={p.name} width={640} /> : <div className="photo-ph">{I.map}</div>}
                 {p.featured && <span className="tag-feat">精選</span>}
@@ -186,6 +192,8 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
               </div>
             </div>
           ))}
+        </div>
+          {hasMap && <div className="places-mapcol"><PlacesMap points={mapPoints!} highlightId={hoverId} /></div>}
         </div>
 
         {canLoadMore && (

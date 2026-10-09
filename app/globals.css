@@ -1175,6 +1175,17 @@ img { display: block; max-width: 100%; }
 .oi-pin-attraction { background: #2f9e44; }
 .oi-pin-food { background: #e03131; }
 .oi-pin-parking { background: #1971c2; }
+.oi-pin-dot.hi { width: 20px; height: 20px; box-shadow: 0 0 0 4px rgba(23, 99, 90, .35), 0 2px 6px rgba(0, 0, 0, .45); }
+
+/* 左列表右地圖 聯動(城市分類頁) */
+.places-body.split { display: block; }
+@media (min-width: 1024px) {
+  .places-body.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); gap: 24px; align-items: start; }
+  .places-body.split .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+  .places-mapcol { position: sticky; top: 92px; }
+  .places-mapcol .oi-map { height: calc(100vh - 130px); min-height: 440px; }
+}
+@media (max-width: 1023px) { .places-mapcol { margin-top: 16px; } .places-mapcol .oi-map { height: 300px; } }
 /* 地圖區塊(列表頁用) */
 .map-sec { margin: 8px 0 26px; }
 .map-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 13px; color: var(--text-2); }

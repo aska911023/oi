@@ -6,7 +6,6 @@ import { isCity, SECTIONS, SECTION_SET, getCityPlaces, getCityTrips, getCityMapP
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import PlacesExplore from "@/components/places-explore";
-import PlacesMap from "@/components/places-map";
 import TripCard from "@/components/trip-card";
 import type { PoiKind } from "@/lib/types";
 
@@ -132,9 +131,8 @@ export default async function CitySectionPage({ params }: { params: Promise<{ ci
         <div className="region-links" style={{ marginTop: 14 }}>
           {SECTIONS.filter((s) => s.seg !== section).map((s) => <Link key={s.seg} href={`/${encodeURIComponent(city)}/${s.seg}`} className="region-link">{city}{s.label}</Link>)}
         </div>
-        {points.length > 0 && <div className="map-sec"><PlacesMap points={points} height={380} /></div>}
       </div>
-      <PlacesExplore places={places} total={total} kind={kind} lockedRegion={city} />
+      <PlacesExplore places={places} total={total} kind={kind} lockedRegion={city} mapPoints={points} />
     </main>
   );
 }
