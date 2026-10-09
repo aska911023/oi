@@ -1213,3 +1213,8 @@ img { display: block; max-width: 100%; }
 .sac-label { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sac-sub { font-size: 12px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 .sac-empty { padding: 14px 12px; color: var(--muted); font-size: 14px; }
+
+/* header nav 不斷字 + 搜尋圖示 */
+.topnav a, .destnav-btn { white-space: nowrap; }
+.topnav-search { display: inline-flex; align-items: center; color: var(--text-2); }
+.topnav-search:hover { color: var(--green); }
