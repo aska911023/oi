@@ -9,6 +9,7 @@ import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
 import ShareStayButton from "@/components/share-stay-button";
 import MediaEmbed from "@/components/media-embed";
+import { breadcrumbLd } from "@/lib/seo";
 import type { Stay, RoomType } from "@/lib/types";
 
 const toImgs = (image?: string, images?: string[] | null) => (images && images.length ? images : image ? [image] : []);
@@ -58,10 +59,17 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
     aggregateRating: reviews.length ? { "@type": "AggregateRating", ratingValue: Number(avg.toFixed(1)), reviewCount: reviews.length } : undefined,
     sameAs: sameAs.length ? sameAs : undefined,
   };
+  const crumbLd = breadcrumbLd([
+    { name: "偶宿 O!", path: "/" },
+    { name: s.region, path: `/${enc(s.region)}` },
+    { name: `${s.region}住宿`, path: `/${enc(s.region)}/hotels` },
+    { name: s.name, path: `/${enc(s.region)}/hotel/${enc(s.slug || s.id)}` },
+  ]);
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbLd) }} />
       <BackLink fallback={`/${enc(s.region)}/hotels`} label="← 回探索" />
 
       <div className="shop">

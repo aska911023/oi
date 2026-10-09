@@ -73,3 +73,42 @@ export async function getPlaceBySlug(kind: PoiKind, param: string): Promise<Plac
   if (!data) { const uuid = extractUuid(param); if (uuid) ({ data } = await sb.from(table).select("*").eq("id", uuid).maybeSingle()); }
   return (data as Place) || null;
 }
+
+// ── 附近互連(entity_relationship_network):同縣市 + 有經緯度則依距離排序 ──
+export type NearItem = { id: string; name: string; href: string; dist?: number };
+type Geo = { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null };
+const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+  const R = 6371, dLat = (bLat - aLat) * Math.PI / 180, dLng = (bLng - aLng) * Math.PI / 180;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(aLat * Math.PI / 180) * Math.cos(bLat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
+
+export async function getNearby(region: string, lat?: number | null, lng?: number | null, excludeId?: string): Promise<{ hotels: NearItem[]; attractions: NearItem[]; restaurants: NearItem[]; parking: NearItem[] }> {
+  const empty = { hotels: [] as NearItem[], attractions: [] as NearItem[], restaurants: [] as NearItem[], parking: [] as NearItem[] };
+  if (!hasSupabase()) return empty;
+  try {
+    const sb = createPublicClient();
+    const cols = "id,name,slug,lat,lng";
+    const [st, at, fo, pa] = await Promise.all([
+      sb.from("stays").select(cols).eq("published", true).eq("approved", true).eq("visibility", "published").eq("region", region).limit(30),
+      sb.from("attractions").select(cols).eq("published", true).eq("region", region).limit(30),
+      sb.from("restaurants").select(cols).eq("published", true).eq("region", region).limit(30),
+      sb.from("parking_lots").select(cols).eq("published", true).eq("region", region).limit(30),
+    ]);
+    const enc = encodeURIComponent;
+    const near = (rows: Geo[] | null, hrefFn: (r: Geo) => string): NearItem[] => {
+      const items = (rows || []).filter((r) => r.id !== excludeId).map((r) => ({
+        id: r.id, name: r.name, href: hrefFn(r),
+        dist: (lat != null && lng != null && r.lat != null && r.lng != null) ? haversineKm(lat, lng, r.lat, r.lng) : undefined,
+      }));
+      items.sort((a, b) => (a.dist ?? 1e9) - (b.dist ?? 1e9));
+      return items.slice(0, 6);
+    };
+    return {
+      hotels: near(st.data as Geo[], (r) => `/${enc(region)}/hotel/${enc(r.slug || r.id)}`),
+      attractions: near(at.data as Geo[], (r) => `/${enc(region)}/attraction/${enc(r.slug || r.id)}`),
+      restaurants: near(fo.data as Geo[], (r) => `/${enc(region)}/restaurant/${enc(r.slug || r.id)}`),
+      parking: near(pa.data as Geo[], (r) => `/${enc(region)}/parking/${enc(r.slug || r.id)}`),
+    };
+  } catch { return empty; }
+}

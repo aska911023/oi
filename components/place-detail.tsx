@@ -4,7 +4,8 @@ import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import { DETAILS, type WeekHour } from "@/lib/places-config";
-import { KIND_SINGULAR } from "@/lib/city";
+import { KIND_SINGULAR, getNearby } from "@/lib/city";
+import { breadcrumbLd } from "@/lib/seo";
 import type { Place, PoiKind } from "@/lib/types";
 
 const enc = encodeURIComponent;
@@ -19,8 +20,8 @@ const KIND_META: Record<PoiKind, { label: string; seg: string; cta: string; sche
 const MAP = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>;
 const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
-// 景點 / 美食 / 停車:伺服器端詳情頁(可被索引)+ per-type JSON-LD。
-export default function PlaceDetail({ place: p, kind }: { place: Place; kind: PoiKind }) {
+// 景點 / 美食 / 停車:伺服器端詳情頁(可被索引)+ per-type JSON-LD + 附近互連。
+export default async function PlaceDetail({ place: p, kind }: { place: Place; kind: PoiKind }) {
   const meta = KIND_META[kind];
   const imgs = toImgs(p.image, p.images);
   const detail = (p.details || {}) as Record<string, unknown>;
@@ -57,9 +58,25 @@ export default function PlaceDetail({ place: p, kind }: { place: Place; kind: Po
     if (dText("price_level")) jsonLd.priceRange = dText("price_level");
   }
 
+  const entityPath = `/${enc(p.region)}/${KIND_SINGULAR[kind]}/${enc(p.slug || p.id)}`;
+  const crumbLd = breadcrumbLd([
+    { name: "偶宿 O!", path: "/" },
+    { name: p.region, path: `/${enc(p.region)}` },
+    { name: `${p.region}${meta.label}`, path: `/${enc(p.region)}/${meta.seg}` },
+    { name: p.name, path: entityPath },
+  ]);
+  const nb = await getNearby(p.region, p.lat, p.lng, p.id);
+  const nearbyGroups = [
+    { label: "附近住宿", items: nb.hotels, more: `/${enc(p.region)}/hotels` },
+    { label: "附近景點", items: nb.attractions, more: `/${enc(p.region)}/attractions` },
+    { label: "附近美食", items: nb.restaurants, more: `/${enc(p.region)}/restaurants` },
+    { label: "附近停車", items: nb.parking, more: `/${enc(p.region)}/parking` },
+  ].filter((g) => g.items.length > 0);
+
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbLd) }} />
       <nav className="card-eyebrow" style={{ marginBottom: 10 }}>
         <Link href="/" className="lnk">偶宿 O!</Link> · <Link href={`/${enc(p.region)}`} className="lnk">{p.region}</Link> · <Link href={`/${enc(p.region)}/${meta.seg}`} className="lnk">{p.region}{meta.label}</Link>
       </nav>
@@ -118,6 +135,18 @@ export default function PlaceDetail({ place: p, kind }: { place: Place; kind: Po
 
         {dText("attribution") && (
           <p className="data-src">資料來源:{dText("attribution")}{dText("data_updated") && `,更新於 ${dText("data_updated")}`}。實際營業狀況請以店家公告為準。</p>
+        )}
+
+        {nearbyGroups.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">附近推薦</h2>
+            {nearbyGroups.map((g) => (
+              <div className="nearby-group" key={g.label}>
+                <div className="nearby-head"><span>{g.label}</span><Link className="lnk" href={g.more}>更多 →</Link></div>
+                <div className="nearby-chips">{g.items.map((it) => <Link key={it.id} href={it.href} className="am-chip">{it.name}</Link>)}</div>
+              </div>
+            ))}
+          </div>
         )}
 
         <div className="shop-block" style={{ marginTop: 22 }}>

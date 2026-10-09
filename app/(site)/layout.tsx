@@ -18,8 +18,18 @@ export const dynamic = "force-dynamic";
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
   const viewer = await getViewer();
+  // 站級結構化資料:品牌實體(Organization)+ 網站(WebSite),讓 Google 建立 oi-stay 品牌 Entity
+  const socials = [settings.contact_fb, settings.contact_ig].filter((u): u is string => !!u && /^https?:\/\//.test(u));
+  const siteLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "@id": "https://www.oi-stay.com/#org", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", logo: settings.logo_image || "https://www.oi-stay.com/icon.png", ...(socials.length ? { sameAs: socials } : {}) },
+      { "@type": "WebSite", "@id": "https://www.oi-stay.com/#website", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", inLanguage: "zh-TW", publisher: { "@id": "https://www.oi-stay.com/#org" } },
+    ],
+  };
   return (
     <CompareProvider>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteLd) }} />
       <SiteTheme s={settings} />
       <ScrollTop />
       <PageViewTracker />
