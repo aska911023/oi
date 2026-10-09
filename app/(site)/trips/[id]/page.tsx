@@ -71,7 +71,12 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
       if (r.region) hrefMap.set(r.id, `/${encodeURIComponent(r.region)}/${TYPE_KIND[type]}/${encodeURIComponent(r.slug || r.id)}`);
     });
   }));
-  const itemHref = (it: TripItem) => (it.refId ? hrefMap.get(it.refId) : undefined);
+  const itemHref = (it: TripItem) => {
+    if (it.refId && hrefMap.get(it.refId)) return hrefMap.get(it.refId); // 住宿/景點/美食/停車 → entity 頁
+    if (it.type === "rental") return "/rentals"; // 租車 → 租車瀏覽頁
+    if (it.type === "station") return "/stations"; // 車站 → 車站瀏覽頁
+    return undefined;
+  };
 
   return (
       <main className="shell" style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 780 }}>
