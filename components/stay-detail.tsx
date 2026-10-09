@@ -1,0 +1,159 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import SaveButton from "@/components/save-button";
+import ReviewForm from "@/components/review-form";
+import PhotoCarousel from "@/components/photo-carousel";
+import RoomList from "@/components/room-list";
+import BackLink from "@/components/back-link";
+import TrackView from "@/components/track-view";
+import OutboundLink from "@/components/outbound-link";
+import ShareStayButton from "@/components/share-stay-button";
+import MediaEmbed from "@/components/media-embed";
+import type { Stay, RoomType } from "@/lib/types";
+
+const toImgs = (image?: string, images?: string[] | null) => (images && images.length ? images : image ? [image] : []);
+const OUT = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg>;
+const enc = encodeURIComponent;
+
+// 民宿詳情(server 元件;城市優先網址 /{region}/hotel/{slug} 使用)
+export default async function StayDetail({ stay: s }: { stay: Stay }) {
+  const sb = await createClient();
+  const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", s.id).eq("published", true).order("sort").order("price");
+  const rooms = (roomsData as RoomType[]) || [];
+  const amenities = (s.amenities || "").split("、").map((a) => a.trim()).filter(Boolean);
+
+  const { data: revData } = await sb.from("reviews").select("rating, comment, created_at, profiles(display_name)").eq("stay_id", s.id).order("created_at", { ascending: false });
+  const reviews = (revData || []) as unknown as { rating: number; comment: string; created_at: string; profiles: { display_name: string } | null }[];
+  const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
+
+  // 附近推薦(同縣市),chip 直接連到該 entity 的乾淨頁
+  const [na, nf, np, nr] = await Promise.all([
+    sb.from("attractions").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
+    sb.from("restaurants").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
+    sb.from("parking_lots").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
+    sb.from("rental_shops").select("id,name,town").eq("published", true).eq("approved", true).eq("region", s.region).limit(6),
+  ]);
+  type NB = { id: string; name: string; slug?: string; town?: string };
+  const nearby: { label: string; more: string; items: { id: string; name: string; href: string }[] }[] = [
+    { label: "附近景點", more: `/${enc(s.region)}/attractions`, items: ((na.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/attraction/${enc(x.slug || x.id)}` })) },
+    { label: "附近美食", more: `/${enc(s.region)}/restaurants`, items: ((nf.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/restaurant/${enc(x.slug || x.id)}` })) },
+    { label: "附近停車", more: `/${enc(s.region)}/parking`, items: ((np.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/parking/${enc(x.slug || x.id)}` })) },
+    { label: "附近租車", more: `/rentals`, items: ((nr.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/rentals` })) },
+  ].filter((g) => g.items.length > 0);
+
+  const ldImgs = toImgs(s.image, s.images);
+  const roomPrices = rooms.map((r) => Number(r.price)).filter((p) => Number.isFinite(p) && p > 0);
+  const minPrice = roomPrices.length ? Math.min(...roomPrices) : (Number(s.price) > 0 ? Number(s.price) : null);
+  const sameAs = [s.website, s.line_url].filter((u): u is string => !!u && /^https?:\/\//.test(u));
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: s.name,
+    description: s.description || undefined,
+    image: ldImgs.length ? ldImgs : undefined,
+    url: `https://www.oi-stay.com/${enc(s.region)}/hotel/${enc(s.slug || s.id)}`,
+    address: { "@type": "PostalAddress", addressCountry: "TW", addressRegion: s.region || undefined, addressLocality: s.town || undefined, streetAddress: s.address || undefined },
+    geo: s.lat != null && s.lng != null ? { "@type": "GeoCoordinates", latitude: s.lat, longitude: s.lng } : undefined,
+    priceRange: minPrice ? `NT$${minPrice.toLocaleString()} 起` : undefined,
+    aggregateRating: reviews.length ? { "@type": "AggregateRating", ratingValue: Number(avg.toFixed(1)), reviewCount: reviews.length } : undefined,
+    sameAs: sameAs.length ? sameAs : undefined,
+  };
+
+  return (
+    <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BackLink fallback={`/${enc(s.region)}/hotels`} label="← 回探索" />
+
+      <div className="shop">
+        <TrackView stayId={s.id} />
+        {toImgs(s.image, s.images).length > 0 && (
+          <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} /></div>
+        )}
+        <div className="card-eyebrow" style={{ marginTop: 18 }}><Link href={`/${enc(s.region)}`} className="lnk">{s.region}</Link> · {s.town}<span className="dot" />{s.category}</div>
+        <h1 className="serif shop-title">{s.name}</h1>
+        {s.description && <p className="shop-desc">{s.description}</p>}
+
+        {s.address && <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 14, color: "var(--text-2)", marginTop: 10 }}>📍 {s.address}</div>}
+        {(s.check_in || s.check_out) && (
+          <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 14, color: "var(--text-2)", marginTop: 6 }}>
+            🕒 {s.check_in ? `入住 ${s.check_in} 後` : ""}{s.check_in && s.check_out ? " · " : ""}{s.check_out ? `退房 ${s.check_out} 前` : ""}
+          </div>
+        )}
+        {s.license_no && <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13.5, color: "var(--muted)", marginTop: 6 }}>🏛 合法民宿登記證號:{s.license_no}</div>}
+
+        <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
+          {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-primary">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
+          {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${enc(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
+          {(s.address || (s.lat != null && s.lng != null)) && (
+            <OutboundLink type="click_map" stayId={s.id} className="btn btn-ghost"
+              href={s.lat != null && s.lng != null
+                ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${enc((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</OutboundLink>
+          )}
+          <SaveButton stayId={s.id} />
+          <ShareStayButton stayId={s.id} name={s.name} />
+        </div>
+
+        {s.embed_urls && s.embed_urls.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">影片介紹 / 網紅推薦</h2>
+            <div className="embed-list">{s.embed_urls.map((u, i) => <MediaEmbed key={i} url={u} />)}</div>
+          </div>
+        )}
+
+        {amenities.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">設施 / 服務</h2>
+            <div className="m-amenities">{amenities.map((a) => <span key={a} className="am-chip">{a}</span>)}</div>
+          </div>
+        )}
+
+        <div className="shop-block">
+          <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
+          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} />}
+        </div>
+
+        <div className="shop-block">
+          <h2 className="serif shop-h">評價 {reviews.length > 0 && <span className="count">★ {avg.toFixed(1)} · {reviews.length} 則</span>}</h2>
+          <ReviewForm stayId={s.id} />
+          {reviews.length > 0 && (
+            <div className="review-list">
+              {reviews.map((r, i) => (
+                <div className="review-row" key={i}>
+                  <div className="review-top">
+                    <span className="review-stars">{"★".repeat(r.rating)}<span className="review-off">{"★".repeat(5 - r.rating)}</span></span>
+                    <span className="review-name">{r.profiles?.display_name || "旅人"}</span>
+                  </div>
+                  {r.comment && <p className="review-comment">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {nearby.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">附近推薦</h2>
+            {nearby.map((g) => (
+              <div className="nearby-group" key={g.label}>
+                <div className="nearby-head"><span>{g.label}</span><Link className="lnk" href={g.more}>更多 →</Link></div>
+                <div className="nearby-chips">{g.items.map((it) => <Link key={it.id} href={it.href} className="am-chip">{it.name}</Link>)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="shop-block">
+          <h2 className="serif shop-h">附近充電 / 換電 / 加油</h2>
+          <div className="detail-actions">
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${enc((s.region + s.town + " 電動車充電站").trim())}`}>⚡ 找附近充電站</a>
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${enc((s.region + s.town + " Gogoro 換電站").trim())}`}>🔋 找附近換電站(Gogoro)</a>
+            <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${enc((s.region + s.town + " 加油站").trim())}`}>⛽ 找附近加油站</a>
+          </div>
+        </div>
+
+        <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>
+      </div>
+    </main>
+  );
+}

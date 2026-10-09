@@ -14,6 +14,7 @@ import PlaceComments from "@/components/place-comments";
 
 const PAGE = 24;
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
+const SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking" }; // kind → entity 單數段
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -179,7 +180,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
               </div>
               <div className="card-body">
                 <div className="card-eyebrow">{p.region}{p.town ? " · " + p.town : ""}</div>
-                <h3>{p.name}</h3>
+                <h3><Link href={`/${encodeURIComponent(p.region)}/${SINGULAR[kindState]}/${encodeURIComponent(p.slug || p.id)}`} onClick={(e) => e.stopPropagation()} style={{ color: "inherit" }}>{p.name}</Link></h3>
                 <div className="card-desc">{p.description || p.address}</div>
               </div>
             </div>

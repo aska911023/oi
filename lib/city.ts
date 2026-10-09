@@ -6,7 +6,8 @@ import { hasSupabase } from "./stays";
 import { createPublicClient } from "./supabase/public";
 import { sbRetry } from "./retry";
 import { KIND_TABLE } from "./places-config";
-import type { Place, PoiKind, Trip } from "./types";
+import { extractUuid } from "./slug";
+import type { Place, PoiKind, Stay, Trip } from "./types";
 
 export const CITIES: string[] = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 export const isCity = (c: string): boolean => CITIES.includes(c);
@@ -46,4 +47,29 @@ export async function getCityTrips(region: string): Promise<Trip[]> {
       .order("created_at", { ascending: false }).limit(48);
     return (data || []) as Trip[];
   } catch { return []; }
+}
+
+// kind → entity 單數段(詳情頁網址用)
+export const KIND_SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking" };
+
+// 乾淨 entity 網址
+export const stayHref = (region: string, slug: string) => `/${encodeURIComponent(region)}/hotel/${encodeURIComponent(slug)}`;
+export const placeHref = (kind: PoiKind, region: string, slug: string) => `/${encodeURIComponent(region)}/${KIND_SINGULAR[kind]}/${encodeURIComponent(slug)}`;
+
+// 以 slug 取單筆(找不到再用網址裡的 UUID,相容舊連結)
+export async function getStayBySlug(param: string): Promise<Stay | null> {
+  if (!hasSupabase()) return null;
+  const sb = createPublicClient();
+  let { data } = await sb.from("stays").select("*").eq("slug", param).maybeSingle();
+  if (!data) { const uuid = extractUuid(param); if (uuid) ({ data } = await sb.from("stays").select("*").eq("id", uuid).maybeSingle()); }
+  return (data as Stay) || null;
+}
+
+export async function getPlaceBySlug(kind: PoiKind, param: string): Promise<Place | null> {
+  if (!hasSupabase()) return null;
+  const sb = createPublicClient();
+  const table = KIND_TABLE[kind];
+  let { data } = await sb.from(table).select("*").eq("slug", param).maybeSingle();
+  if (!data) { const uuid = extractUuid(param); if (uuid) ({ data } = await sb.from(table).select("*").eq("id", uuid).maybeSingle()); }
+  return (data as Place) || null;
 }

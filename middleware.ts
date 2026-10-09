@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { GEOGRAPHIC_AREAS } from "@/lib/data"; // 純資料(僅 import type),edge 安全
+
+// 縣市集合(判斷 /stay/{slug} 的 slug 前綴是否為縣市,用來推導新網址)
+const CITY_SET = new Set(GEOGRAPHIC_AREAS.flatMap((a) => a.regions));
 
 /* ────────────────────────────────────────────────────────────────
  * 反爬蟲(第二層,伺服器端)— 搭配前端 EntryGate 真人門
@@ -58,6 +62,17 @@ export async function middleware(request: NextRequest) {
     const segs = pathname.slice(7).replace(/\/+$/, "").split("/").filter(Boolean); // 保持 percent-encoded,交給目標頁解碼
     if (segs.length === 1) return NextResponse.redirect(new URL(`/${segs[0]}/hotels`, request.url), 308);
     if (segs.length >= 2) return NextResponse.redirect(new URL(`/${segs[0]}/hotels/${segs[1]}`, request.url), 308);
+  }
+  // /stay/{slug} → /{region}/hotel/{slug}(region 由 slug 前綴推得:slug = make_slug(region-名稱))。
+  // 推不出縣市(舊 /stay/uuid 等)則放行,交給 /stay/[id] 頁(canonical 指向新網址)。
+  if (pathname.startsWith("/stay/")) {
+    const slugEnc = pathname.slice(6).replace(/\/+$/, "");
+    if (slugEnc && !slugEnc.includes("/")) {
+      let decoded = slugEnc;
+      try { decoded = decodeURIComponent(slugEnc); } catch {}
+      const region = decoded.split("-")[0];
+      if (CITY_SET.has(region)) return NextResponse.redirect(new URL(`/${encodeURIComponent(region)}/hotel/${slugEnc}`, request.url), 308);
+    }
   }
 
   const ip = clientIp(request);

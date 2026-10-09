@@ -169,6 +169,7 @@ export interface Poi {
 // 景點/美食/停車(三張獨立表共用形狀:base + details jsonb)
 export interface Place {
   id: string;
+  slug?: string; // 乾淨網址用(/{region}/{kind}/{slug})
   name: string;
   region: string;
   town: string;

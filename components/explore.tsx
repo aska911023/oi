@@ -186,7 +186,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
           {rows.length === 0 && <div className="empty">找不到符合條件的房型,換個關鍵字或風格試試。</div>}
           {rows.map((r) => (
             <div className="card-wrap" key={r.id}>
-              <Link href={`/stay/${r.stay_slug || r.stay_id}`} className="card">
+              <Link href={`/${encodeURIComponent(r.region)}/hotel/${encodeURIComponent(r.stay_slug || r.stay_id)}`} className="card">
                 <div className={"photo" + (toImgs(r.image, r.images).length ? "" : " noimg")}>
                   {toImgs(r.image, r.images).length
                     ? <PhotoCarousel images={toImgs(r.image, r.images)} alt={r.stay_name} width={640} />

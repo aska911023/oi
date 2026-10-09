@@ -7,7 +7,7 @@ export default function RoomTile({ r }: { r: RoomCard }) {
   const img = (r.images && r.images[0]) || r.image || "";
   return (
     <div className="card-wrap">
-      <Link href={`/stay/${r.stay_slug || r.stay_id}`} className="card">
+      <Link href={`/${encodeURIComponent(r.region)}/hotel/${encodeURIComponent(r.stay_slug || r.stay_id)}`} className="card">
         <div className={"photo" + (img ? "" : " noimg")}>
           {img
             ? // eslint-disable-next-line @next/next/no-img-element
