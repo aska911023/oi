@@ -53,6 +53,26 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
   const dayList = isMedia ? [] : Array.from({ length: trip.days }, (_, i) => i + 1);
   const itemsOfDay = (d: number) => (trip.items || []).filter((it: TripItem) => it.day === d);
 
+  // 行程站點連回 entity 頁(補斷鏈):依 refId 查出各站的 region/slug,只連已上架的頁。
+  const TYPE_TABLE: Record<string, string> = { stay: "stays", attraction: "attractions", food: "restaurants", parking: "parking_lots" };
+  const TYPE_KIND: Record<string, string> = { stay: "hotel", attraction: "attraction", food: "restaurant", parking: "parking" };
+  const idsByType: Record<string, string[]> = {};
+  for (const it of (trip.items || []) as TripItem[]) {
+    if (it.refId && TYPE_TABLE[it.type]) (idsByType[it.type] ||= []).push(it.refId);
+  }
+  const hrefMap = new Map<string, string>();
+  await Promise.all(Object.entries(idsByType).map(async ([type, ids]) => {
+    const uniq = Array.from(new Set(ids));
+    if (!uniq.length) return;
+    let q = sb.from(TYPE_TABLE[type]).select("id,slug,region").in("id", uniq).eq("published", true);
+    if (type === "stay") q = q.eq("approved", true).eq("visibility", "published");
+    const { data: rows } = await q;
+    (rows || []).forEach((r: { id: string; slug?: string; region?: string }) => {
+      if (r.region) hrefMap.set(r.id, `/${encodeURIComponent(r.region)}/${TYPE_KIND[type]}/${encodeURIComponent(r.slug || r.id)}`);
+    });
+  }));
+  const itemHref = (it: TripItem) => (it.refId ? hrefMap.get(it.refId) : undefined);
+
   return (
       <main className="shell" style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 780 }}>
         <Link href="/trips" className="lnk">← 回行程分享牆</Link>
@@ -95,7 +115,9 @@ export default async function TripDetail({ params }: { params: Promise<{ id: str
                     <li key={it.id}>
                       <span className="tv-time">{it.time || "彈性"}</span>
                       <span className={"ti-type ti-" + it.type}>{TRIP_ITEM_LABEL[it.type]}</span>
-                      <span className="tv-name">{it.name}</span>
+                      {itemHref(it)
+                        ? <Link href={itemHref(it)!} className="tv-name tv-link">{it.name}</Link>
+                        : <span className="tv-name">{it.name}</span>}
                       {it.note && <span className="tv-note">— {it.note}</span>}
                       {it.image && <img className="tv-img" src={it.image} alt="" />}
                     </li>

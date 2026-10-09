@@ -1225,3 +1225,7 @@ img { display: block; max-width: 100%; }
 .hsearch-panel { position: fixed; top: 84px; left: 0; right: 0; z-index: 19; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); padding: 16px 0; animation: hsearch-drop .16s ease; }
 .hsearch-panel .sac { max-width: 560px; }
 @keyframes hsearch-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 行程站點連回 entity 頁 */
+.tv-link { color: var(--green); font-weight: 600; }
+.tv-link:hover { text-decoration: underline; }
