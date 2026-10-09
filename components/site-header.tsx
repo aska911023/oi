@@ -3,6 +3,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
 import DestinationsNav from "@/components/destinations-nav";
+import HeaderSearch from "@/components/header-search";
 import NotificationBell from "@/components/notification-bell";
 import Avatar from "@/components/avatar";
 import type { Viewer } from "@/lib/viewer";
@@ -15,15 +16,13 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
       <div className="shell">
         <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
+        <HeaderSearch />
         <nav className="topnav">
           <DestinationsNav />
           <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
           <Link href="/contact">聯絡我們</Link>
-          <Link href="/search" className="topnav-search" aria-label="搜尋" title="搜尋">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-          </Link>
           {loggedIn ? (
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}

@@ -11,7 +11,7 @@ const CITIES = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const enc = encodeURIComponent;
 
 // 全站搜尋 + 即時建議(城市 / 民宿 / 景點 / 美食)。
-export default function SearchAutocomplete({ initialQ = "", autoFocus = false, placeholder = "搜尋城市、民宿、景點、美食…" }: { initialQ?: string; autoFocus?: boolean; placeholder?: string }) {
+export default function SearchAutocomplete({ initialQ = "", autoFocus = false, placeholder = "搜尋城市、民宿、景點、美食…", onNavigate }: { initialQ?: string; autoFocus?: boolean; placeholder?: string; onNavigate?: () => void }) {
   const router = useRouter();
   const [kw, setKw] = useState(initialQ);
   const [res, setRes] = useState<Res[]>([]);
@@ -53,7 +53,7 @@ export default function SearchAutocomplete({ initialQ = "", autoFocus = false, p
     if (!open || !res.length) return;
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, res.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
-    else if (e.key === "Enter" && active >= 0) { e.preventDefault(); setOpen(false); router.push(res[active].href); }
+    else if (e.key === "Enter" && active >= 0) { e.preventDefault(); setOpen(false); onNavigate?.(); router.push(res[active].href); }
     else if (e.key === "Escape") setOpen(false);
   }
 
@@ -65,7 +65,7 @@ export default function SearchAutocomplete({ initialQ = "", autoFocus = false, p
       {open && res.length > 0 && (
         <div className="sac-menu">
           {res.map((r, i) => (
-            <Link key={i} href={r.href} className={"sac-row" + (i === active ? " on" : "")} onClick={() => setOpen(false)}>
+            <Link key={i} href={r.href} className={"sac-row" + (i === active ? " on" : "")} onClick={() => { setOpen(false); onNavigate?.(); }}>
               <span className="sac-label">{r.label}</span><span className="sac-sub">{r.sub}</span>
             </Link>
           ))}
