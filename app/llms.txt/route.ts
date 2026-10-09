@@ -17,8 +17,8 @@ export async function GET() {
 - 行程規劃與分享:把民宿、景點、美食、停車、租車排進每一天,並公開分享
 - 周邊資訊:景點、美食、停車場、租車、車站
 
-## 熱門地區民宿(落地頁)
-${regions.map((r) => `- [${r}民宿推薦](${BASE}/stays/${encodeURIComponent(r)})`).join("\n")}
+## 熱門城市(住宿・景點・美食・停車・地圖)
+${regions.map((r) => `- [${r}旅遊](${BASE}/${encodeURIComponent(r)})`).join("\n")}
 
 ## 重要連結
 - [首頁 / 搜尋民宿](${BASE}/)

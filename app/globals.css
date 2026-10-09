@@ -1200,10 +1200,7 @@ img { display: block; max-width: 100%; }
 }
 
 /* ── 搜尋 autocomplete ── */
-.topsearch { display: none; }
-@media (min-width: 980px) { .topsearch { display: block; margin: 0 auto 0 28px; } }
 .sac { position: relative; width: 100%; }
-.topsearch .sac { max-width: 260px; }
 .sac-ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; }
 .sac-input { width: 100%; height: 40px; padding: 0 14px 0 38px; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); color: var(--text); font-size: 14px; outline: none; transition: border-color .15s; }
 .sac-input:focus { border-color: var(--green); }
@@ -1218,7 +1215,7 @@ img { display: block; max-width: 100%; }
 .topnav a, .destnav-btn { white-space: nowrap; }
 
 /* header 左側搜尋(點一下往下展開全寬搜尋欄) */
-.hsearch { margin-right: auto; display: flex; align-items: center; }
+.hsearch { display: inline-flex; align-items: center; }
 .hsearch-btn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; color: var(--text-2); transition: background .15s, color .15s; }
 .hsearch-btn:hover, .hsearch-btn.on { background: var(--green-soft); color: var(--green); }
 .hsearch-backdrop { position: fixed; inset: 0; top: 84px; z-index: 18; }

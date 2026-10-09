@@ -16,8 +16,8 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
       <div className="shell">
         <Logo src={settings.logo_image || undefined} size={settings.logo_size} />
-        <HeaderSearch />
         <nav className="topnav">
+          <HeaderSearch />
           <DestinationsNav />
           <Link href="/places/attraction">探索景點</Link>
           <Link href="/plan">規劃行程</Link>
