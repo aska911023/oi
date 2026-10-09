@@ -61,10 +61,9 @@ export default function StationsExplore({ stations }: { stations: Station[] }) {
           {results.length === 0 && <div className="empty">沒有符合的車站。</div>}
           {results.map((s) => (
             <div key={s.id} className="station-chip">
-              <a className="st-link" href={mapHref(s)} target="_blank" rel="noopener noreferrer">
+              <a className="st-link" href={mapHref(s)} target="_blank" rel="noopener noreferrer" title={`${s.region} · 在地圖開啟`}>
                 <span className={"st-badge " + s.kind}>{s.kind === "hsr" ? "高鐵" : "台鐵"}</span>
                 <span className="st-name">{s.name}</span>
-                <small>{s.region}</small>
               </a>
               <AddToTrip type="station" refId={s.id} name={(s.kind === "hsr" ? "高鐵" : "台鐵") + s.name} region={s.region} compact />
             </div>

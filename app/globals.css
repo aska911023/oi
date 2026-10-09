@@ -945,16 +945,15 @@ img { display: block; max-width: 100%; }
 
 /* 車站頁 */
 .station-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.station-chip { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 12px; padding: 9px 11px; background: #fff; }
+.station-chip { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 9px 11px; background: #fff; }
 .station-chip:hover { border-color: var(--green); }
 .st-link { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: inherit; text-decoration: none; }
 .st-badge { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; flex: none; }
 .st-badge.hsr { background: #fde8e8; color: #c0392b; }
 .st-badge.tra { background: #e4f3ea; color: #1f7a4d; }
-.station-chip .st-name { font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-link small { color: var(--muted); margin-left: auto; font-size: 12px; flex: none; padding-left: 6px; }
-/* 加入行程 小鈕(車站/緊湊處) */
-.att-compact { flex: none; font-size: 12px; font-weight: 600; color: var(--green); background: var(--green-soft); border: 1px solid var(--border); border-radius: 16px; padding: 4px 9px; white-space: nowrap; cursor: pointer; }
+.station-chip .st-name { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 加入行程 小圓鈕(車站等緊湊處) */
+.att-compact { flex: none; width: 27px; height: 27px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; line-height: 1; color: var(--green); background: var(--green-soft); border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
 .att-compact:hover { border-color: var(--green); }
 .att-compact.on { color: #fff; background: var(--green); border-color: var(--green); }
 .att-compact:disabled { cursor: default; }

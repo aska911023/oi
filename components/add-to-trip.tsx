@@ -26,7 +26,7 @@ export default function AddToTrip({ type, refId, name, region, compact = false }
     return (
       <button type="button" className={"att-compact" + (added ? " on" : "")} onClick={add} disabled={added}
         title={added ? "已加入行程" : "加入行程"} aria-label={added ? "已加入行程" : "加入行程"}>
-        {added ? "✓" : "＋ 行程"}
+        {added ? "✓" : "＋"}
       </button>
     );
   }
