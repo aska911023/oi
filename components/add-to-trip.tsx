@@ -16,6 +16,7 @@ export default function AddToTrip({ type, refId, name, region }: DraftItem) {
       const arr: DraftItem[] = raw ? JSON.parse(raw) : [];
       if (!arr.some((x) => x.refId === refId && x.type === type)) arr.push({ type, refId, name, region });
       localStorage.setItem(KEY, JSON.stringify(arr));
+      window.dispatchEvent(new Event("oi-trip-draft")); // 通知浮動草稿籃更新
       setAdded(true);
     } catch { /* ignore */ }
   }

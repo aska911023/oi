@@ -143,6 +143,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       const fr = draft.find((d) => d.region)?.region;
       if (fr) setRegion((prev) => prev || fr);
       localStorage.removeItem("oi_trip_draft");
+      window.dispatchEvent(new Event("oi-trip-draft")); // 草稿已帶入,通知浮動籃歸零
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

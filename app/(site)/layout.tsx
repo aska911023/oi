@@ -6,6 +6,7 @@ import PageViewTracker from "@/components/page-view-tracker";
 import ScrollTop from "@/components/scroll-top";
 import CompareBar from "@/components/compare-bar";
 import BottomNav from "@/components/bottom-nav";
+import TripDraftBadge from "@/components/trip-draft-badge";
 import RoleViewSwitcher from "@/components/role-view-switcher";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
@@ -73,6 +74,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <a href="/api/_t" className="hp-trap" aria-hidden="true" tabIndex={-1} rel="nofollow noindex">請勿點擊</a>
       </footer>
       <CompareBar />
+      <TripDraftBadge />
       <BottomNav />
     </CompareProvider>
   );
