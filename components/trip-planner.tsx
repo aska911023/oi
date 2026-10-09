@@ -131,6 +131,22 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
     return () => { alive = false; };
   }, [loggedIn]);
 
+  // 從 entity 頁「加入行程」帶入的 localStorage 草稿(只在「開新行程」時帶入,不覆蓋編輯/複製中的行程)
+  useEffect(() => {
+    if (initial) return;
+    try {
+      const raw = localStorage.getItem("oi_trip_draft");
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { type: string; refId: string; name: string; region?: string }[];
+      if (!Array.isArray(draft) || !draft.length) return;
+      setItems(draft.map((d) => ({ id: genId(), day: 1, type: d.type as TripItemType, name: d.name, refId: d.refId, time: "", note: "", slot: (d.type === "stay" ? "night" : "day") as "day" | "night" })));
+      const fr = draft.find((d) => d.region)?.region;
+      if (fr) setRegion((prev) => prev || fr);
+      localStorage.removeItem("oi_trip_draft");
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const dayList = Array.from({ length: days }, (_, i) => i + 1);
   const defaultSlot = (t: TripItemType): "day" | "night" => (t === "stay" ? "night" : "day");
   const itemsOfDay = (d: number) => items.filter((it) => it.day === d);

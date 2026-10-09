@@ -10,6 +10,7 @@ import OutboundLink from "@/components/outbound-link";
 import ShareStayButton from "@/components/share-stay-button";
 import MediaEmbed from "@/components/media-embed";
 import PlacesMap from "@/components/places-map";
+import AddToTrip from "@/components/add-to-trip";
 import { breadcrumbLd } from "@/lib/seo";
 import type { Stay, RoomType } from "@/lib/types";
 
@@ -100,6 +101,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
                 : `https://www.google.com/maps/search/?api=1&query=${enc((s.name + " " + s.region + s.town + (s.address || "")).trim())}`}>在地圖開啟 {OUT}</OutboundLink>
           )}
           <SaveButton stayId={s.id} />
+          <AddToTrip type="stay" refId={s.id} name={s.name} region={s.region} />
           <ShareStayButton stayId={s.id} name={s.name} />
         </div>
 

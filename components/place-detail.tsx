@@ -4,6 +4,7 @@ import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import PlacesMap from "@/components/places-map";
+import AddToTrip from "@/components/add-to-trip";
 import { DETAILS, type WeekHour } from "@/lib/places-config";
 import { KIND_SINGULAR, getNearby } from "@/lib/city";
 import { breadcrumbLd } from "@/lib/seo";
@@ -93,6 +94,7 @@ export default async function PlaceDetail({ place: p, kind }: { place: Place; ki
           <a className="btn btn-primary" href={mapHref} target="_blank" rel="noopener noreferrer">{MAP} 在地圖開啟 / 導航</a>
           {p.website && <a className="btn btn-ghost" href={p.website} target="_blank" rel="noopener noreferrer">{meta.cta} {OUT}</a>}
           <SharePlaceButton name={p.name} mapUrl={mapHref} />
+          <AddToTrip type={kind} refId={p.id} name={p.name} region={p.region} />
           {!imgs.length && <SaveBookmark type={kind} id={p.id} nextPath={`/${enc(p.region)}/${KIND_SINGULAR[kind]}/${enc(p.slug || p.id)}`} />}
         </div>
 
