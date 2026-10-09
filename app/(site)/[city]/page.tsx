@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getRoomsByRegion } from "@/lib/rooms";
-import { isCity, CITIES, SECTIONS, getCityPlaces } from "@/lib/city";
+import { isCity, CITIES, SECTIONS, getCityPlaces, getCityAllPoints } from "@/lib/city";
 import { breadcrumbLd } from "@/lib/seo";
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
+import PlacesMap from "@/components/places-map";
 import type { Place } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -51,10 +52,11 @@ function placeCards(city: string, singular: string, items: Place[]) {
 export default async function CityHub({ params }: { params: Promise<{ city: string }> }) {
   const city = decodeParam((await params).city);
   if (!isCity(city)) notFound();
-  const [{ rooms, total }, attr, food] = await Promise.all([
+  const [{ rooms, total }, attr, food, allPoints] = await Promise.all([
     getRoomsByRegion(city),
     getCityPlaces("attraction", city, 8),
     getCityPlaces("food", city, 8),
+    getCityAllPoints(city),
   ]);
   const others = CITIES.filter((c) => c !== city);
   const crumbLd = breadcrumbLd([{ name: "偶宿 O!", path: "/" }, { name: city, path: `/${enc(city)}` }]);
@@ -70,11 +72,23 @@ export default async function CityHub({ params }: { params: Promise<{ city: stri
         {city}的<b>住宿</b>、<b>景點</b>、<b>美食</b>、<b>停車</b>與<b>行程</b>,偶宿 O! 一次幫你整理好 —— 從「想去哪裡」到「怎麼玩」。
       </p>
 
-      <div className="region-links" style={{ marginBottom: 32 }}>
+      <div className="region-links" style={{ marginBottom: 24 }}>
         {SECTIONS.map((s) => (
           <Link key={s.seg} href={`/${enc(city)}/${s.seg}`} className="region-link">{city}{s.label}</Link>
         ))}
       </div>
+
+      {allPoints.length > 0 && (
+        <section className="map-sec">
+          <PlacesMap points={allPoints} height={420} />
+          <div className="map-legend">
+            <span><i style={{ background: "#e8590c" }} />住宿</span>
+            <span><i style={{ background: "#2f9e44" }} />景點</span>
+            <span><i style={{ background: "#e03131" }} />美食</span>
+            <span><i style={{ background: "#1971c2" }} />停車</span>
+          </div>
+        </section>
+      )}
 
       {/* 熱門住宿 */}
       <section>

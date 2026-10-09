@@ -74,6 +74,46 @@ export async function getPlaceBySlug(kind: PoiKind, param: string): Promise<Plac
   return (data as Place) || null;
 }
 
+// 某縣市某類的地圖點位(有經緯度者)
+export type CityMapPoint = { id: string; name: string; lat: number; lng: number; href: string; kind: string };
+export async function getCityMapPoints(kind: PoiKind, region: string): Promise<CityMapPoint[]> {
+  if (!hasSupabase()) return [];
+  try {
+    const sb = createPublicClient();
+    const { data } = await sb.from(KIND_TABLE[kind]).select("id,name,slug,lat,lng").eq("published", true).eq("region", region)
+      .not("lat", "is", null).not("lng", "is", null).limit(500);
+    const enc = encodeURIComponent;
+    return ((data || []) as { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null }[])
+      .filter((r) => r.lat != null && r.lng != null)
+      .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${KIND_SINGULAR[kind]}/${enc(r.slug || r.id)}`, kind }));
+  } catch { return []; }
+}
+
+// 某縣市「全部分類」的地圖點位(住宿+景點+美食+停車,用於城市 hub 總覽地圖)
+export async function getCityAllPoints(region: string): Promise<CityMapPoint[]> {
+  if (!hasSupabase()) return [];
+  try {
+    const sb = createPublicClient();
+    const enc = encodeURIComponent;
+    const sel = "id,name,slug,lat,lng";
+    const [st, at, fo, pa] = await Promise.all([
+      sb.from("stays").select(sel).eq("published", true).eq("approved", true).eq("visibility", "published").eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("attractions").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("restaurants").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("parking_lots").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+    ]);
+    type Row = { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null };
+    const mk = (rows: Row[] | null, kind: string, hrefKind: string): CityMapPoint[] =>
+      (rows || []).filter((r) => r.lat != null && r.lng != null).map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${hrefKind}/${enc(r.slug || r.id)}`, kind }));
+    return [
+      ...mk(st.data as Row[], "hotel", "hotel"),
+      ...mk(at.data as Row[], "attraction", "attraction"),
+      ...mk(fo.data as Row[], "food", "restaurant"),
+      ...mk(pa.data as Row[], "parking", "parking"),
+    ];
+  } catch { return []; }
+}
+
 // ── 附近互連(entity_relationship_network):同縣市 + 有經緯度則依距離排序 ──
 export type NearItem = { id: string; name: string; href: string; dist?: number };
 type Geo = { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null };

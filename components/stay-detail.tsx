@@ -9,6 +9,7 @@ import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
 import ShareStayButton from "@/components/share-stay-button";
 import MediaEmbed from "@/components/media-embed";
+import PlacesMap from "@/components/places-map";
 import { breadcrumbLd } from "@/lib/seo";
 import type { Stay, RoomType } from "@/lib/types";
 
@@ -138,6 +139,13 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
             </div>
           )}
         </div>
+
+        {s.lat != null && s.lng != null && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">位置</h2>
+            <PlacesMap points={[{ id: s.id, name: s.name, lat: Number(s.lat), lng: Number(s.lng), kind: "hotel" }]} height={300} />
+          </div>
+        )}
 
         {nearby.length > 0 && (
           <div className="shop-block">

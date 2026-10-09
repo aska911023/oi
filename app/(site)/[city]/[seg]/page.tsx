@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getRoomsByRegion, STAY_THEMES } from "@/lib/rooms";
-import { isCity, SECTIONS, SECTION_SET, getCityPlaces, getCityTrips, type Section } from "@/lib/city";
+import { isCity, SECTIONS, SECTION_SET, getCityPlaces, getCityTrips, getCityMapPoints, type Section } from "@/lib/city";
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import PlacesExplore from "@/components/places-explore";
+import PlacesMap from "@/components/places-map";
 import TripCard from "@/components/trip-card";
 import type { PoiKind } from "@/lib/types";
 
@@ -118,7 +119,7 @@ export default async function CitySectionPage({ params }: { params: Promise<{ ci
 
   // ── 景點 / 美食 / 停車(places,沿用 PlacesExplore 鎖定縣市)──
   const kind = SEG_META[section].kind as PoiKind;
-  const { places, total } = await getCityPlaces(kind, city);
+  const [{ places, total }, points] = await Promise.all([getCityPlaces(kind, city), getCityMapPoints(kind, city)]);
   const word = SEG_META[section].word;
   return (
     <main>
@@ -131,6 +132,7 @@ export default async function CitySectionPage({ params }: { params: Promise<{ ci
         <div className="region-links" style={{ marginTop: 14 }}>
           {SECTIONS.filter((s) => s.seg !== section).map((s) => <Link key={s.seg} href={`/${encodeURIComponent(city)}/${s.seg}`} className="region-link">{city}{s.label}</Link>)}
         </div>
+        {points.length > 0 && <div className="map-sec"><PlacesMap points={points} height={380} /></div>}
       </div>
       <PlacesExplore places={places} total={total} kind={kind} lockedRegion={city} />
     </main>

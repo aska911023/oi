@@ -3,6 +3,7 @@ import PhotoCarousel from "@/components/photo-carousel";
 import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
+import PlacesMap from "@/components/places-map";
 import { DETAILS, type WeekHour } from "@/lib/places-config";
 import { KIND_SINGULAR, getNearby } from "@/lib/city";
 import { breadcrumbLd } from "@/lib/seo";
@@ -130,6 +131,13 @@ export default async function PlaceDetail({ place: p, kind }: { place: Place; ki
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {p.lat != null && p.lng != null && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">位置</h2>
+            <PlacesMap points={[{ id: p.id, name: p.name, lat: Number(p.lat), lng: Number(p.lng), kind }]} height={300} />
           </div>
         )}
 
