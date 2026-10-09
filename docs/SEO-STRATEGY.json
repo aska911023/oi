@@ -1,0 +1,146 @@
+{
+  "project": {
+    "name": "oi-stay",
+    "domain": "https://oi-stay.com",
+    "type": "travel_directory_platform",
+    "positioning": "旅遊資訊與在地商家整合平台",
+    "core_categories": ["住宿", "景點", "餐廳", "小吃", "停車場", "旅遊行程"]
+  },
+  "seo_goal": {
+    "primary": "建立 Google 對 oi-stay 品牌與旅遊資料庫的信任與主題權威",
+    "secondary": [
+      "提升自然搜尋流量",
+      "建立城市與旅遊類別的搜尋排名",
+      "建立大量高品質長尾關鍵字入口",
+      "建立品牌搜尋量",
+      "讓平台資料形成長期 SEO 資產"
+    ]
+  },
+  "domain_setup": {
+    "primary_domain": "https://oi-stay.com",
+    "www_redirect": "301",
+    "http_redirect": "301_to_https",
+    "canonical": "https://oi-stay.com",
+    "ssl": true,
+    "robots_txt": true,
+    "sitemap": true,
+    "google_search_console": true,
+    "google_analytics": true
+  },
+  "domain_history_check": {
+    "enabled": true,
+    "check_before_seo": [
+      "Wayback Machine", "Google indexed pages", "Historical backlinks", "Spam backlinks",
+      "Adult content history", "Gambling content history", "Scam content history",
+      "Previous SEO manipulation", "Manual actions"
+    ]
+  },
+  "website_structure": {
+    "homepage": "/",
+    "cities": "/{city}/",
+    "categories": {
+      "hotels": "/{city}/hotels/",
+      "restaurants": "/{city}/restaurants/",
+      "attractions": "/{city}/attractions/",
+      "snacks": "/{city}/snacks/",
+      "parking": "/{city}/parking/",
+      "itineraries": "/{city}/itineraries/"
+    },
+    "entity_pages": {
+      "hotel": "/{city}/hotel/{slug}",
+      "restaurant": "/{city}/restaurant/{slug}",
+      "attraction": "/{city}/attraction/{slug}",
+      "snack": "/{city}/snack/{slug}",
+      "parking": "/{city}/parking/{slug}"
+    }
+  },
+  "internal_linking": {
+    "enabled": true,
+    "strategy": "entity_relationship_network",
+    "examples": [
+      "住宿 -> 附近景點", "住宿 -> 附近餐廳", "住宿 -> 附近停車場",
+      "餐廳 -> 附近住宿", "餐廳 -> 附近景點",
+      "景點 -> 附近住宿", "景點 -> 附近餐廳", "景點 -> 附近停車場",
+      "城市 -> 所有相關分類", "行程 -> 住宿 + 景點 + 餐廳 + 停車場"
+    ]
+  },
+  "schema": {
+    "enabled": true,
+    "types": ["Organization", "WebSite", "BreadcrumbList", "Article", "LocalBusiness", "Hotel", "Restaurant"],
+    "rules": [
+      "Schema 必須與頁面實際內容一致",
+      "不要虛構評價與價格",
+      "不要大量重複相同 Schema",
+      "依頁面 Entity 類型選擇適合的 Schema"
+    ]
+  },
+  "content_strategy": {
+    "principle": "quality_over_quantity",
+    "avoid": ["大量 AI 低品質文章", "複製內容", "大量模板化頁面", "無實際資訊的 SEO 頁面", "購買垃圾 backlinks"],
+    "content_types": [
+      "城市旅遊指南", "住宿推薦", "景點介紹", "餐廳介紹", "小吃介紹", "停車資訊",
+      "一日遊", "兩天一夜", "親子行程", "情侶行程", "季節旅遊攻略"
+    ]
+  },
+  "programmatic_seo": {
+    "enabled": true,
+    "strategy": "database_driven_seo",
+    "examples": [
+      "{city}住宿推薦", "{city}親子住宿", "{city}景點推薦", "{city}餐廳推薦",
+      "{city}停車場", "{city}一日遊", "{city}兩天一夜", "{city}住宿+景點", "{city}住宿+餐廳"
+    ],
+    "requirements": [
+      "每個頁面必須有獨立且有價值的內容",
+      "避免單純替換城市名稱的複製頁",
+      "頁面必須有真實資料",
+      "建立合理 Internal Links",
+      "避免大量低品質索引頁"
+    ]
+  },
+  "indexing_strategy": {
+    "phase_1": ["首頁", "主要城市頁", "主要分類頁", "第一批高品質 Entity 頁面"],
+    "phase_2": ["城市×分類頁", "旅遊攻略", "行程頁"],
+    "phase_3": ["長尾搜尋頁", "更多城市", "更多 Entity"],
+    "principle": "先建立品質，再擴大索引數量"
+  },
+  "backlink_strategy": {
+    "goal": "建立相關且自然的外部連結",
+    "sources": ["合作民宿", "合作餐廳", "景點網站", "地方旅遊網站", "旅遊部落客", "地方媒體", "合作品牌", "旅遊社群"],
+    "avoid": ["大量購買 backlinks", "PBN 垃圾網站", "大量無關網站連結", "自動化垃圾留言", "短時間暴增大量低品質連結"]
+  },
+  "brand_strategy": {
+    "brand": "oi-stay",
+    "goal": "建立品牌搜尋與 Entity Recognition",
+    "channels": ["Official Website", "Facebook", "Instagram", "Threads", "YouTube", "LINE"],
+    "target_searches": ["oi-stay", "oi stay", "oi-stay 住宿", "oi-stay 旅遊"]
+  },
+  "technical_seo": {
+    "requirements": [
+      "HTTPS", "Mobile Friendly", "Fast Loading", "Core Web Vitals", "Canonical",
+      "301 Redirect", "404 Handling", "XML Sitemap", "Robots.txt", "Breadcrumb",
+      "Clean URL", "Image Optimization", "WebP/AVIF", "Lazy Loading", "Structured Data"
+    ]
+  },
+  "first_90_days": {
+    "days_1_30": [
+      "確認網域歷史", "完成 DNS", "完成 HTTPS", "建立 Search Console", "建立 Analytics",
+      "建立 Sitemap", "建立 Robots.txt", "完成網站架構", "建立主要城市", "建立第一批 Entity",
+      "完成 Schema", "完成 Internal Linking"
+    ],
+    "days_31_60": [
+      "增加城市資料", "增加住宿", "增加景點", "增加餐廳", "增加停車場",
+      "開始旅遊攻略", "建立第一批行程頁", "開始建立自然 backlinks", "監控 Google Index"
+    ],
+    "days_61_90": [
+      "擴大城市覆蓋", "建立長尾 SEO 頁面", "優化 Search Console 表現較好的關鍵字",
+      "改善 CTR", "改善內部連結", "刪除或避免低品質索引頁", "持續建立合作 backlinks", "建立品牌搜尋量"
+    ]
+  },
+  "core_principle": {
+    "strategy": "不要單純養網域，要養網站的主題權威、品牌、資料庫與 Entity 關係",
+    "priority": [
+      "網站架構", "資料品質", "Entity 數量與完整度", "Internal Linking",
+      "Technical SEO", "Structured Data", "高品質內容", "自然 Backlinks", "品牌搜尋"
+    ]
+  }
+}

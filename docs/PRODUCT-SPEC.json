@@ -1,0 +1,148 @@
+{
+  "project": {
+    "name": "OI-STAY",
+    "domain": "https://oi-stay.com",
+    "product_type": "Travel Discovery & Planning Platform",
+    "core_concept": "Search + Explore + Map + Save + Trip Planning",
+    "ui_positioning": "像 Google Maps 一樣好找、像 Airbnb 一樣好看、像旅遊規劃 App 一樣好用"
+  },
+  "design_direction": {
+    "style": "Premium Travel + Local Discovery",
+    "visual_keywords": ["高級", "自然", "乾淨", "現代", "旅遊感", "在地感", "圖片導向", "高可讀性"],
+    "avoid": ["傳統旅行社網站", "過度商業化", "資訊過度密集", "大量小字", "過多動畫", "廉價模板感"]
+  },
+  "design_system": {
+    "layout": {
+      "desktop": { "max_width": "1280px", "grid": "12 columns", "content_spacing": "24-32px" },
+      "tablet": { "grid": "8 columns" },
+      "mobile": { "grid": "4 columns", "horizontal_padding": "16px" }
+    },
+    "visual": {
+      "background": ["white", "warm_gray", "light_beige"],
+      "brand_color": { "primary": "建立 OI-STAY 品牌主色", "secondary": "自然／旅遊感輔助色" },
+      "border_radius": { "small": "8px", "medium": "12px", "large": "20px", "card": "16-20px" },
+      "shadow": "subtle",
+      "image_style": "high-quality travel photography"
+    },
+    "typography": {
+      "style": "Modern Sans Serif",
+      "priority": ["可讀性", "手機閱讀", "中文顯示", "清楚的階層"],
+      "heading": "Bold", "body": "Regular", "metadata": "Medium"
+    }
+  },
+  "navigation": {
+    "desktop": {
+      "header": ["Logo", "搜尋", "目的地", "住宿", "景點", "餐廳", "行程", "我的旅程"],
+      "right_actions": ["登入", "註冊"]
+    },
+    "mobile": {
+      "bottom_navigation": [
+        { "name": "首頁", "icon": "home" }, { "name": "搜尋", "icon": "search" },
+        { "name": "地圖", "icon": "map" }, { "name": "收藏", "icon": "heart" }, { "name": "我的", "icon": "user" }
+      ]
+    }
+  },
+  "homepage": {
+    "goal": "讓使用者在 3 秒內理解 OI-STAY 可以幫助他探索與規劃旅行",
+    "hero": {
+      "layout": "large_visual",
+      "headline": "探索你的下一趟旅行",
+      "search": { "placeholder": "你想去哪裡？住宿、景點、餐廳...", "filters": ["目的地", "住宿", "景點", "餐廳", "停車場", "行程"] }
+    },
+    "quick_destinations": { "title": "熱門目的地", "display": "horizontal_cards", "examples": ["台北", "宜蘭", "花蓮", "台中", "台南", "高雄"] },
+    "featured": [
+      { "section": "熱門住宿", "layout": "horizontal_card_slider" },
+      { "section": "熱門景點", "layout": "image_cards" },
+      { "section": "人氣餐廳", "layout": "restaurant_cards" },
+      { "section": "熱門行程", "layout": "itinerary_cards" }
+    ],
+    "discovery": { "title": "探索更多", "categories": ["住宿", "景點", "餐廳", "小吃", "停車場", "旅遊攻略"] }
+  },
+  "search": {
+    "experience": "Search First",
+    "features": ["autocomplete", "location_search", "category_filter", "price_filter", "rating_filter", "distance_filter", "open_now", "date_filter"],
+    "search_results": { "desktop": "list + map", "mobile": "list with map toggle" }
+  },
+  "map": {
+    "core_feature": true,
+    "layout": { "desktop": "split_view", "mobile": "full_screen_map" },
+    "map_markers": ["hotel", "restaurant", "attraction", "snack", "parking"],
+    "filters": ["住宿", "景點", "餐廳", "小吃", "停車場"],
+    "interaction": ["marker_click", "cluster_markers", "location_search", "nearby_search", "map_bounds_search"]
+  },
+  "listing_pages": {
+    "city_page": { "sections": ["城市 Hero", "城市介紹", "熱門住宿", "熱門景點", "熱門餐廳", "熱門小吃", "停車場", "推薦行程", "旅遊攻略"] },
+    "category_page": { "layout": "filterable_listing", "components": ["search_bar", "filters", "sort", "cards", "map"] }
+  },
+  "entity_pages": {
+    "hotel": {
+      "hero": ["large_image", "name", "rating", "location", "price", "favorite"],
+      "sections": ["介紹", "房型", "設施", "圖片", "價格", "地圖", "附近景點", "附近餐廳", "附近停車場", "交通方式", "相關住宿"],
+      "primary_cta": "查看訂房"
+    },
+    "restaurant": {
+      "sections": ["介紹", "菜色", "價格", "營業時間", "地址", "地圖", "圖片", "附近景點", "附近住宿", "附近停車場"],
+      "primary_cta": "導航"
+    },
+    "attraction": {
+      "sections": ["介紹", "圖片", "開放時間", "票價", "地址", "地圖", "附近住宿", "附近餐廳", "附近停車場", "推薦行程"],
+      "primary_cta": "開始導航"
+    },
+    "parking": {
+      "sections": ["位置", "價格", "營業時間", "車位資訊", "設施", "地圖", "附近住宿", "附近景點", "附近餐廳"],
+      "primary_cta": "導航"
+    }
+  },
+  "trip_planner": {
+    "name": "我的旅程",
+    "goal": "將探索轉換成實際旅行規劃",
+    "features": ["收藏住宿", "收藏景點", "收藏餐廳", "收藏小吃", "收藏停車場", "建立旅行", "建立每日行程", "拖曳排序", "地圖查看", "分享行程"],
+    "itinerary": {
+      "structure": {
+        "trip": { "name": "宜蘭兩天一夜", "destination": "宜蘭" },
+        "days": [
+          { "day": 1, "items": ["住宿", "午餐", "景點", "晚餐", "住宿"] },
+          { "day": 2, "items": ["早餐", "景點", "午餐", "景點", "返程"] }
+        ]
+      }
+    }
+  },
+  "card_design": {
+    "hotel_card": ["image", "favorite_button", "name", "location", "rating", "price"],
+    "restaurant_card": ["image", "favorite_button", "name", "cuisine", "rating", "price", "location"],
+    "attraction_card": ["image", "favorite_button", "name", "location", "category"],
+    "itinerary_card": ["cover_image", "title", "duration", "destination", "number_of_places"]
+  },
+  "mobile_ux": {
+    "priority": "mobile_first",
+    "requirements": ["大尺寸搜尋框", "Bottom Navigation", "Swipeable Cards", "Sticky CTA", "地圖快速切換", "一手操作", "快速收藏", "快速導航"],
+    "bottom_navigation": ["首頁", "搜尋", "地圖", "收藏", "我的"]
+  },
+  "interaction": {
+    "animations": { "enabled": true, "style": "subtle", "duration": "150-300ms" },
+    "micro_interactions": ["收藏動畫", "Card hover", "Map marker interaction", "Search autocomplete", "Loading skeleton", "Page transition"],
+    "avoid": ["過度動畫", "大型 loading animation", "影響頁面速度的動畫"]
+  },
+  "personalization": { "features": ["最近瀏覽", "收藏", "推薦住宿", "推薦景點", "推薦餐廳", "推薦行程", "依地點推薦"] },
+  "trust_elements": {
+    "display": ["真實圖片", "地址", "官方網站", "電話", "營業時間", "資料更新時間", "評價來源", "導航", "價格資訊"],
+    "principle": "資訊透明與可信度優先"
+  },
+  "performance": {
+    "priority": "high",
+    "requirements": ["Responsive Design", "Image Optimization", "WebP", "AVIF", "Lazy Loading", "Code Splitting", "CDN", "Fast First Load", "Core Web Vitals"]
+  },
+  "accessibility": { "requirements": ["適當文字對比", "Keyboard Navigation", "Alt Text", "ARIA Labels", "可讀字體大小", "觸控區域至少 44px"] },
+  "future_features": {
+    "phase_2": ["AI 行程規劃", "個人化推薦", "收藏同步", "旅程分享", "多人共同編輯行程"],
+    "phase_3": ["住宿預訂", "餐廳預訂", "景點票券", "停車預訂", "會員系統", "商家後台"]
+  },
+  "design_principle": {
+    "primary": "Search First",
+    "secondary": "Visual Discovery",
+    "third": "Map Based Exploration",
+    "fourth": "Save Everything",
+    "fifth": "Turn Discovery Into Trip",
+    "final_goal": "讓使用者從『我想去哪裡』一路完成『我要怎麼玩』"
+  }
+}

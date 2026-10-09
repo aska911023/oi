@@ -31,9 +31,10 @@ const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; ct
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 
-export default function PlacesExplore({ places, total = 0, kind, regions = [] }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[] }) {
+export default function PlacesExplore({ places, total = 0, kind, regions = [], lockedRegion }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[]; lockedRegion?: string }) {
+  const cityMode = !!lockedRegion; // 城市頁:鎖定縣市、隱藏跨區篩選/分類tab/通用標題(標題由伺服器頁出)
   const [kw, setKw] = useState("");
-  const [region, setRegion] = useState("all");
+  const [region, setRegion] = useState(lockedRegion || "all");
   const [tags, setTags] = useState<string[]>([]);
   const [active, setActive] = useState<Place | null>(null);
   const [kindState, setKindState] = useState<PoiKind>(kind);
@@ -47,7 +48,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
   const firstRun = useRef(true);
 
   // 直接進入某個路由(SSR)時,以 props 重置
-  useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion("all"); setTags([]); firstRun.current = true; }, [places, total, kind]);
+  useEffect(() => { setKindState(kind); setRows(places); setRpcTotal(total); setKw(""); setRegion(lockedRegion || "all"); setTags([]); firstRun.current = true; }, [places, total, kind, lockedRegion]);
 
 
   async function load(k: PoiKind, kwv: string, regionv: string, tagsv: string[], off: number, append: boolean) {
@@ -104,19 +105,23 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
     <>
       <section className="disc">
         <div className="shell">
-          {/* 二級分類切換 */}
-          <div className="places-tabs">
-            {POI_KINDS.map((k) => (
-              <button key={k.slug} type="button" onClick={() => switchKind(k.kind)} className={"chip" + (k.kind === kindState ? " on" : "")}>{TAB_LABEL[k.kind]}</button>
-            ))}
-            <Link href="/rentals" className="chip">租車</Link>
-            <Link href="/stations" className="chip">車站</Link>
-          </div>
+          {/* 二級分類切換(城市頁隱藏,改由城市頁的分類導覽切換) */}
+          {!cityMode && (
+            <div className="places-tabs">
+              {POI_KINDS.map((k) => (
+                <button key={k.slug} type="button" onClick={() => switchKind(k.kind)} className={"chip" + (k.kind === kindState ? " on" : "")}>{TAB_LABEL[k.kind]}</button>
+              ))}
+              <Link href="/rentals" className="chip">租車</Link>
+              <Link href="/stations" className="chip">車站</Link>
+            </div>
+          )}
 
-          <div className="places-head">
-            <h1 className="serif">{copy.title}</h1>
-            <p>{copy.sub}</p>
-          </div>
+          {!cityMode && (
+            <div className="places-head">
+              <h1 className="serif">{copy.title}</h1>
+              <p>{copy.sub}</p>
+            </div>
+          )}
 
           {/* 搜尋 + 地區 */}
           <div className="disc-search">
@@ -129,7 +134,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [] }:
             </div>
           </div>
 
-          {regions.length > 0 && (
+          {!cityMode && regions.length > 0 && (
             <div className="disc-filters">
               <div className="filter-row" style={{ alignItems: "flex-start" }}>
                 <span className="filter-cap">{I.pin} 地區</span>

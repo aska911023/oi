@@ -49,6 +49,17 @@ function tooMany(ip: string, t: number): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 舊網址 → 城市優先新結構(308 永久轉址,邊緣層處理,所有客戶端含搜尋引擎都吃得到)。
+  //   /stays/{area}            → /{area}/hotels
+  //   /stays/{area}/{theme}    → /{area}/hotels/{theme}
+  // 註:不在頁面層用 redirect(),因前台 error.tsx 自癒邊界會把 NEXT_REDIRECT 當錯誤攔成 500。
+  if (pathname.startsWith("/stays/")) {
+    const segs = pathname.slice(7).replace(/\/+$/, "").split("/").filter(Boolean); // 保持 percent-encoded,交給目標頁解碼
+    if (segs.length === 1) return NextResponse.redirect(new URL(`/${segs[0]}/hotels`, request.url), 308);
+    if (segs.length >= 2) return NextResponse.redirect(new URL(`/${segs[0]}/hotels/${segs[1]}`, request.url), 308);
+  }
+
   const ip = clientIp(request);
   const ua = request.headers.get("user-agent") || "";
   const t = Date.now();
