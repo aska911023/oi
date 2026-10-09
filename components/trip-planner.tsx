@@ -142,8 +142,8 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       setItems(draft.map((d) => ({ id: genId(), day: 1, type: d.type as TripItemType, name: d.name, refId: d.refId, time: "", note: "", slot: (d.type === "stay" ? "night" : "day") as "day" | "night" })));
       const fr = draft.find((d) => d.region)?.region;
       if (fr) setRegion((prev) => prev || fr);
-      localStorage.removeItem("oi_trip_draft");
-      window.dispatchEvent(new Event("oi-trip-draft")); // 草稿已帶入,通知浮動籃歸零
+      // 注意:這裡「不」清草稿 —— 清太早會讓使用者還沒存檔就回上一頁時整批不見。
+      // 草稿改在「存檔成功」時才清(見 save()),或使用者按草稿籃的 ✕ 自行清。
     } catch { /* ignore */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -249,6 +249,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
     setSaving(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
     setTripId(id);
+    try { localStorage.removeItem("oi_trip_draft"); window.dispatchEvent(new Event("oi-trip-draft")); } catch { /* ignore */ } // 存檔成功才清草稿籃
     revalidateTrips().catch(() => {}); // 公開行程牆快取失效
     alert("已儲存到你的行程 ✓");
   }
