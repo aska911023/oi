@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getRoomsByRegion } from "@/lib/rooms";
 import { isCity, CITIES, SECTIONS, getCityPlaces, getCityAllPoints } from "@/lib/city";
+import { getArticles } from "@/lib/articles";
 import { breadcrumbLd } from "@/lib/seo";
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
@@ -52,11 +53,12 @@ function placeCards(city: string, singular: string, items: Place[]) {
 export default async function CityHub({ params }: { params: Promise<{ city: string }> }) {
   const city = decodeParam((await params).city);
   if (!isCity(city)) notFound();
-  const [{ rooms, total }, attr, food, allPoints] = await Promise.all([
+  const [{ rooms, total }, attr, food, allPoints, guides] = await Promise.all([
     getRoomsByRegion(city),
     getCityPlaces("attraction", city, 8),
     getCityPlaces("food", city, 8),
     getCityAllPoints(city),
+    getArticles(city, 4),
   ]);
   const others = CITIES.filter((c) => c !== city);
   const crumbLd = breadcrumbLd([{ name: "偶宿 O!", path: "/" }, { name: city, path: `/${enc(city)}` }]);
@@ -122,6 +124,30 @@ export default async function CityHub({ params }: { params: Promise<{ city: stri
             <Link className="lnk" href={`/${enc(city)}/restaurants`}>看全部 →</Link>
           </div>
           {placeCards(city, "restaurant", food.places.slice(0, 4))}
+        </section>
+      )}
+
+      {/* 旅遊攻略 */}
+      {guides.length > 0 && (
+        <section style={{ marginTop: 40 }}>
+          <div className="sec-head">
+            <div className="st"><h2 className="serif">{city}旅遊攻略</h2></div>
+            <Link className="lnk" href="/guides">更多 →</Link>
+          </div>
+          <div className="guide-grid">
+            {guides.map((g) => (
+              <Link key={g.id} href={`/guides/${g.slug || g.id}`} className="guide-card">
+                <div className={"guide-cover" + (g.cover_image ? "" : " noimg")}>
+                  {g.cover_image
+                    ? // eslint-disable-next-line @next/next/no-img-element
+                      <img src={g.cover_image} alt={g.title} loading="lazy" />
+                    : null}
+                  {g.tag && <span className="guide-tag">{g.tag}</span>}
+                </div>
+                <div className="guide-cardbody"><h2>{g.title}</h2>{g.excerpt && <p>{g.excerpt}</p>}</div>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 
