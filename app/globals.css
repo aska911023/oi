@@ -768,7 +768,8 @@ img { display: block; max-width: 100%; }
 .trip-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 /* IG 貼文式行程卡 + 單欄 feed */
 /* 三欄貼文牆(窄螢幕自動降為兩欄/單欄);align-items:start 讓各卡維持自己的高度 */
-.ig-feed { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; align-items: start; }
+.ig-feed { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; align-items: stretch; }
+.ig-feed .ig-post { display: flex; flex-direction: column; }
 .ig-feed .empty { grid-column: 1 / -1; }
 @media (max-width: 1040px) { .ig-feed { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 680px) { .ig-feed { grid-template-columns: 1fr; } }
@@ -1118,6 +1119,13 @@ img { display: block; max-width: 100%; }
 .ig-menu button:hover, .ig-menu a:hover { background: var(--green-soft); color: var(--green); }
 .ig-title { display: block; font-weight: 700; color: var(--ink); }
 .ig-cap-sum { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 4px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.65; }
+/* 分享牆卡片:媒體區統一高度,讓卡片一樣長 */
+.ig-media { height: 300px; overflow: hidden; }
+.ig-media .disc-img { height: 300px; }
+.ig-media.ig-media-embed { height: 300px; overflow: hidden; padding: 0; }
+.ig-media.ig-media-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 0 20px; background: linear-gradient(135deg, var(--green-soft), #fff); }
+.ig-media-ph span { font-weight: 700; font-size: 17px; color: var(--green-dark); line-height: 1.4; }
+.ig-media-ph small { color: var(--text-2); font-size: 13px; }
 
 .ig-clickable { cursor: pointer; }
 

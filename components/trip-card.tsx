@@ -96,8 +96,13 @@ export default function TripCard({ trip: t, manageSlot, viewerId }: { trip: Trip
       {isMedia && embedUrl ? (
         <div className="ig-media ig-media-embed"><MediaEmbed url={embedUrl} /></div>
       ) : photos.length > 0 ? (
-        <Link href={to} className="ig-media"><HeroCarousel images={photos} height={430} /></Link>
-      ) : null}
+        <Link href={to} className="ig-media"><HeroCarousel images={photos} height={300} /></Link>
+      ) : (
+        <Link href={to} className="ig-media ig-media-ph">
+          <span>{t.title}</span>
+          <small>{t.days} 天{t.nights ? ` ${t.nights} 夜` : ""}{t.region ? ` · ${t.region}` : ""}</small>
+        </Link>
+      )}
 
       <div className="ig-actions">
         <TripLikeButton tripId={t.id} count={t.like_count || 0} />
