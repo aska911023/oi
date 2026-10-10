@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { RoomCard, SortMode } from "@/lib/types";
-import { ALL_CATEGORY_LABEL, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel } from "@/lib/data";
+import { ALL_CATEGORY_LABEL, PRICE_RANGES, AMENITY_FILTERS, ROOM_TAGS, priceLabel, GEOGRAPHIC_AREAS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import BlocksRender from "@/components/blocks-render";
 import PhotoCarousel from "@/components/photo-carousel";
@@ -40,7 +40,8 @@ const toImgs = (image?: string | null, images?: string[] | null) =>
 
 export default function Explore({ rooms, total = 0, regions = [], categories = [], blocks, searchHint, heroLayout, heroSplitRatio }: { rooms: RoomCard[]; total?: number; regions?: string[]; categories?: string[]; blocks?: Block[]; searchHint?: string; heroLayout?: HeroLayout; heroSplitRatio?: number }) {
   const [kw, setKw] = useState("");
-  const [region, setRegion] = useState("all");
+  const [area, setArea] = useState("");            // 選中的大區(北/中/南/東/離島),"" = 全部地區
+  const [regionSel, setRegionSel] = useState<string[]>([]); // 區內多選縣市
   const [guests, setGuests] = useState("");
   const [priceRange, setPriceRange] = useState("all");
   const [cat, setCat] = useState(ALL_CATEGORY_LABEL);
@@ -58,10 +59,16 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
   const saveCountOf = (r: RoomCard) => (r.save_count ?? 0) + (saveDelta[r.id] ?? 0);
   const firstRun = useRef(true);
 
+  // 只顯示「有民宿」的大區與縣市(資料驅動);選了大區沒點縣市 → 篩整個大區
+  const areaList = GEOGRAPHIC_AREAS.map((a) => ({ name: a.name, counties: a.regions.filter((r) => regions.includes(r)) })).filter((a) => a.counties.length > 0);
+  const curCounties = areaList.find((a) => a.name === area)?.counties || [];
+  const effRegions = regionSel.length ? regionSel : (area ? curCounties : []);
+  const toggleCounty = (c: string) => setRegionSel((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
+
   function rpcArgs(off: number) {
     const pr = PRICE_RANGES.find((p) => p.value === priceRange)!;
     return {
-      kw: kw.trim(), p_region: region === "all" ? null : region,
+      kw: kw.trim(), p_region: null, p_regions: effRegions.length ? effRegions : null,
       p_price_min: pr.min ? pr.min : null, p_price_max: pr.max ?? null,
       p_guests: guests.trim() ? parseInt(guests) : null,
       p_category: cat === ALL_CATEGORY_LABEL ? null : cat,
@@ -84,7 +91,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
     const t = setTimeout(() => fetchPage(0, false), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kw, region, guests, priceRange, cat, sort, amens, roomTags]);
+  }, [kw, area, regionSel, guests, priceRange, cat, sort, amens, roomTags]);
 
   const canLoadMore = rows.length < rpcTotal;
 
@@ -127,12 +134,22 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
             <div className="filter-row" style={{ alignItems: "flex-start" }}>
               <span className="filter-cap">{I.pin} 目的地</span>
               <div className="chips">
-                <button className={"chip " + (region === "all" ? "on" : "")} onClick={() => setRegion("all")}>全部地區</button>
-                {regions.map((r) => (
-                  <button key={r} className={"chip " + (region === r ? "on" : "")} onClick={() => setRegion(r)}>{r}</button>
+                <button className={"chip " + (!area ? "on" : "")} onClick={() => { setArea(""); setRegionSel([]); }}>全部地區</button>
+                {areaList.map((a) => (
+                  <button key={a.name} className={"chip " + (area === a.name ? "on" : "")} onClick={() => { setArea(a.name); setRegionSel([]); }}>{a.name}</button>
                 ))}
               </div>
             </div>
+            {area && curCounties.length > 0 && (
+              <div className="filter-row filter-subrow" style={{ alignItems: "flex-start" }}>
+                <span className="filter-cap">{area}縣市</span>
+                <div className="chips">
+                  {curCounties.map((c) => (
+                    <button key={c} className={"chip chip-sub " + (regionSel.includes(c) ? "on" : "")} onClick={() => toggleCounty(c)}>{c}</button>
+                  ))}
+                </div>
+              </div>
+            )}
             {categories.length > 0 && (
               <div className="filter-row" style={{ alignItems: "flex-start" }}>
                 <span className="filter-cap">{I.grid} 住宿風格</span>
