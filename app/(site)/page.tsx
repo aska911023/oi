@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = s.share_title || "偶宿 O! · 台灣民宿搜尋";
   const description = s.share_desc || "彙整全台民宿,包棟/親子/海景一次搜尋,看房型價格與周邊景點。";
   return {
-    title,
+    title: { absolute: title }, // 首頁標題不套「%s｜偶宿 O!」模板,避免品牌出現兩次
     description,
     alternates: { canonical: "/" },
     openGraph: { title, description, url: "https://www.oi-stay.com", type: "website", siteName: "偶宿 O!", locale: "zh_TW" },
