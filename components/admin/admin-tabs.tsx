@@ -18,6 +18,7 @@ const TOP = [
   { href: "/admin/members", label: "會員資料" },
   { href: "/admin/vendors", label: "業者審核" },
   { href: "/admin/partners", label: "業者名單" },
+  { href: "/admin/creators", label: "創作者" },
   { href: "/admin/plans", label: "方案設定" },
   { href: "/admin/guides", label: "攻略" },
   { href: "/admin/site", label: "首頁設定" },

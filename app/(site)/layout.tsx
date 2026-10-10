@@ -62,6 +62,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <Link href="/about">品牌故事</Link>
             <Link href="/contact">聯絡我們</Link>
             <Link href="/apply">業者上架</Link>
+            <Link href="/creator/apply">成為創作者</Link>
             <Link href="/terms">服務條款</Link>
             <Link href="/privacy">隱私權政策</Link>
           </div>
