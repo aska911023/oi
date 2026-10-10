@@ -672,7 +672,7 @@ img { display: block; max-width: 100%; }
 .pb-grid input:focus, .pb-grid select:focus { outline: none; border-color: var(--green); }
 .pb-grid textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border-strong); border-radius: 10px; padding: 11px 13px; font: inherit; line-height: 1.6; background: #fff; color: var(--text); resize: vertical; }
 .pb-grid textarea:focus { outline: none; border-color: var(--green); }
-.pb-grid .tp-bodybox { min-height: 220px; resize: both; max-width: 100%; }
+.pb-grid .tp-bodybox { resize: both; max-width: 100%; }
 @media (max-width: 700px) { .pb-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 460px) { .pb-grid { grid-template-columns: 1fr; } }
 

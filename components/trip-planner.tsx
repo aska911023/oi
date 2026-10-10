@@ -139,7 +139,15 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
       if (!raw) return;
       const draft = JSON.parse(raw) as { type: string; refId: string; name: string; region?: string }[];
       if (!Array.isArray(draft) || !draft.length) return;
-      setItems(draft.map((d) => ({ id: genId(), day: 1, type: d.type as TripItemType, name: d.name, refId: d.refId, time: "", note: "", slot: (d.type === "stay" ? "night" : "day") as "day" | "night" })));
+      // 幾間民宿 → 幾晚:住宿各排一晚(Day1、Day2…),天數=晚數+1(最後一天退房);景點/美食等先放 Day1 白天
+      const stays = draft.filter((d) => d.type === "stay");
+      const others = draft.filter((d) => d.type !== "stay");
+      if (stays.length >= 1) { setNights(stays.length); setDays(stays.length + 1); }
+      const seeded: TripItem[] = [
+        ...stays.map((d, i) => ({ id: genId(), day: i + 1, type: "stay" as TripItemType, name: d.name, refId: d.refId, time: "", note: "", slot: "night" as "day" | "night" })),
+        ...others.map((d) => ({ id: genId(), day: 1, type: d.type as TripItemType, name: d.name, refId: d.refId, time: "", note: "", slot: "day" as "day" | "night" })),
+      ];
+      setItems(seeded);
       const fr = draft.find((d) => d.region)?.region;
       if (fr) setRegion((prev) => prev || fr);
       // 注意:這裡「不」清草稿 —— 清太早會讓使用者還沒存檔就回上一頁時整批不見。
@@ -166,9 +174,9 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   }
   function removeItem(id: string) { setItems((p) => p.filter((it) => it.id !== id)); }
 
-  // 單一項目複製到別天(保留白天/晚上分段)
-  function copyItemTo(item: TripItem, toDay: number) {
-    setItems((p) => [...p, { ...item, id: genId(), day: toDay, slot: item.slot || defaultSlot(item.type) }]);
+  // 單一項目移動到別天(保留白天/晚上分段)
+  function moveItemTo(item: TripItem, toDay: number) {
+    setItems((p) => p.map((it) => (it.id === item.id ? { ...it, day: toDay, slot: it.slot || defaultSlot(it.type) } : it)));
   }
 
   // 拖拉換順序(拖到某項就插到它前面,並跟隨它的天/時段)
@@ -267,7 +275,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
             <div><label>每人預算(選填)</label><input type="number" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="NT$" /></div>
             <div><label>交通方式</label><select value={transport} onChange={(e) => setTransport(e.target.value)}>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select></div>
             <div><label>主要地區(選填)</label><select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">不指定</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
-            <div className="wide"><label>行程簡介 / 內文(選填,可換行)</label><textarea className="tp-bodybox" rows={9} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="描述這趟旅程…(可多行)" /></div>
+            <div className="wide"><label>行程簡介 / 內文(選填,可換行)</label><textarea className="tp-bodybox" rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="描述這趟旅程…(可多行;右下角可拖曳放大)" /></div>
             <div className="wide"><label>影片(YouTube / IG / TikTok,可多個,一行一個)</label><textarea rows={2} value={embedText} onChange={(e) => setEmbedText(e.target.value)} placeholder={"https://youtu.be/…\nhttps://tiktok.com/@…/video/…"} /></div>
             <div><label>誰可以留言</label><select value={commentPolicy} onChange={(e) => setCommentPolicy(e.target.value)}>
               <option value="all">所有人</option>
@@ -316,8 +324,8 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
                         </div>
                         <div className="ti-actions">
                           {days > 1 && (
-                            <select className="ti-copy" value="" onChange={(e) => { const to = Number(e.target.value); if (to) copyItemTo(it, to); e.currentTarget.value = ""; }} title="複製這一項到別天">
-                              <option value="">複製到…</option>
+                            <select className="ti-copy" value="" onChange={(e) => { const to = Number(e.target.value); if (to) moveItemTo(it, to); e.currentTarget.value = ""; }} title="移動這一項到別天">
+                              <option value="">移動到…</option>
                               {dayList.filter((x) => x !== d).map((x) => <option key={x} value={x}>Day {x}</option>)}
                             </select>
                           )}
