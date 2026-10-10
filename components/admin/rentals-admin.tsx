@@ -6,6 +6,7 @@ import { logAdmin } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS, RENTAL_TAGS } from "@/lib/data";
 import { revalidateRentals } from "@/app/actions";
 import RentalPlansEditor from "@/components/admin/rental-plans-editor";
+import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import type { RentalShop } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
@@ -21,6 +22,10 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  // 快捷匯入照片:只跳精簡上傳框,不用開整張編輯表(租車只存單張,取第一張)
+  const [photoFor, setPhotoFor] = useState<RentalShop | null>(null);
+  const [photoImgs, setPhotoImgs] = useState<string[]>([]);
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   const filtered = useMemo(() => list.filter((s) => {
     if (!q.trim()) return true;
@@ -77,6 +82,22 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
     await refresh();
   }
 
+  function openPhotos(s: RentalShop) {
+    setPhotoFor(s);
+    setPhotoImgs(s.image ? [s.image] : []);
+  }
+  async function savePhotos() {
+    if (!photoFor) return;
+    setPhotoBusy(true);
+    const sb = createClient();
+    const { error } = await sb.from("rental_shops").update({ image: photoImgs[0] || "" }).eq("id", photoFor.id);
+    setPhotoBusy(false);
+    if (error) { alert("儲存失敗:" + error.message); return; }
+    if (!ownerId) logAdmin("edit", { type: "rental", id: photoFor.id, name: photoFor.name, detail: { 動作: "匯入照片" } });
+    setPhotoFor(null);
+    await refresh();
+  }
+
   async function togglePublish(s: RentalShop) {
     const sb = createClient();
     await sb.from("rental_shops").update({ published: !s.published }).eq("id", s.id);
@@ -129,6 +150,7 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
                 </td>
                 <td>
                   <div className="row-actions">
+                    <button className={"lnk" + (s.image ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(s)}>📷 {s.image ? "照片" : "加照片"}</button>
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
@@ -140,6 +162,21 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
           </tbody>
         </table>
       </div>
+
+      {photoFor && (
+        <>
+          <div className="overlay" onClick={() => setPhotoFor(null)} />
+          <div className="editor" role="dialog" aria-modal="true" style={{ maxWidth: 560 }}>
+            <h2>匯入照片 — {photoFor.name}</h2>
+            <p style={{ color: "var(--muted)", fontSize: 13, margin: "0 0 14px" }}>直接選檔或貼網址,存檔後立即套用到前台(租車店顯示第一張)。</p>
+            <MultiImageUploader prefix="rental" value={photoImgs} onChange={setPhotoImgs} />
+            <div className="editor-actions">
+              <button className="btn btn-ghost" onClick={() => setPhotoFor(null)}>取消</button>
+              <button className="btn btn-primary" onClick={savePhotos} disabled={photoBusy}>{photoBusy ? "儲存中…" : "儲存照片"}</button>
+            </div>
+          </div>
+        </>
+      )}
 
       {form && (
         <>

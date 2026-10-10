@@ -97,6 +97,10 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   const [form, setForm] = useState<Form | null>(null);
   const [assign, setAssign] = useState<Stay | null>(null);
   const [busy, setBusy] = useState(false);
+  // 快捷匯入照片:只跳精簡上傳框,不用開整張編輯表
+  const [photoFor, setPhotoFor] = useState<Stay | null>(null);
+  const [photoImgs, setPhotoImgs] = useState<string[]>([]);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const roomSaveRef = useRef<(() => Promise<void>) | null>(null); // 房型編輯器把 saveAll 註冊進來,讓主「儲存」一起存
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<LogRow[] | null>(null);
@@ -199,6 +203,22 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     setBusy(false);
     // 新建後留在編輯狀態,讓下方「房型管理」立刻出現
     setForm((f) => (f ? { ...f, id: newId } : f));
+    await refresh();
+  }
+
+  function openPhotos(s: Stay) {
+    setPhotoFor(s);
+    setPhotoImgs(s.images && s.images.length ? s.images : (s.image ? [s.image] : []));
+  }
+  async function savePhotos() {
+    if (!photoFor) return;
+    setPhotoBusy(true);
+    const sb = createClient();
+    const { error } = await sb.from("stays").update({ images: photoImgs, image: photoImgs[0] || "" }).eq("id", photoFor.id);
+    setPhotoBusy(false);
+    if (error) { alert("儲存失敗:" + error.message); return; }
+    await logAdmin("edit", photoFor, { 動作: "匯入照片" });
+    setPhotoFor(null);
     await refresh();
   }
 
@@ -312,6 +332,8 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                 </>}
                 <td>
                   <div className="row-actions">
+                    {(() => { const n = s.images?.length || (s.image ? 1 : 0);
+                      return <button className={"lnk" + (n ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(s)}>📷 {n ? `照片·${n}` : "加照片"}</button>; })()}
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
@@ -328,6 +350,21 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
           </tbody>
         </table>
       </div>
+
+      {photoFor && (
+        <>
+          <div className="overlay" onClick={() => setPhotoFor(null)} />
+          <div className="editor" role="dialog" aria-modal="true" style={{ maxWidth: 560 }}>
+            <h2>匯入照片 — {photoFor.name}</h2>
+            <p style={{ color: "var(--muted)", fontSize: 13, margin: "0 0 14px" }}>直接選檔(可多選)或貼網址,第一張為封面。存檔後立即套用到前台。</p>
+            <MultiImageUploader prefix="stay" value={photoImgs} onChange={setPhotoImgs} />
+            <div className="editor-actions">
+              <button className="btn btn-ghost" onClick={() => setPhotoFor(null)}>取消</button>
+              <button className="btn btn-primary" onClick={savePhotos} disabled={photoBusy}>{photoBusy ? "儲存中…" : "儲存照片"}</button>
+            </div>
+          </div>
+        </>
+      )}
 
       {form && (
         <>

@@ -29,6 +29,10 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+  // 快捷匯入照片:只跳精簡上傳框,不用開整張編輯表
+  const [photoFor, setPhotoFor] = useState<Place | null>(null);
+  const [photoImgs, setPhotoImgs] = useState<string[]>([]);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const label = KIND_LABEL[kind];
 
   const filtered = useMemo(() => list.filter((p) => {
@@ -99,6 +103,22 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
     await refresh();
   }
 
+  function openPhotos(p: Place) {
+    setPhotoFor(p);
+    setPhotoImgs(p.images && p.images.length ? p.images : (p.image ? [p.image] : []));
+  }
+  async function savePhotos() {
+    if (!photoFor) return;
+    setPhotoBusy(true);
+    const sb = createClient();
+    const { error } = await sb.from(table).update({ images: photoImgs, image: photoImgs[0] || "" }).eq("id", photoFor.id);
+    setPhotoBusy(false);
+    if (error) { alert("儲存失敗:" + error.message); return; }
+    logAdmin("edit", { type: "place", id: photoFor.id, name: photoFor.name, detail: { 類別: label, 動作: "匯入照片" } });
+    setPhotoFor(null);
+    await refresh();
+  }
+
   async function togglePublish(p: Place) {
     const sb = createClient();
     await sb.from(table).update({ published: !p.published }).eq("id", p.id);
@@ -142,6 +162,8 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
                 <td><span className={"pill " + (p.published ? "live" : "draft")}>{p.published ? "已發布" : "隱藏"}</span></td>
                 <td>
                   <div className="row-actions">
+                    {(() => { const n = p.images?.length || (p.image ? 1 : 0);
+                      return <button className={"lnk" + (n ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(p)}>📷 {n ? `照片·${n}` : "加照片"}</button>; })()}
                     <button className="lnk" onClick={() => setForm({ ...p, details: p.details || {} })}>編輯</button>
                     <button className="lnk" onClick={() => togglePublish(p)}>{p.published ? "隱藏" : "發布"}</button>
                     <button className="lnk danger" onClick={() => remove(p)}>刪除</button>
@@ -152,6 +174,21 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
           </tbody>
         </table>
       </div>
+
+      {photoFor && (
+        <>
+          <div className="overlay" onClick={() => setPhotoFor(null)} />
+          <div className="editor" role="dialog" aria-modal="true" style={{ maxWidth: 560 }}>
+            <h2>匯入照片 — {photoFor.name}</h2>
+            <p style={{ color: "var(--muted)", fontSize: 13, margin: "0 0 14px" }}>直接選檔(可多選)或貼網址,第一張為封面。存檔後立即套用到前台。</p>
+            <MultiImageUploader prefix="place" value={photoImgs} onChange={setPhotoImgs} />
+            <div className="editor-actions">
+              <button className="btn btn-ghost" onClick={() => setPhotoFor(null)}>取消</button>
+              <button className="btn btn-primary" onClick={savePhotos} disabled={photoBusy}>{photoBusy ? "儲存中…" : "儲存照片"}</button>
+            </div>
+          </div>
+        </>
+      )}
 
       {form && (
         <>
