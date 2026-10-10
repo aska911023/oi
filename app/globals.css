@@ -1117,7 +1117,7 @@ img { display: block; max-width: 100%; }
 .ig-menu .pill { align-self: flex-start; margin: 2px 6px 4px; }
 .ig-menu button:hover, .ig-menu a:hover { background: var(--green-soft); color: var(--green); }
 .ig-title { display: block; font-weight: 700; color: var(--ink); }
-.ig-cap-sum { display: block; margin: 4px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.65; }
+.ig-cap-sum { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 4px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.65; }
 
 .ig-clickable { cursor: pointer; }
 
