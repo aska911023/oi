@@ -1212,6 +1212,13 @@ img { display: block; max-width: 100%; }
 .guide-author { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-weight: 600; font-size: 14.5px; }
 .guide-author:hover span { color: var(--green); }
 .creator-badge { font-size: 12px; font-weight: 700; color: #fff; background: var(--green); border-radius: 20px; padding: 3px 10px; vertical-align: middle; margin-left: 6px; }
+/* 創作者成效表 */
+.cperf { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+.cperf th, .cperf td { padding: 9px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.cperf th { font-size: 12.5px; color: var(--muted); font-weight: 600; text-align: left; }
+.cperf td:first-child { font-weight: 600; }
+.cperf th:not(:first-child), .cperf td:not(:first-child) { text-align: center; }
+.cperf tbody tr:hover { background: var(--green-soft); }
 /* 後台攻略清單 */
 .art-list { display: flex; flex-direction: column; gap: 8px; }
 .art-row { display: flex; align-items: center; gap: 14px; justify-content: space-between; border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; background: var(--surface); }
