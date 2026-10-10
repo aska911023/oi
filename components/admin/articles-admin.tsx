@@ -7,19 +7,24 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const TAGS = ["城市指南", "一日遊", "兩天一夜", "親子行程", "情侶行程", "季節限定", "美食攻略", "景點攻略"];
 
-interface Article { id?: string; slug?: string; title: string; excerpt?: string; cover_image?: string; body?: string; region?: string; tag?: string; published?: boolean; created_at?: string; }
+interface Article { id?: string; slug?: string; title: string; excerpt?: string; cover_image?: string; body?: string; region?: string; tag?: string; published?: boolean; created_at?: string; author_id?: string | null; }
 const EMPTY: Article = { title: "", excerpt: "", cover_image: "", body: "", region: "", tag: "", published: false };
 
-export default function ArticlesAdmin() {
+export default function ArticlesAdmin({ ownOnly = false }: { ownOnly?: boolean }) {
   const [list, setList] = useState<Article[]>([]);
   const [edit, setEdit] = useState<Article | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uid, setUid] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     const sb = createClient();
-    const { data } = await sb.from("articles").select("id,slug,title,region,tag,published,created_at").order("created_at", { ascending: false });
+    const { data: { user } } = await sb.auth.getUser();
+    setUid(user?.id ?? null);
+    let q = sb.from("articles").select("id,slug,title,region,tag,published,created_at,author_id").order("created_at", { ascending: false });
+    if (ownOnly && user) q = q.eq("author_id", user.id);
+    const { data } = await q;
     setList((data as Article[]) || []);
     setLoading(false);
   }
@@ -33,7 +38,7 @@ export default function ArticlesAdmin() {
     const payload = { title: edit.title.trim(), excerpt: edit.excerpt || null, cover_image: edit.cover_image || null, body: edit.body || null, region: edit.region || null, tag: edit.tag || null, published: !!edit.published };
     const { error } = edit.id
       ? await sb.from("articles").update(payload).eq("id", edit.id)
-      : await sb.from("articles").insert(payload);
+      : await sb.from("articles").insert({ ...payload, author_id: uid });
     setSaving(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
     setEdit(null); load();

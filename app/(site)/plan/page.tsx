@@ -20,6 +20,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
+  let isCreator = false;
+  if (user) {
+    const { data: prof } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    isCreator = prof?.role === "creator" || prof?.role === "admin";
+  }
 
   // 住宿改用「房型」清單(民宿名 · 房型名),規劃時可直接選房型
   type RoomRow = { id: string; name: string; stays: { id: string; name: string; region: string; town: string } | { id: string; name: string; region: string; town: string }[] | null };
@@ -62,6 +67,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         loggedIn={!!user}
         initial={initial}
         initialOwned={initialOwned}
+        isCreator={isCreator}
       />
     </main>
   );

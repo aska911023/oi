@@ -13,9 +13,11 @@ export interface Article {
   published?: boolean;
   created_at?: string;
   updated_at?: string;
+  author_id?: string | null;
+  author?: { display_name?: string | null; avatar_url?: string | null } | null;
 }
 
-const LIST_COLS = "id,slug,title,excerpt,cover_image,region,tag,created_at";
+const LIST_COLS = "id,slug,title,excerpt,cover_image,region,tag,created_at, author:author_id(display_name, avatar_url)";
 
 // 已發布攻略(可選縣市)
 export async function getArticles(region?: string, limit = 60): Promise<Article[]> {
@@ -34,8 +36,9 @@ export async function getArticleBySlug(param: string): Promise<Article | null> {
   if (!hasSupabase()) return null;
   try {
     const sb = createPublicClient();
-    let { data } = await sb.from("articles").select("*").eq("slug", param).maybeSingle();
-    if (!data) ({ data } = await sb.from("articles").select("*").eq("id", param).maybeSingle());
+    const cols = "*, author:author_id(display_name, avatar_url)";
+    let { data } = await sb.from("articles").select(cols).eq("slug", param).maybeSingle();
+    if (!data) ({ data } = await sb.from("articles").select(cols).eq("id", param).maybeSingle());
     return (data as Article) || null;
   } catch { return null; }
 }

@@ -34,7 +34,7 @@ const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
   { type: "station", label: "車站", key: "stations" },
 ];
 
-export default function TripPlanner({ stays, rooms, attractions, foods, parkings, rentals, stations, loggedIn, initial, initialOwned }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean }) {
+export default function TripPlanner({ stays, rooms, attractions, foods, parkings, rentals, stations, loggedIn, initial, initialOwned, isCreator = false }: Pools & { loggedIn: boolean; initial?: Trip | null; initialOwned?: boolean; isCreator?: boolean }) {
   const pools: Pools = useMemo(() => ({ stays, rooms, attractions, foods, parkings, rentals, stations }), [stays, rooms, attractions, foods, parkings, rentals, stations]);
 
   const [tripId, setTripId] = useState<string | null>(initial && initialOwned ? initial.id : null);
@@ -276,7 +276,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
             <div><label>交通方式</label><select value={transport} onChange={(e) => setTransport(e.target.value)}>{TRANSPORTS.map((t) => <option key={t}>{t}</option>)}</select></div>
             <div><label>主要地區(選填)</label><select value={region} onChange={(e) => setRegion(e.target.value)}><option value="">不指定</option>{REGIONS.map((r) => <option key={r}>{r}</option>)}</select></div>
             <div className="wide"><label>行程簡介 / 內文(選填,可換行)</label><textarea className="tp-bodybox" rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} placeholder="描述這趟旅程…(可多行;右下角可拖曳放大)" /></div>
-            <div className="wide"><label>影片(YouTube / IG / TikTok,可多個,一行一個)</label><textarea rows={2} value={embedText} onChange={(e) => setEmbedText(e.target.value)} placeholder={"https://youtu.be/…\nhttps://tiktok.com/@…/video/…"} /></div>
+            {isCreator && <div className="wide"><label>影片(YouTube / IG / TikTok,可多個,一行一個)<span style={{ color: "var(--muted)", fontWeight: 400 }}> · 創作者專屬</span></label><textarea rows={2} value={embedText} onChange={(e) => setEmbedText(e.target.value)} placeholder={"https://youtu.be/…\nhttps://tiktok.com/@…/video/…"} /></div>}
             <div><label>誰可以留言</label><select value={commentPolicy} onChange={(e) => setCommentPolicy(e.target.value)}>
               <option value="all">所有人</option>
               <option value="followers">只有粉絲</option>

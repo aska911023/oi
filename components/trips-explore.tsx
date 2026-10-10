@@ -32,7 +32,7 @@ const HEAD_BUCKETS = [
   { v: "5+", label: "5 人以上" },
 ];
 
-export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "", myAvatar = null, viewerId = null }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string; myAvatar?: string | null; viewerId?: string | null }) {
+export default function TripsExplore({ initialTrips, initialTotal, loggedIn = false, myName = "", myAvatar = null, viewerId = null, isCreator = false }: { initialTrips: Trip[]; initialTotal: number; loggedIn?: boolean; myName?: string; myAvatar?: string | null; viewerId?: string | null; isCreator?: boolean }) {
   const [kw, setKw] = useState("");
   const [dayB, setDayB] = useState("all");
   const [budgetB, setBudgetB] = useState("all");
@@ -95,7 +95,7 @@ export default function TripsExplore({ initialTrips, initialTotal, loggedIn = fa
         <span className="cs-prompt">{loggedIn ? "分享你的行程…" : "登入後分享你的行程…"}</span>
         <span className="btn btn-primary btn-sm cs-btn">分享行程</span>
       </Link>
-      <MediaCompose loggedIn={loggedIn} myName={myName} myAvatar={myAvatar} />
+      {isCreator && <MediaCompose loggedIn={loggedIn} myName={myName} myAvatar={myAvatar} />}
 
       <div className="ig-feed">
         {results.length === 0 && <div className="empty">還沒有符合條件的行程。放寬篩選,或自己<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>規劃一個</Link>並公開分享。</div>}

@@ -5,6 +5,7 @@ import { getArticleBySlug } from "@/lib/articles";
 import { renderMarkdown } from "@/lib/md";
 import { breadcrumbLd } from "@/lib/seo";
 import { decodeParam } from "@/lib/slug";
+import Avatar from "@/components/avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     image: a.cover_image || undefined,
     datePublished: a.created_at,
     dateModified: a.updated_at || a.created_at,
-    author: { "@type": "Organization", name: "偶宿 O!" },
+    author: a.author?.display_name ? { "@type": "Person", name: a.author.display_name } : { "@type": "Organization", name: "偶宿 O!" },
     publisher: { "@type": "Organization", name: "偶宿 O!", "@id": "https://www.oi-stay.com/#org" },
     mainEntityOfPage: `https://www.oi-stay.com/guides/${a.slug || a.id}`,
   };
@@ -47,7 +48,13 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         {a.region && <> · <Link href={`/${encodeURIComponent(a.region)}`} className="lnk">{a.region}</Link></>}
       </nav>
       <h1 className="serif" style={{ fontSize: 30, marginBottom: 10, lineHeight: 1.3 }}>{a.title}</h1>
-      <div className="card-eyebrow" style={{ marginBottom: 18 }}>{a.tag && <span>{a.tag}</span>}{a.tag && a.region ? " · " : ""}{a.region && <span>{a.region}</span>}</div>
+      {a.author?.display_name && (
+        <Link href={a.author_id ? `/u/${a.author_id}` : "#"} className="guide-author">
+          <Avatar src={a.author.avatar_url} name={a.author.display_name} size={34} />
+          <span>{a.author.display_name}</span>
+        </Link>
+      )}
+      <div className="card-eyebrow" style={{ marginBottom: 18, marginTop: 8 }}>{a.tag && <span>{a.tag}</span>}{a.tag && a.region ? " · " : ""}{a.region && <span>{a.region}</span>}</div>
       {a.cover_image && (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="guide-hero" src={a.cover_image} alt={a.title} />
