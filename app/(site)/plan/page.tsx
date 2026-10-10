@@ -4,6 +4,7 @@ import { getPublishedPlaces } from "@/lib/places";
 import { getPublishedRentalShops } from "@/lib/rentals";
 import { getStations } from "@/lib/stations";
 import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +21,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  let isCreator = false;
-  if (user) {
-    const { data: prof } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
-    isCreator = prof?.role === "creator" || prof?.role === "admin";
-  }
+  // isCreator / loggedIn 跟著 admin 的檢視身分預覽走(影片欄只給創作者)
+  const viewer = await getViewer();
+  const isCreator = viewer.role === "creator" || viewer.role === "admin";
 
   // 住宿改用「房型」清單(民宿名 · 房型名),規劃時可直接選房型
   type RoomRow = { id: string; name: string; stays: { id: string; name: string; region: string; town: string } | { id: string; name: string; region: string; town: string }[] | null };
@@ -64,7 +63,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         parkings={parkings.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         rentals={rentals.map((p) => ({ id: p.id, name: p.name, region: p.region, town: p.town }))}
         stations={stations.map((s) => ({ id: s.id, name: (s.kind === "hsr" ? "高鐵 " : "台鐵 ") + s.name, region: s.region, town: "" }))}
-        loggedIn={!!user}
+        loggedIn={viewer.loggedIn}
         initial={initial}
         initialOwned={initialOwned}
         isCreator={isCreator}
