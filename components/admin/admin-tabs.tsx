@@ -20,7 +20,6 @@ const TOP = [
   { href: "/admin/partners", label: "業者名單" },
   { href: "/admin/creators", label: "創作者" },
   { href: "/admin/plans", label: "方案設定" },
-  { href: "/admin/guides", label: "攻略" },
   { href: "/admin/site", label: "首頁設定" },
   { href: "/admin/analytics", label: "數據" },
 ];

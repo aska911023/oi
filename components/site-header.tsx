@@ -27,7 +27,6 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
             <>
               {role === "admin" && <Link href="/admin">管理後台</Link>}
               {(role === "partner" || role === "admin") && <Link href="/vendor">業者後台</Link>}
-              {(role === "creator" || role === "admin") && <Link href="/creator">創作者後台</Link>}
               <NotificationBell />
               <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={30} /> 歡迎,{name}</Link>
             </>

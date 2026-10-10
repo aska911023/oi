@@ -6,10 +6,11 @@ import type { ViewRole } from "@/lib/viewer";
 
 // admin 專用:以某個角色「預覽」網站(像 Discord 以身分查看)。
 // 靠 cookie oi_view_as 讓伺服器端的 header/頁面跟著變;只改畫面,不改資料權限。
-const LABEL: Record<string, string> = { partner: "業者", user: "一般會員", guest: "訪客" };
+const LABEL: Record<string, string> = { partner: "業者", creator: "創作者", user: "一般會員", guest: "訪客" };
 const OPTIONS: { v: ViewRole | "self"; label: string }[] = [
   { v: "self", label: "以自己(管理員)" },
   { v: "partner", label: "業者" },
+  { v: "creator", label: "創作者" },
   { v: "user", label: "一般會員" },
   { v: "guest", label: "訪客(未登入)" },
 ];

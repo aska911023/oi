@@ -52,10 +52,10 @@ export default function CreatorsAdmin() {
       ) : (
         <div style={{ overflowX: "auto", marginBottom: 30 }}>
           <table className="cperf">
-            <thead><tr><th>創作者</th><th>行程</th><th>攻略</th><th>粉絲</th><th>讚</th><th>收藏</th><th>留言</th></tr></thead>
+            <thead><tr><th>創作者</th><th>行程</th><th>粉絲</th><th>讚</th><th>收藏</th><th>留言</th></tr></thead>
             <tbody>
               {perf.map((c) => (
-                <tr key={c.id}><td>{c.name || "(未命名)"}</td><td>{c.trips}</td><td>{c.articles}</td><td>{c.followers}</td><td>{c.likes}</td><td>{c.saves}</td><td>{c.comments}</td></tr>
+                <tr key={c.id}><td>{c.name || "(未命名)"}</td><td>{c.trips}</td><td>{c.followers}</td><td>{c.likes}</td><td>{c.saves}</td><td>{c.comments}</td></tr>
               ))}
             </tbody>
           </table>

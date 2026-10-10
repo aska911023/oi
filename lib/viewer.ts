@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 // 「檢視身分」(admin 專用的 UI 預覽,像 Discord 以角色查看)。
 // 靠 cookie oi_view_as 覆蓋「有效身分」給伺服器端元件用;只有真正的 admin 才生效。
 // 注意:這只改畫面/導覽,不改資料權限(資料仍由 RLS 用真帳號把關)。
-export type ViewRole = "partner" | "user" | "guest";
-const VALID: ViewRole[] = ["partner", "user", "guest"];
+export type ViewRole = "partner" | "creator" | "user" | "guest";
+const VALID: ViewRole[] = ["partner", "creator", "user", "guest"];
 
 export interface Viewer {
   isRealAdmin: boolean;      // 真實是不是 admin(決定能否用檢視身分)
