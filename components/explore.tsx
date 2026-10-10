@@ -135,7 +135,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
               <span className="filter-cap">{I.pin} 目的地</span>
               <div className="chips">
                 <button className={"chip " + (!area ? "on" : "")} onClick={() => { setArea(""); setRegionSel([]); }}>全部地區</button>
-                {areaList.map((a) => (
+                {areaList.filter((a) => !area || a.name === area).map((a) => (
                   <button key={a.name} className={"chip " + (area === a.name ? "on" : "")} onClick={() => { setArea(a.name); setRegionSel([]); }}>{a.name}</button>
                 ))}
               </div>
