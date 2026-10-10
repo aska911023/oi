@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CreatorApplyForm from "@/components/creator-apply-form";
@@ -10,11 +9,10 @@ export const metadata: Metadata = { title: "成為創作者", robots: { index: f
 export default async function CreatorApplyPage() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) redirect("/login?next=/creator/apply");
-
-  const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  // 不用 redirect():(site) 的 error.tsx 自癒邊界會把頁面層 redirect 吃掉 → 未登入直接顯示登入提示
+  const profile = user ? (await sb.from("profiles").select("role").eq("id", user.id).maybeSingle()).data : null;
   const role = profile?.role;
-  const { data: app } = await sb.from("creator_applications").select("status").eq("applicant_id", user.id).maybeSingle();
+  const app = user ? (await sb.from("creator_applications").select("status").eq("applicant_id", user.id).maybeSingle()).data : null;
 
   return (
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 640 }}>
@@ -22,7 +20,9 @@ export default async function CreatorApplyPage() {
       <p style={{ color: "var(--text-2)", lineHeight: 1.7, marginBottom: 24 }}>
         創作者可以分享 <b>IG / YouTube 影音</b>、撰寫<b>旅遊攻略</b>,內容會掛上你的名字 —— 把你的作品帶給更多想出遊的人。
       </p>
-      {role === "creator" || role === "admin" ? (
+      {!user ? (
+        <div className="empty">請先<Link href="/login?next=/creator/apply" className="lnk">登入 / 註冊</Link>,才能申請成為創作者。</div>
+      ) : role === "creator" || role === "admin" ? (
         <div className="empty">你已經是創作者了 🎉 <Link href="/creator" className="lnk">前往創作者後台 →</Link></div>
       ) : app?.status === "pending" ? (
         <div className="empty">你的申請<b>審核中</b>,我們會主動跟你聯絡 😊</div>
