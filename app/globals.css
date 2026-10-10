@@ -1215,9 +1215,8 @@ img { display: block; max-width: 100%; }
 .art-title { font-weight: 700; color: var(--text); }
 .art-meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
 .art-actions { flex: none; display: flex; gap: 12px; white-space: nowrap; }
-/* 目的地兩層篩選:大區 → 區內縣市子列 */
-.filter-subrow { margin-top: -2px; }
-.filter-subrow .filter-cap { color: var(--muted); font-size: 12.5px; }
+/* 目的地兩層篩選:大區後面接區內縣市(同一列,細分隔線隔開) */
+.chip-divider { width: 1px; align-self: stretch; min-height: 22px; background: var(--border-strong); margin: 0 6px; }
 .chip-sub { font-size: 13px; }
 /* 地圖區塊(列表頁用) */
 .map-sec { margin: 8px 0 26px; }

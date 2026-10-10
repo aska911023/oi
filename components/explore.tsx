@@ -138,18 +138,12 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                 {areaList.filter((a) => !area || a.name === area).map((a) => (
                   <button key={a.name} className={"chip " + (area === a.name ? "on" : "")} onClick={() => { setArea(a.name); setRegionSel([]); }}>{a.name}</button>
                 ))}
+                {area && curCounties.length > 0 && <span className="chip-divider" aria-hidden="true" />}
+                {area && curCounties.map((c) => (
+                  <button key={c} className={"chip chip-sub " + (regionSel.includes(c) ? "on" : "")} onClick={() => toggleCounty(c)}>{c}</button>
+                ))}
               </div>
             </div>
-            {area && curCounties.length > 0 && (
-              <div className="filter-row filter-subrow" style={{ alignItems: "flex-start" }}>
-                <span className="filter-cap" aria-hidden="true" />
-                <div className="chips">
-                  {curCounties.map((c) => (
-                    <button key={c} className={"chip chip-sub " + (regionSel.includes(c) ? "on" : "")} onClick={() => toggleCounty(c)}>{c}</button>
-                  ))}
-                </div>
-              </div>
-            )}
             {categories.length > 0 && (
               <div className="filter-row" style={{ alignItems: "flex-start" }}>
                 <span className="filter-cap">{I.grid} 住宿風格</span>
