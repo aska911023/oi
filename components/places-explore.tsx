@@ -12,7 +12,7 @@ import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import AddToTrip from "@/components/add-to-trip";
-import PlacesMap, { type MapPoint } from "@/components/places-map";
+import PlacesMap, { type MapPoint, type MapBounds } from "@/components/places-map";
 
 const PAGE = 24;
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
@@ -39,6 +39,8 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
   const hasMap = !!(mapPoints && mapPoints.length); // 左列表右地圖聯動
   const [kw, setKw] = useState("");
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const [followMap, setFollowMap] = useState(false); // 跟著地圖找:只顯示目前地圖範圍內
+  const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [region, setRegion] = useState(lockedRegion || "all");
   const [tags, setTags] = useState<string[]>([]);
   const [active, setActive] = useState<Place | null>(null);
@@ -92,7 +94,9 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
   }, [kw, region, tags]);
 
   const results = rows;
-  const canLoadMore = rows.length < rpcTotal;
+  const inBounds = (p: Place, b: MapBounds) => p.lat != null && p.lng != null && Number(p.lat) <= b.n && Number(p.lat) >= b.s && Number(p.lng) <= b.e && Number(p.lng) >= b.w;
+  const shown = (hasMap && followMap && bounds) ? results.filter((p) => inBounds(p, bounds)) : results;
+  const canLoadMore = rows.length < rpcTotal && !(hasMap && followMap);
 
   const mapHref = (p: Place) =>
     p.lat != null && p.lng != null
@@ -169,13 +173,18 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
 
       <div className="shell">
         <div className="sec-head">
-          <div className="st"><h2 className="serif">{copy.title}</h2><span className="count">{rpcTotal} 筆</span></div>
+          <div className="st"><h2 className="serif">{copy.title}</h2><span className="count">{hasMap && followMap && bounds ? `地圖範圍 ${shown.length}` : `${rpcTotal} 筆`}</span></div>
+          {hasMap && (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13.5, color: "var(--text-2)", cursor: "pointer" }}>
+              <input type="checkbox" checked={followMap} onChange={(e) => setFollowMap(e.target.checked)} /> 只看地圖範圍內
+            </label>
+          )}
         </div>
 
         <div className={"places-body" + (hasMap ? " split" : "")}>
         <div className="cards">
-          {results.length === 0 && <div className="empty">{copy.empty}</div>}
-          {results.map((p) => (
+          {shown.length === 0 && <div className="empty">{hasMap && followMap ? "這個地圖範圍內沒有結果,縮小地圖或取消勾選。" : copy.empty}</div>}
+          {shown.map((p) => (
             <div key={p.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
               onClick={() => setActive(p)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}
               onMouseEnter={hasMap ? () => setHoverId(p.id) : undefined}
@@ -193,7 +202,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
             </div>
           ))}
         </div>
-          {hasMap && <div className="places-mapcol"><PlacesMap points={mapPoints!} highlightId={hoverId} /></div>}
+          {hasMap && <div className="places-mapcol"><PlacesMap points={mapPoints!} highlightId={hoverId} onBounds={setBounds} /></div>}
         </div>
 
         {canLoadMore && (

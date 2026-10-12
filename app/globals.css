@@ -1187,6 +1187,16 @@ img { display: block; max-width: 100%; }
 .oi-pin-me { background: #2b7fff; box-shadow: 0 0 0 5px rgba(43, 127, 255, .28), 0 1px 4px rgba(0, 0, 0, .4); }
 .oi-mapbtn { display: block; width: 30px; height: 30px; line-height: 28px; text-align: center; padding: 0; margin-top: 8px; background: #fff; color: #333; border: 1px solid rgba(0, 0, 0, .2); border-radius: 6px; font-size: 15px; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); }
 .oi-mapbtn:hover { background: #f2f4f1; }
+.oi-pop { min-width: 168px; }
+.oi-pop-img { height: 92px; background-size: cover; background-position: center; border-radius: 8px; margin-bottom: 8px; }
+.oi-pop-name { font-weight: 700; font-size: 14px; color: #14201b; line-height: 1.3; }
+.oi-pop-sub { font-size: 12px; color: #6b746e; margin-top: 2px; }
+.oi-pop-price { font-size: 13px; font-weight: 800; color: var(--green); margin-top: 3px; }
+.oi-pop-act { display: flex; gap: 8px; align-items: center; margin-top: 9px; flex-wrap: wrap; }
+.oi-pop-link { color: var(--green); font-weight: 600; text-decoration: none; font-size: 12.5px; }
+.oi-pop-link:hover { text-decoration: underline; }
+.oi-pop-add { font-size: 12px; font-weight: 700; color: var(--green); background: none; border: 1px solid var(--green); border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+.oi-pop-add:disabled { color: #6b746e; border-color: #cfd6c9; cursor: default; }
 
 /* 左列表右地圖 聯動(城市分類頁) */
 .places-body.split { display: block; }

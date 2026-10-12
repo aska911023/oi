@@ -75,17 +75,17 @@ export async function getPlaceBySlug(kind: PoiKind, param: string): Promise<Plac
 }
 
 // 某縣市某類的地圖點位(有經緯度者)
-export type CityMapPoint = { id: string; name: string; lat: number; lng: number; href: string; kind: string };
+export type CityMapPoint = { id: string; name: string; lat: number; lng: number; href: string; kind: string; image?: string; price?: number; town?: string; region?: string };
 export async function getCityMapPoints(kind: PoiKind, region: string): Promise<CityMapPoint[]> {
   if (!hasSupabase()) return [];
   try {
     const sb = createPublicClient();
-    const { data } = await sb.from(KIND_TABLE[kind]).select("id,name,slug,lat,lng").eq("published", true).eq("region", region)
+    const { data } = await sb.from(KIND_TABLE[kind]).select("id,name,slug,lat,lng,image,town").eq("published", true).eq("region", region)
       .not("lat", "is", null).not("lng", "is", null).limit(500);
     const enc = encodeURIComponent;
-    return ((data || []) as { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null }[])
+    return ((data || []) as { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null; image?: string; town?: string }[])
       .filter((r) => r.lat != null && r.lng != null)
-      .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${KIND_SINGULAR[kind]}/${enc(r.slug || r.id)}`, kind }));
+      .map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${KIND_SINGULAR[kind]}/${enc(r.slug || r.id)}`, kind, image: r.image || undefined, town: r.town || undefined, region }));
   } catch { return []; }
 }
 
@@ -95,16 +95,16 @@ export async function getCityAllPoints(region: string): Promise<CityMapPoint[]> 
   try {
     const sb = createPublicClient();
     const enc = encodeURIComponent;
-    const sel = "id,name,slug,lat,lng";
+    const placeSel = "id,name,slug,lat,lng,image,town";
     const [st, at, fo, pa] = await Promise.all([
-      sb.from("stays").select(sel).eq("published", true).eq("approved", true).eq("visibility", "published").eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
-      sb.from("attractions").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
-      sb.from("restaurants").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
-      sb.from("parking_lots").select(sel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("stays").select("id,name,slug,lat,lng,image,price,town").eq("published", true).eq("approved", true).eq("visibility", "published").eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("attractions").select(placeSel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("restaurants").select(placeSel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
+      sb.from("parking_lots").select(placeSel).eq("published", true).eq("region", region).not("lat", "is", null).not("lng", "is", null).limit(300),
     ]);
-    type Row = { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null };
+    type Row = { id: string; name: string; slug?: string; lat?: number | null; lng?: number | null; image?: string; town?: string; price?: number | null };
     const mk = (rows: Row[] | null, kind: string, hrefKind: string): CityMapPoint[] =>
-      (rows || []).filter((r) => r.lat != null && r.lng != null).map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${hrefKind}/${enc(r.slug || r.id)}`, kind }));
+      (rows || []).filter((r) => r.lat != null && r.lng != null).map((r) => ({ id: r.id, name: r.name, lat: Number(r.lat), lng: Number(r.lng), href: `/${enc(region)}/${hrefKind}/${enc(r.slug || r.id)}`, kind, image: r.image || undefined, town: r.town || undefined, region, ...(typeof r.price === "number" && r.price > 0 ? { price: r.price } : {}) }));
     return [
       ...mk(st.data as Row[], "hotel", "hotel"),
       ...mk(at.data as Row[], "attraction", "attraction"),

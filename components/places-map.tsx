@@ -6,14 +6,46 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import type { Map as LMap, Marker } from "leaflet";
 
-export type MapPoint = { id: string; name: string; lat: number; lng: number; href?: string; kind?: string };
+export type MapPoint = { id: string; name: string; lat: number; lng: number; href?: string; kind?: string; image?: string; price?: number; town?: string; region?: string };
+export type MapBounds = { n: number; s: number; e: number; w: number };
 
 const KIND_LABEL: Record<string, string> = { hotel: "🟠 住宿", stay: "🟠 住宿", attraction: "🟢 景點", food: "🔴 美食", parking: "🔵 停車" };
 const KIND_ORDER = ["hotel", "stay", "attraction", "food", "parking"];
+const KIND_DRAFT: Record<string, string> = { hotel: "stay", stay: "stay", attraction: "attraction", food: "food", parking: "parking" };
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 const pinHtml = (kind?: string, hi = false) => `<span class="oi-pin-dot oi-pin-${kind || "default"}${hi ? " hi" : ""}"></span>`;
 const finite = (p: MapPoint) => Number.isFinite(p.lat) && Number.isFinite(p.lng);
+
+// 寫進行程草稿(與 add-to-trip.tsx 同格式)
+function addDraft(type: string, refId: string, name: string, region?: string) {
+  try {
+    const KEY = "oi_trip_draft";
+    const arr = JSON.parse(localStorage.getItem(KEY) || "[]") as { type: string; refId: string }[];
+    if (!arr.some((x) => x.refId === refId && x.type === type)) arr.push({ type, refId, name, region } as never);
+    localStorage.setItem(KEY, JSON.stringify(arr));
+    window.dispatchEvent(new Event("oi-trip-draft"));
+  } catch { /* ignore */ }
+}
+
+// 點位小卡(縮圖 + 名稱 + 價格 + 查看 + 加入行程);延後到 popup 開啟才建 DOM
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildPopup(L: any, p: MapPoint): HTMLElement {
+  const el = L.DomUtil.create("div", "oi-pop");
+  const img = p.image ? `<div class="oi-pop-img" style="background-image:url('${(p.image).replace(/'/g, "%27")}')"></div>` : "";
+  const sub = p.town ? `<div class="oi-pop-sub">${esc(p.town)}</div>` : "";
+  const price = (typeof p.price === "number" && p.price > 0) ? `<div class="oi-pop-price">$${p.price.toLocaleString()} 起</div>` : "";
+  const link = p.href ? `<a class="oi-pop-link" href="${esc(p.href)}">查看詳情 →</a>` : "";
+  el.innerHTML = img + `<div class="oi-pop-body"><div class="oi-pop-name">${esc(p.name)}</div>${sub}${price}<div class="oi-pop-act">${link}</div></div>`;
+  const dtype = KIND_DRAFT[p.kind || ""];
+  if (dtype) {
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "oi-pop-add"; btn.textContent = "＋ 加入行程";
+    btn.addEventListener("click", () => { addDraft(dtype, p.id, p.name, p.region); btn.textContent = "✓ 已加入"; btn.disabled = true; });
+    el.querySelector(".oi-pop-act")?.appendChild(btn);
+  }
+  return el;
+}
 
 /* 自訂控制:我的位置 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,12 +100,14 @@ function addFullscreen(L: any, map: any, el: HTMLElement) {
 
 // 互動地圖(OpenStreetMap + Leaflet,免金鑰)。
 // highlightId:「左列表右地圖」hover 聯動(有傳=不聚合)。多點位自動聚合 + 分類開關 + 定位 + 底圖 + 全螢幕。
-export default function PlacesMap({ points, height = 360, zoom, highlightId, cluster }:
-  { points: MapPoint[]; height?: number; zoom?: number; highlightId?: string | null; cluster?: boolean }) {
+export default function PlacesMap({ points, height = 360, zoom, highlightId, cluster, onBounds }:
+  { points: MapPoint[]; height?: number; zoom?: number; highlightId?: string | null; cluster?: boolean; onBounds?: (b: MapBounds) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Record<string, { marker: Marker; kind?: string }>>({});
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const LRef = useRef<any>(null);
+  const onBoundsRef = useRef(onBounds);
+  onBoundsRef.current = onBounds;
 
   useEffect(() => {
     let map: LMap | null = null;
@@ -100,11 +134,18 @@ export default function PlacesMap({ points, height = 360, zoom, highlightId, clu
       const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { attribution: "© OpenTopoMap (CC-BY-SA)", maxZoom: 17 });
       osm.addTo(map!);
 
+      // 跟著地圖找:回報目前可視範圍(只在有 onBounds 時)
+      if (onBoundsRef.current) {
+        const emit = () => { if (!map) return; const b = map.getBounds(); onBoundsRef.current?.({ n: b.getNorth(), s: b.getSouth(), e: b.getEast(), w: b.getWest() }); };
+        map!.on("moveend", emit);
+        setTimeout(emit, 180);
+      }
+
       markersRef.current = {};
       const makeMarker = (p: MapPoint) => {
         const icon = L.divIcon({ className: "oi-pin", html: pinHtml(p.kind), iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -8] });
         const m = L.marker([p.lat, p.lng], { icon, title: p.name });
-        m.bindPopup(p.href ? `<a href="${esc(p.href)}" class="oi-pin-link">${esc(p.name)}</a>` : esc(p.name), { closeButton: true });
+        m.bindPopup(() => buildPopup(L, p), { closeButton: true, minWidth: 180, maxWidth: 230 });
         markersRef.current[p.id] = { marker: m, kind: p.kind };
         return m;
       };
