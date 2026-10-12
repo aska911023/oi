@@ -62,6 +62,7 @@ export default function ImageZoom({ images, alt, imgClassName }: { images: strin
     <div className="imgzoom">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className={imgClassName} src={src} alt={alt || ""} />
+      {src && <span className="hc-refnote">圖片僅供參考</span>}
       {multi && (
         <>
           <button type="button" className="hc-arrow prev" onClick={nav(-1)} aria-label="上一張">‹</button>

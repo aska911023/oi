@@ -11,6 +11,7 @@ export default function PhotoCarousel({ images, alt, dots = true, arrows = true,
   width?: number;
 }) {
   const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s, width));
+  const hasImg = !!(images && images.some((s) => s && s.trim()));
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function PhotoCarousel({ images, alt, dots = true, arrows = true,
           ))}
         </div>
       )}
+      {hasImg && <span className="hc-refnote">圖片僅供參考</span>}
     </>
   );
 }
