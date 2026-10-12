@@ -84,7 +84,7 @@ export default async function PlaceDetail({ place: p, kind }: { place: Place; ki
       </nav>
 
       <div className="shop">
-        {imgs.length > 0 && <div className="shop-hero-c" style={{ position: "relative" }}><PhotoCarousel images={imgs} alt={p.name} refBadge /><SaveBookmark type={kind} id={p.id} floating nextPath={`/${enc(p.region)}/${KIND_SINGULAR[kind]}/${enc(p.slug || p.id)}`} /></div>}
+        {imgs.length > 0 && <><div className="shop-hero-c" style={{ position: "relative" }}><PhotoCarousel images={imgs} alt={p.name} /><SaveBookmark type={kind} id={p.id} floating nextPath={`/${enc(p.region)}/${KIND_SINGULAR[kind]}/${enc(p.slug || p.id)}`} /></div><div className="hc-refnote">圖片僅供參考</div></>}
         <div className="card-eyebrow" style={{ marginTop: 18 }}>{p.region}{p.town ? " · " + p.town : ""}<span className="dot" />{meta.label}</div>
         <h1 className="serif shop-title">{p.name}</h1>
         {p.description && <p className="shop-desc">{p.description}</p>}

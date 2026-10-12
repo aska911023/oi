@@ -208,6 +208,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                   </div>
                   {r.rooms_total != null && <span className="tag-rooms">共 {r.rooms_total} 間</span>}
                 </div>
+                {toImgs(r.image, r.images).length > 0 && <div className="hc-refnote">圖片僅供參考</div>}
                 <div className="card-body">
                   <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
                   <h3>{r.stay_name}</h3>

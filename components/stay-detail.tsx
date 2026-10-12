@@ -77,7 +77,8 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
       <div className="shop">
         <TrackView stayId={s.id} />
         {toImgs(s.image, s.images).length > 0 && (
-          <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} refBadge /></div>
+          <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} /></div>
+          {toImgs(s.image, s.images).length > 0 && <div className="hc-refnote">圖片僅供參考</div>}
         )}
         <div className="card-eyebrow" style={{ marginTop: 18 }}><Link href={`/${enc(s.region)}`} className="lnk">{s.region}</Link> · {s.town}<span className="dot" />{s.category}</div>
         <h1 className="serif shop-title">{s.name}</h1>

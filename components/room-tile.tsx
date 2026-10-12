@@ -18,6 +18,7 @@ export default function RoomTile({ r }: { r: RoomCard }) {
             {r.ad_tier && r.ad_tier !== "free" && <span className="cbadge cbadge-feat">精選</span>}
           </div>
         </div>
+        {img && <div className="hc-refnote">圖片僅供參考</div>}
         <div className="card-body">
           <div className="card-eyebrow">{r.region} · {r.town}<span className="dot" />{r.category}</div>
           <h3>{r.stay_name}</h3>

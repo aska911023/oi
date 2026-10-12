@@ -194,6 +194,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
                 {p.featured && <span className="tag-feat">精選</span>}
                 <SaveBookmark type={kindState} id={p.id} floating nextPath={`/places/${kindState}`} />
               </div>
+              {toImgs(p.image, p.images).length > 0 && <div className="hc-refnote">圖片僅供參考</div>}
               <div className="card-body">
                 <div className="card-eyebrow">{p.region}{p.town ? " · " + p.town : ""}</div>
                 <h3><Link href={`/${encodeURIComponent(p.region)}/${SINGULAR[kindState]}/${encodeURIComponent(p.slug || p.id)}`} onClick={(e) => e.stopPropagation()} style={{ color: "inherit" }}>{p.name}</Link></h3>
@@ -224,6 +225,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
               {toImgs(active.image, active.images).length ? <ImageZoom images={toImgs(active.image, active.images)} alt={active.name} imgClassName="detail-img" /> : <div className="detail-img photo-ph">{I.map}</div>}
               <SaveBookmark type={kindState} id={active.id} floating nextPath={`/places/${kindState}`} />
             </div>
+            {toImgs(active.image, active.images).length > 0 && <div className="hc-refnote">圖片僅供參考</div>}
             <div className="detail-body">
               <div className="card-eyebrow">{active.region}{active.town ? " · " + active.town : ""}</div>
               <h2>{active.name}</h2>
