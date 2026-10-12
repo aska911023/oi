@@ -15,7 +15,7 @@ export default async function VendorBookingsPage() {
   const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
   const isAdmin = profile?.role === "admin";
 
-  let staysQ = sb.from("stays").select("id,name,booking_deposit_pct,booking_enabled").order("name");
+  let staysQ = sb.from("stays").select("id,name,booking_deposit_pct,booking_enabled,booking_note").order("name");
   if (!isAdmin) staysQ = staysQ.eq("owner_id", ownerId);
   const { data: stays } = await staysQ;
   const stayIds = (stays || []).map((s) => s.id);

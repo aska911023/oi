@@ -22,6 +22,9 @@ export default function AvailabilityCalendar({ rooms, bookings, ownerId }:
   const [avail, setAvail] = useState<Record<string, AvailRow>>({});
   const [edit, setEdit] = useState<{ date: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [bStart, setBStart] = useState("");
+  const [bEnd, setBEnd] = useState("");
+  const [bBusy, setBBusy] = useState(false);
 
   const room = rooms.find((r) => r.id === roomId);
   const firstDow = new Date(y, m, 1).getDay();
@@ -43,6 +46,36 @@ export default function AvailabilityCalendar({ rooms, bookings, ownerId }:
 
   function prevMonth() { if (m === 0) { setY(y - 1); setM(11); } else setM(m - 1); }
   function nextMonth() { if (m === 11) { setY(y + 1); setM(0); } else setM(m + 1); }
+
+  // 批次:把一段日期全部關房 / 開放(保留既有庫存、價格覆寫)
+  async function applyRange(action: "close" | "open") {
+    if (!roomId) return;
+    if (!bStart || !bEnd || bEnd < bStart) { alert("請選有效的日期區間"); return; }
+    setBBusy(true);
+    const sb = createClient();
+    const { data } = await sb.from("room_availability").select("*")
+      .eq("room_type_id", roomId).gte("date", bStart).lte("date", bEnd);
+    const ex: Record<string, AvailRow> = {};
+    ((data as AvailRow[]) || []).forEach((r) => { ex[r.date] = r; });
+    const ups: AvailRow[] = [];
+    const dels: string[] = [];
+    for (let d = new Date(bStart); d <= new Date(bEnd); d.setDate(d.getDate() + 1)) {
+      const date = d.toISOString().slice(0, 10);
+      const cur = ex[date];
+      const inv = cur?.inventory ?? null, pr = cur?.price_override ?? null, nt = cur?.note ?? "";
+      if (action === "close") {
+        ups.push({ room_type_id: roomId, date, inventory: inv, closed: true, price_override: pr, note: nt });
+      } else if (inv == null && pr == null && !nt) {
+        dels.push(date); // 開放後全預設 → 刪列
+      } else {
+        ups.push({ room_type_id: roomId, date, inventory: inv, closed: false, price_override: pr, note: nt });
+      }
+    }
+    if (ups.length) await sb.from("room_availability").upsert(ups, { onConflict: "room_type_id,date" });
+    if (dels.length) await sb.from("room_availability").delete().eq("room_type_id", roomId).in("date", dels);
+    setBBusy(false);
+    await load();
+  }
 
   // 依星期推價:週五六 = 假日價,其餘平日;可被 price_override 覆寫
   const pnum = (k: string): number | null => { const v = (room?.pricing as Record<string, unknown>)?.[k]; return typeof v === "number" ? v : null; };
@@ -98,6 +131,16 @@ export default function AvailabilityCalendar({ rooms, bookings, ownerId }:
           <button className="btn btn-ghost btn-sm" onClick={nextMonth}>›</button>
           <button className="btn btn-ghost btn-sm" onClick={() => { setY(now.getFullYear()); setM(now.getMonth()); }}>今天</button>
         </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "0 0 12px", fontSize: 13 }}>
+        <span style={{ color: "var(--muted,#808b83)" }}>批次:</span>
+        <input type="date" value={bStart} onChange={(e) => setBStart(e.target.value)} />
+        <span style={{ color: "var(--muted,#808b83)" }}>→</span>
+        <input type="date" value={bEnd} onChange={(e) => setBEnd(e.target.value)} />
+        <button className="btn btn-ghost btn-sm" disabled={bBusy} onClick={() => applyRange("close")}>整段關房</button>
+        <button className="btn btn-ghost btn-sm" disabled={bBusy} onClick={() => applyRange("open")}>整段開放</button>
+        <span style={{ color: "var(--muted,#808b83)", fontSize: 12 }}>(保留既有庫存/價格覆寫,只改關房狀態)</span>
       </div>
 
       <div style={{ border: cellBorder, borderRadius: 10, overflow: "hidden", opacity: loading ? 0.6 : 1 }}>

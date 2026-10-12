@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import AvailabilityCalendar from "@/components/vendor/availability-calendar";
 
 /* ---------- types ---------- */
-interface Stay { id: string; name: string; booking_deposit_pct: number; booking_enabled: boolean }
+interface Stay { id: string; name: string; booking_deposit_pct: number; booking_enabled: boolean; booking_note: string }
 interface Room { id: string; stay_id: string; name: string; price: number; capacity: number; rooms_total: number | null; pricing: Record<string, unknown>; kind: string }
 interface BRoom { id: string; booking_id: string; room_type_id: string | null; room_name: string; qty: number; nights: number; unit_price: number; line_total: number }
 interface Payment { id: string; booking_id: string; kind: string; method: string; amount: number; received_at: string }
@@ -46,15 +46,16 @@ const overlaps = (aIn: string, aOut: string, bIn: string, bOut: string) => aIn <
 type Line = { room_type_id: string; qty: number; unit_price: number };
 
 /* ================================================================= */
-export default function BookingsManager({ ownerId, stays, rooms, initialBookings }:
+export default function BookingsManager({ ownerId, stays: initialStays, rooms, initialBookings }:
   { ownerId: string; stays: Stay[]; rooms: Room[]; initialBookings: Booking[] }) {
+  const [stays, setStays] = useState<Stay[]>(initialStays);
   const [list, setList] = useState<Booking[]>(initialBookings);
   const [tab, setTab] = useState<"pending" | "confirmed" | "today" | "all">("pending");
   const [sel, setSel] = useState<Booking | null>(null);
   const [events, setEvents] = useState<BEvent[] | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [view, setView] = useState<"orders" | "calendar">("orders");
+  const [view, setView] = useState<"orders" | "calendar" | "settings">("orders");
   const today = todayStr();
 
   const stayName = (id: string) => stays.find((s) => s.id === id)?.name || "—";
@@ -151,9 +152,11 @@ export default function BookingsManager({ ownerId, stays, rooms, initialBookings
       <div className="seg" style={{ marginBottom: 16 }}>
         <button className={view === "orders" ? "on" : ""} onClick={() => setView("orders")}>📋 訂單</button>
         <button className={view === "calendar" ? "on" : ""} onClick={() => setView("calendar")}>📅 房況日曆</button>
+        <button className={view === "settings" ? "on" : ""} onClick={() => setView("settings")}>⚙ 訂房設定</button>
       </div>
 
       {view === "calendar" && <AvailabilityCalendar rooms={rooms} bookings={list} ownerId={ownerId} />}
+      {view === "settings" && <SettingsPanel stays={stays} onUpdate={setStays} />}
 
       {view === "orders" && <>
       <div className="stats">
@@ -448,5 +451,56 @@ function CreateModal({ stays, roomsOf, remaining, ownerId, onClose, onDone }: {
         </div>
       </div>
     </>
+  );
+}
+
+/* ================= 訂房設定(每店可改,不寫死) ================= */
+function SettingsPanel({ stays, onUpdate }: { stays: Stay[]; onUpdate: (s: Stay[]) => void }) {
+  const [draft, setDraft] = useState<Stay[]>(stays);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const setField = (id: string, patch: Partial<Stay>) => setDraft((d) => d.map((s) => s.id === id ? { ...s, ...patch } : s));
+
+  async function save(s: Stay) {
+    setSavingId(s.id);
+    const sb = createClient();
+    const { error } = await sb.from("stays").update({
+      booking_enabled: s.booking_enabled,
+      booking_deposit_pct: Math.max(0, Math.min(100, Number(s.booking_deposit_pct) || 0)),
+      booking_note: (s.booking_note || "").trim(),
+    }).eq("id", s.id);
+    setSavingId(null);
+    if (error) { alert("儲存失敗:" + error.message); return; }
+    onUpdate(draft); // 同步上層,讓手動建單用新的訂金%
+  }
+
+  if (!draft.length) return <div className="empty">沒有民宿可設定。</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <p style={{ fontSize: 13, color: "var(--muted,#808b83)", margin: 0 }}>每間民宿可各自設定。訂金比例會用在手動建單自動算應收訂金;關閉「啟用訂房」= 這間先不收訂房(前台上線後也不會顯示)。</p>
+      {draft.map((s) => (
+        <div key={s.id} style={{ border: "1px solid var(--border,#e1e6dc)", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <b style={{ fontSize: 15 }}>{s.name}</b>
+            <label className="check" style={{ marginLeft: "auto" }}>
+              <input type="checkbox" checked={s.booking_enabled} onChange={(e) => setField(s.id, { booking_enabled: e.target.checked })} /> 啟用訂房
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div>
+              <label style={{ fontSize: 12, color: "var(--muted,#808b83)" }}>訂金比例(%)</label><br />
+              <input type="number" min={0} max={100} value={s.booking_deposit_pct}
+                onChange={(e) => setField(s.id, { booking_deposit_pct: Number(e.target.value) })} style={{ width: 90 }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <label style={{ fontSize: 12, color: "var(--muted,#808b83)" }}>訂房須知 / 確認訊息</label><br />
+              <input value={s.booking_note || ""} placeholder="例:訂金請於 3 日內匯款,逾期取消…"
+                onChange={(e) => setField(s.id, { booking_note: e.target.value })} style={{ width: "100%" }} />
+            </div>
+            <button className="btn btn-primary btn-sm" disabled={savingId === s.id} onClick={() => save(s)}>{savingId === s.id ? "儲存中…" : "儲存"}</button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
