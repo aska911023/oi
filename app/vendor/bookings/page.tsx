@@ -36,6 +36,7 @@ export default async function VendorBookingsPage() {
   return (
     <BookingsManager
       ownerId={ownerId}
+      isAdmin={isAdmin}
       stays={(stays as never) || []}
       rooms={(rooms as never) || []}
       initialBookings={(bookings as never) || []}

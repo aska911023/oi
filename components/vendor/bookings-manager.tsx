@@ -46,8 +46,8 @@ const overlaps = (aIn: string, aOut: string, bIn: string, bOut: string) => aIn <
 type Line = { room_type_id: string; qty: number; unit_price: number };
 
 /* ================================================================= */
-export default function BookingsManager({ ownerId, stays: initialStays, rooms, initialBookings }:
-  { ownerId: string; stays: Stay[]; rooms: Room[]; initialBookings: Booking[] }) {
+export default function BookingsManager({ ownerId, isAdmin, stays: initialStays, rooms, initialBookings }:
+  { ownerId: string; isAdmin: boolean; stays: Stay[]; rooms: Room[]; initialBookings: Booking[] }) {
   const [stays, setStays] = useState<Stay[]>(initialStays);
   const [list, setList] = useState<Booking[]>(initialBookings);
   const [tab, setTab] = useState<"pending" | "confirmed" | "today" | "all">("pending");
@@ -226,7 +226,7 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
         onClose={() => { setSel(null); setEvents(null); }}
         onConfirm={() => doConfirm(sel)} onReject={() => doReject(sel)} onCheckIn={() => doCheckIn(sel)}
         onCheckOut={() => doCheckOut(sel)} onCancel={() => doCancel(sel)} onNoShow={() => doNoShow(sel)}
-        onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onSetStatus={(to) => doSetStatus(sel, to)} onPaid={refresh} ownerId={ownerId} />}
+        onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onSetStatus={(to) => doSetStatus(sel, to)} onPaid={refresh} ownerId={ownerId} isAdmin={isAdmin} />}
 
       {showCreate && <CreateModal stays={stays} roomsOf={roomsOf} remaining={remaining} ownerId={ownerId}
         onClose={() => setShowCreate(false)} onDone={async () => { setShowCreate(false); await refresh(); }} />}
@@ -236,10 +236,10 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
 }
 
 /* ================= 詳情抽屜 ================= */
-function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onSetStatus, onPaid, ownerId }: {
+function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onSetStatus, onPaid, ownerId, isAdmin }: {
   b: Booking; stayName: string; events: BEvent[] | null; busy: boolean; onClose: () => void;
   onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void; onDelete: () => void; onSetStatus: (to: string) => void;
-  onPaid: () => void; ownerId: string;
+  onPaid: () => void; ownerId: string; isAdmin: boolean;
 }) {
   const [payOpen, setPayOpen] = useState(false);
   // 退款一律當負的扣(不管存進去的符號),其餘加
@@ -341,7 +341,7 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
         </div>
 
         <div className="editor-actions" style={{ justifyContent: "space-between" }}>
-          <button className="lnk danger" disabled={busy} onClick={onDelete}>刪除訂單</button>
+          {isAdmin ? <button className="lnk danger" disabled={busy} onClick={onDelete}>刪除訂單</button> : <span />}
           <button className="btn btn-ghost" onClick={onClose}>關閉</button>
         </div>
       </div>
