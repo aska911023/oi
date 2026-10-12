@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/vendor", label: "我的民宿" },
   { href: "/vendor/rentals", label: "我的租車" },
+  { href: "/vendor/bookings", label: "訂房" },
 ];
 
 export default function VendorTabs() {

@@ -15,6 +15,7 @@ const GROUP = [
 // 頂層大標
 const TOP = [
   { href: "/admin", label: "旅遊上架", group: true },
+  { href: "/admin/bookings", label: "訂房" },
   { href: "/admin/members", label: "會員資料" },
   { href: "/admin/vendors", label: "業者審核" },
   { href: "/admin/partners", label: "業者名單" },

@@ -196,12 +196,12 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
 
       <div className="atable-wrap">
         <table className="atable">
-          <thead><tr><th>訂單</th><th>客人</th><th>入住</th><th>房型</th><th>金額</th><th>狀態</th><th></th></tr></thead>
+          <thead><tr><th>民宿 / 訂單</th><th>客人</th><th>入住</th><th>房型</th><th>金額</th><th>狀態</th><th></th></tr></thead>
           <tbody>
             {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">這個分類沒有訂單。</td></tr>}
             {filtered.map((b) => (
               <tr key={b.id}>
-                <td><b style={{ fontFamily: "var(--mono, monospace)" }}>{b.code}</b><br /><span style={{ fontSize: 11, color: "var(--muted)" }}>{stayName(b.stay_id)} · {SOURCE_LABEL[b.source] || b.source}</span></td>
+                <td><b>{stayName(b.stay_id)}</b><br /><span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono,monospace)" }}>{b.code} · {SOURCE_LABEL[b.source] || b.source}</span></td>
                 <td>{b.guest_name || "—"}<br /><span style={{ fontSize: 11, color: "var(--muted)" }}>{b.guest_phone}</span></td>
                 <td style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{b.check_in}<br /><span style={{ fontSize: 11, color: "var(--muted)" }}>→ {b.check_out} · {b.nights}晚</span></td>
                 <td style={{ fontSize: 12.5 }}>{(b.booking_rooms || []).map((r) => `${r.room_name}×${r.qty}`).join("、") || "—"}</td>
