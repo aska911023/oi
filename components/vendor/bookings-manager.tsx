@@ -52,6 +52,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
   const [list, setList] = useState<Booking[]>(initialBookings);
   const [tab, setTab] = useState<"pending" | "confirmed" | "today" | "all">("pending");
   const [storeFilter, setStoreFilter] = useState("all"); // 挑單一民宿看(管理員看全部店用)
+  const [q, setQ] = useState(""); // 搜尋:客人/電話/Email/訂單碼/民宿
   const [sel, setSel] = useState<Booking | null>(null);
   const [events, setEvents] = useState<BEvent[] | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -90,12 +91,19 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
     };
   }, [scoped, today]);
 
-  const filtered = useMemo(() => scoped.filter((b) => {
-    if (tab === "pending") return b.status === "pending";
-    if (tab === "confirmed") return b.status === "confirmed";
-    if (tab === "today") return b.check_in === today || b.check_out === today;
-    return true;
-  }), [scoped, tab, today]);
+  const filtered = useMemo(() => {
+    const kw = q.trim().toLowerCase();
+    return scoped.filter((b) => {
+      if (kw) { // 搜尋時跨所有狀態
+        const sName = stays.find((s) => s.id === b.stay_id)?.name || "";
+        return `${b.code} ${b.guest_name} ${b.guest_phone} ${b.guest_email} ${sName}`.toLowerCase().includes(kw);
+      }
+      if (tab === "pending") return b.status === "pending";
+      if (tab === "confirmed") return b.status === "confirmed";
+      if (tab === "today") return b.check_in === today || b.check_out === today;
+      return true;
+    });
+  }, [scoped, tab, today, q, stays]);
 
   /* ---- 剩餘房數(從已載入訂單推算,排除拒絕/取消) ---- */
   function remaining(roomId: string, ci: string, co: string, excludeId?: string) {
@@ -190,6 +198,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
       </div>
 
       <div className="admin-bar">
+        <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋客人 / 電話 / Email / 訂單碼 / 民宿…" />
         {stays.length > 1 && (
           <select value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}
             style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border-strong)", maxWidth: 240, background: "var(--surface,#fff)" }}>
@@ -209,7 +218,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
         <table className="atable">
           <thead><tr><th>民宿 / 訂單</th><th>客人</th><th>入住</th><th>房型</th><th>金額</th><th>狀態</th><th></th></tr></thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">這個分類沒有訂單。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">{q.trim() ? "找不到符合的訂單。" : "這個分類沒有訂單。"}</td></tr>}
             {filtered.map((b) => (
               <tr key={b.id}>
                 <td><b>{stayName(b.stay_id)}</b><br /><span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono,monospace)" }}>{b.code} · {SOURCE_LABEL[b.source] || b.source}</span></td>
