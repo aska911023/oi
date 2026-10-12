@@ -136,6 +136,16 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
   // 取消/未到/拒絕後復原:拒絕→回待確認,其餘→回已確認(清掉取消原因/時間)
   const doRestore = (b: Booking) => advance(b, b.status === "rejected" ? "pending" : "confirmed",
     b.status === "rejected" ? { cancel_reason: "" } : { confirmed_at: new Date().toISOString(), cancel_reason: "", cancelled_at: null }, "復原");
+  async function doDelete(b: Booking) {
+    if (!confirm(`確定刪除訂單「${b.code}」?此動作無法復原(房型明細與收款紀錄會一併刪除)。`)) return;
+    setBusy(true);
+    const sb = createClient();
+    const { error } = await sb.from("bookings").delete().eq("id", b.id);
+    setBusy(false);
+    if (error) { alert("刪除失敗:" + error.message); return; }
+    setSel(null); setEvents(null);
+    await refresh();
+  }
 
   async function loadEvents(id: string) {
     setEvents(null);
@@ -210,7 +220,7 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
         onClose={() => { setSel(null); setEvents(null); }}
         onConfirm={() => doConfirm(sel)} onReject={() => doReject(sel)} onCheckIn={() => doCheckIn(sel)}
         onCheckOut={() => doCheckOut(sel)} onCancel={() => doCancel(sel)} onNoShow={() => doNoShow(sel)}
-        onRestore={() => doRestore(sel)} onPaid={refresh} ownerId={ownerId} />}
+        onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onPaid={refresh} ownerId={ownerId} />}
 
       {showCreate && <CreateModal stays={stays} roomsOf={roomsOf} remaining={remaining} ownerId={ownerId}
         onClose={() => setShowCreate(false)} onDone={async () => { setShowCreate(false); await refresh(); }} />}
@@ -220,9 +230,9 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
 }
 
 /* ================= 詳情抽屜 ================= */
-function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onPaid, ownerId }: {
+function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onPaid, ownerId }: {
   b: Booking; stayName: string; events: BEvent[] | null; busy: boolean; onClose: () => void;
-  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void;
+  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void; onDelete: () => void;
   onPaid: () => void; ownerId: string;
 }) {
   const [payOpen, setPayOpen] = useState(false);
@@ -318,7 +328,10 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           </div>
         </div>
 
-        <div className="editor-actions"><button className="btn btn-ghost" onClick={onClose}>關閉</button></div>
+        <div className="editor-actions" style={{ justifyContent: "space-between" }}>
+          <button className="lnk danger" disabled={busy} onClick={onDelete}>刪除訂單</button>
+          <button className="btn btn-ghost" onClick={onClose}>關閉</button>
+        </div>
       </div>
     </>
   );
