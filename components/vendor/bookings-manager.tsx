@@ -136,6 +136,12 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
   // 取消/未到/拒絕後復原:拒絕→回待確認,其餘→回已確認(清掉取消原因/時間)
   const doRestore = (b: Booking) => advance(b, b.status === "rejected" ? "pending" : "confirmed",
     b.status === "rejected" ? { cancel_reason: "" } : { confirmed_at: new Date().toISOString(), cancel_reason: "", cancelled_at: null }, "復原");
+  // 直接改成任一狀態(手賤按錯都救得回來)
+  const doSetStatus = (b: Booking, to: string) => {
+    const extra: Partial<Booking> = to === "confirmed" ? { confirmed_at: new Date().toISOString(), cancelled_at: null, cancel_reason: "" }
+      : to === "cancelled" ? { cancelled_at: new Date().toISOString() } : {};
+    advance(b, to, extra, "手動改狀態");
+  };
   async function doDelete(b: Booking) {
     if (!confirm(`確定刪除訂單「${b.code}」?此動作無法復原(房型明細與收款紀錄會一併刪除)。`)) return;
     setBusy(true);
@@ -220,7 +226,7 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
         onClose={() => { setSel(null); setEvents(null); }}
         onConfirm={() => doConfirm(sel)} onReject={() => doReject(sel)} onCheckIn={() => doCheckIn(sel)}
         onCheckOut={() => doCheckOut(sel)} onCancel={() => doCancel(sel)} onNoShow={() => doNoShow(sel)}
-        onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onPaid={refresh} ownerId={ownerId} />}
+        onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onSetStatus={(to) => doSetStatus(sel, to)} onPaid={refresh} ownerId={ownerId} />}
 
       {showCreate && <CreateModal stays={stays} roomsOf={roomsOf} remaining={remaining} ownerId={ownerId}
         onClose={() => setShowCreate(false)} onDone={async () => { setShowCreate(false); await refresh(); }} />}
@@ -230,9 +236,9 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
 }
 
 /* ================= 詳情抽屜 ================= */
-function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onPaid, ownerId }: {
+function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onSetStatus, onPaid, ownerId }: {
   b: Booking; stayName: string; events: BEvent[] | null; busy: boolean; onClose: () => void;
-  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void; onDelete: () => void;
+  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void; onDelete: () => void; onSetStatus: (to: string) => void;
   onPaid: () => void; ownerId: string;
 }) {
   const [payOpen, setPayOpen] = useState(false);
@@ -308,6 +314,11 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           {b.status === "checked_in" && <button className="btn btn-primary" disabled={busy} onClick={onCheckOut}>退房(完成)</button>}
           {["cancelled", "no_show", "rejected"].includes(b.status) && <button className="btn btn-primary" disabled={busy} onClick={onRestore}>復原訂單</button>}
           {b.status !== "rejected" && <button className="btn btn-ghost" onClick={() => setPayOpen(true)}>記錄收款</button>}
+          <select value="" disabled={busy} onChange={(e) => { if (e.target.value) onSetStatus(e.target.value); }}
+            style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border-strong)", fontSize: 13, background: "var(--surface,#fff)" }} title="直接改成任一狀態">
+            <option value="">⟳ 改狀態…</option>
+            {Object.entries(STATUS).filter(([k]) => k !== b.status).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
         </div>
 
         {payOpen && <PayForm bookingId={b.id} ownerId={ownerId} total={b.total} depositDue={b.deposit_amount} paid={paid}
