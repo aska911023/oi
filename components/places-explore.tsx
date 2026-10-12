@@ -66,7 +66,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
     if (tagsv.length) query = query.contains("details", { tags: tagsv }); // details.tags 需包含所選全部
     const kwv2 = safeKw(kwv);
     if (kwv2) query = query.or(`name.ilike.%${kwv2}%,region.ilike.%${kwv2}%,town.ilike.%${kwv2}%,address.ilike.%${kwv2}%`);
-    const { data, count } = await query.order("featured", { ascending: false }).order("created_at", { ascending: false }).range(off, off + PAGE - 1);
+    const { data, count } = await query.order("has_image", { ascending: false }).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(off, off + PAGE - 1);
     const newRows = (data || []) as Place[];
     setRpcTotal(count ?? 0);
     setRows((prev) => (append ? [...prev, ...newRows] : newRows));

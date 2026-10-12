@@ -5,10 +5,12 @@ import { imgUrl } from "@/lib/img";
 
 // 輕量輪播:把 slides + 箭頭 + dots 直接塞進外層定位容器(.photo / .shop-hero-c / .room-thumb-c)。
 // 單張時等同一張靜態圖;多張時自動輪播,可左右箭頭/圓點切換(含 stopPropagation,卡片包在 Link 裡也不會誤跳轉)。
-export default function PhotoCarousel({ images, alt, dots = true, arrows = true, interval = 4000, width }: {
+export default function PhotoCarousel({ images, alt, dots = true, arrows = true, interval = 4000, width, refBadge = false }: {
   images: string[]; alt?: string; dots?: boolean; arrows?: boolean; interval?: number;
   /** 給卡片用:跟 Storage 要指定寬度的縮圖(CDN 會快取),省流量也載得快 */
   width?: number;
+  /** 大圖才掛「圖片僅供參考」角標(卡片不掛,避免跟共N間/白點打架) */
+  refBadge?: boolean;
 }) {
   const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s, width));
   const hasImg = !!(images && images.some((s) => s && s.trim()));
@@ -45,7 +47,7 @@ export default function PhotoCarousel({ images, alt, dots = true, arrows = true,
           ))}
         </div>
       )}
-      {hasImg && <span className="hc-refnote">圖片僅供參考</span>}
+      {refBadge && hasImg && <span className="hc-refnote">圖片僅供參考</span>}
     </>
   );
 }
