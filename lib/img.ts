@@ -35,14 +35,12 @@ export async function compressImage(file: File): Promise<File> {
 }
 
 /**
- * 顯示用網址。Supabase Storage 的公開檔可即時轉成指定寬度(CDN 會快取),
- * 外部網址(例如貼進來的官網圖)原樣回傳。
+ * 顯示用網址。直接回傳原圖 —— 上傳時已壓到 1600px WebP(compressImage),
+ * 不再走 Supabase Storage 的 render/image 即時轉換(Pro 每月僅含 100 張,會超額被限制)。
+ * egress 有大量餘裕,原圖已是壓縮過的 WebP,直接送即可。
  */
-export function imgUrl(src: string | null | undefined, width?: number): string {
-  if (!src) return "";
-  if (!width || !src.includes("/storage/v1/object/public/")) return src;
-  const base = src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
-  return `${base}${base.includes("?") ? "&" : "?"}width=${width}&quality=70`;
+export function imgUrl(src: string | null | undefined, _width?: number): string {
+  return src || "";
 }
 
 export const imgList = (list: string[] | null | undefined, width?: number) =>
