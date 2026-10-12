@@ -51,6 +51,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
   const [stays, setStays] = useState<Stay[]>(initialStays);
   const [list, setList] = useState<Booking[]>(initialBookings);
   const [tab, setTab] = useState<"pending" | "confirmed" | "today" | "all">("pending");
+  const [storeFilter, setStoreFilter] = useState("all"); // 挑單一民宿看(管理員看全部店用)
   const [sel, setSel] = useState<Booking | null>(null);
   const [events, setEvents] = useState<BEvent[] | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -71,27 +72,30 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
     if (sel) { const fresh = ((data as Booking[]) || []).find((b) => b.id === sel.id); setSel(fresh || null); }
   }
 
+  // 先依選定民宿收斂(數字與列表都吃這個)
+  const scoped = useMemo(() => storeFilter === "all" ? list : list.filter((b) => b.stay_id === storeFilter), [list, storeFilter]);
+
   /* ---- stats ---- */
   const stats = useMemo(() => {
     const monthPrefix = today.slice(0, 7);
     let received = 0;
-    list.forEach((b) => b.payments?.forEach((p) => {
+    scoped.forEach((b) => b.payments?.forEach((p) => {
       if ((p.received_at || "").slice(0, 7) === monthPrefix) received += Number(p.amount) || 0;
     }));
     return {
-      pending: list.filter((b) => b.status === "pending").length,
-      checkIn: list.filter((b) => ["confirmed", "checked_in"].includes(b.status) && b.check_in === today).length,
-      checkOut: list.filter((b) => ["checked_in", "confirmed"].includes(b.status) && b.check_out === today).length,
+      pending: scoped.filter((b) => b.status === "pending").length,
+      checkIn: scoped.filter((b) => ["confirmed", "checked_in"].includes(b.status) && b.check_in === today).length,
+      checkOut: scoped.filter((b) => ["checked_in", "confirmed"].includes(b.status) && b.check_out === today).length,
       received,
     };
-  }, [list, today]);
+  }, [scoped, today]);
 
-  const filtered = useMemo(() => list.filter((b) => {
+  const filtered = useMemo(() => scoped.filter((b) => {
     if (tab === "pending") return b.status === "pending";
     if (tab === "confirmed") return b.status === "confirmed";
     if (tab === "today") return b.check_in === today || b.check_out === today;
     return true;
-  }), [list, tab, today]);
+  }), [scoped, tab, today]);
 
   /* ---- 剩餘房數(從已載入訂單推算,排除拒絕/取消) ---- */
   function remaining(roomId: string, ci: string, co: string, excludeId?: string) {
@@ -186,6 +190,13 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
       </div>
 
       <div className="admin-bar">
+        {stays.length > 1 && (
+          <select value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}
+            style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border-strong)", maxWidth: 240, background: "var(--surface,#fff)" }}>
+            <option value="all">所有民宿({stays.length})</option>
+            {stays.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        )}
         <div className="seg">
           {([["pending", `待確認${stats.pending ? " " + stats.pending : ""}`], ["confirmed", "已確認"], ["today", "今日"], ["all", "全部"]] as const).map(([v, label]) => (
             <button key={v} className={tab === v ? "on" : ""} onClick={() => setTab(v)}>{label}</button>
