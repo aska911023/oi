@@ -33,6 +33,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const [photoFor, setPhotoFor] = useState<Place | null>(null);
   const [photoImgs, setPhotoImgs] = useState<string[]>([]);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set()); // 勾選批次上/下架
   const label = KIND_LABEL[kind];
 
   const filtered = useMemo(() => list.filter((p) => {
@@ -133,6 +134,19 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
     await refresh();
   }
 
+  const toggleSel = (id: string) => setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const toggleAll = () => setSelected((s) => { const n = new Set(s); if (filtered.every((p) => n.has(p.id))) filtered.forEach((p) => n.delete(p.id)); else filtered.forEach((p) => n.add(p.id)); return n; });
+  async function bulkPublish(pub: boolean) {
+    const ids = [...selected]; if (!ids.length) return;
+    const sb = createClient();
+    const { error } = await sb.from(table).update({ published: pub }).in("id", ids);
+    if (error) { alert("失敗:" + error.message); return; }
+    logAdmin(pub ? "publish" : "unpublish", { type: "place", detail: { 類別: label, 批次: ids.length } });
+    setSelected(new Set());
+    await refresh();
+  }
+
   return (
     <>
       <div className="stats">
@@ -148,13 +162,23 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
         <button className="btn btn-primary" onClick={() => setForm(empty())}>＋ 新增{label}</button>
       </div>
 
+      {selected.size > 0 && (
+        <div className="admin-bar" style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px", alignItems: "center", marginTop: -8 }}>
+          <b style={{ fontSize: 14 }}>已選 {selected.size} 筆</b>
+          <button className="btn btn-primary btn-sm" onClick={() => bulkPublish(true)}>批次上架</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => bulkPublish(false)}>批次下架</button>
+          <button className="lnk" onClick={() => setSelected(new Set())}>取消選取</button>
+        </div>
+      )}
+
       <div className="atable-wrap">
         <table className="atable">
-          <thead><tr><th></th><th>名稱</th><th>地區</th><th>地址</th><th>狀態</th><th>操作</th></tr></thead>
+          <thead><tr><th style={{ width: 30 }}><input type="checkbox" checked={allFilteredSelected} onChange={toggleAll} title="全選本頁" /></th><th></th><th>名稱</th><th>地區</th><th>地址</th><th>狀態</th><th>操作</th></tr></thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={6} className="empty-row">還沒有{label},點右上「新增{label}」開始。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">還沒有{label},點右上「新增{label}」開始。</td></tr>}
             {filtered.map((p) => (
               <tr key={p.id}>
+                <td><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSel(p.id)} /></td>
                 <td>{p.image ? <img className="athumb" src={p.image} alt="" /> : <div className="athumb" />}</td>
                 <td><b>{p.name}</b>{p.featured && <span className="pill feat" style={{ marginLeft: 8 }}>精選</span>}</td>
                 <td>{p.region}{p.town ? " · " + p.town : ""}</td>

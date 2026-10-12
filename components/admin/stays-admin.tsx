@@ -101,6 +101,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   const [photoFor, setPhotoFor] = useState<Stay | null>(null);
   const [photoImgs, setPhotoImgs] = useState<string[]>([]);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set()); // 勾選批次上/下架(限 admin)
   const roomSaveRef = useRef<(() => Promise<void>) | null>(null); // 房型編輯器把 saveAll 註冊進來,讓主「儲存」一起存
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<LogRow[] | null>(null);
@@ -248,6 +249,19 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     await refresh();
   }
 
+  const toggleSel = (id: string) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const allSortedSelected = sorted.length > 0 && sorted.every((s) => selected.has(s.id));
+  const toggleAll = () => setSelected((p) => { const n = new Set(p); if (sorted.every((s) => n.has(s.id))) sorted.forEach((s) => n.delete(s.id)); else sorted.forEach((s) => n.add(s.id)); return n; });
+  async function bulkPublish(pub: boolean) {
+    const ids = [...selected]; if (!ids.length) return;
+    const sb = createClient();
+    const { error } = await sb.from("stays").update({ published: pub }).in("id", ids);
+    if (error) { alert("失敗:" + error.message); return; }
+    await logAdmin(pub ? "publish" : "unpublish", null, { 批次: ids.length });
+    setSelected(new Set());
+    await refresh();
+  }
+
   return (
     <>
       {loadError && (
@@ -278,10 +292,20 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
         <button className="btn btn-primary" onClick={() => setForm({ ...EMPTY })}>＋ 新增民宿</button>
       </div>
 
+      {isAdminView && selected.size > 0 && (
+        <div className="admin-bar" style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px", alignItems: "center", marginBottom: 12 }}>
+          <b style={{ fontSize: 14 }}>已選 {selected.size} 間</b>
+          <button className="btn btn-primary btn-sm" onClick={() => bulkPublish(true)}>批次上架</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => bulkPublish(false)}>批次下架</button>
+          <button className="lnk" onClick={() => setSelected(new Set())}>取消選取</button>
+        </div>
+      )}
+
       <div className="atable-wrap">
         <table className="atable">
           <thead>
             <tr>
+              {isAdminView && <th style={{ width: 30 }}><input type="checkbox" checked={allSortedSelected} onChange={toggleAll} title="全選" /></th>}
               <th></th>
               <th className="th-sort" onClick={() => clickSort("name")}>名稱{sortInd("name")}</th>
               <th className="th-sort" onClick={() => clickSort("region")}>地區{sortInd("region")}</th>
@@ -295,9 +319,10 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
             </tr>
           </thead>
           <tbody>
-            {sorted.length === 0 && <tr><td colSpan={isAdminView ? 9 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
+            {sorted.length === 0 && <tr><td colSpan={isAdminView ? 10 : 6} className="empty-row">沒有符合的民宿。點「新增民宿」開始上架。</td></tr>}
             {sorted.map((s) => (
               <tr key={s.id}>
+                {isAdminView && <td><input type="checkbox" checked={selected.has(s.id)} onChange={() => toggleSel(s.id)} /></td>}
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
                 <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
                 <td>{s.region} · {s.town}</td>
