@@ -8,7 +8,7 @@ import AvailabilityCalendar from "@/components/vendor/availability-calendar";
 interface Stay { id: string; name: string; booking_deposit_pct: number; booking_enabled: boolean; booking_note: string }
 interface Room { id: string; stay_id: string; name: string; price: number; capacity: number; rooms_total: number | null; pricing: Record<string, unknown>; kind: string }
 interface BRoom { id: string; booking_id: string; room_type_id: string | null; room_name: string; qty: number; nights: number; unit_price: number; line_total: number }
-interface Payment { id: string; booking_id: string; kind: string; method: string; amount: number; received_at: string }
+interface Payment { id: string; booking_id: string; kind: string; method: string; amount: number; received_at: string; note?: string }
 interface BEvent { id: string; action: string; from_status: string | null; to_status: string | null; note: string; created_at: string }
 interface Booking {
   id: string; stay_id: string; code: string; source: string; status: string;
@@ -132,7 +132,7 @@ export default function BookingsManager({ ownerId, stays: initialStays, rooms, i
   const doCheckIn = (b: Booking) => advance(b, "checked_in");
   const doCheckOut = (b: Booking) => advance(b, "completed");
   const doCancel = (b: Booking) => { if (!confirm("確定取消這筆訂單?")) return; const r = prompt("取消原因(選填):") ?? ""; advance(b, "cancelled", { cancelled_at: new Date().toISOString(), cancel_reason: r }, r); };
-  const doNoShow = (b: Booking) => advance(b, "no_show");
+  const doNoShow = (b: Booking) => { const r = prompt("未到備註(選填):") ?? ""; advance(b, "no_show", {}, r); };
   // 取消/未到/拒絕後復原:拒絕→回待確認,其餘→回已確認(清掉取消原因/時間)
   const doRestore = (b: Booking) => advance(b, b.status === "rejected" ? "pending" : "confirmed",
     b.status === "rejected" ? { cancel_reason: "" } : { confirmed_at: new Date().toISOString(), cancel_reason: "", cancelled_at: null }, "復原");
@@ -294,6 +294,7 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--muted)" }}>
                 <span>{PAY_KIND[p.kind]} · {PAY_METHOD[p.method]} <b style={{ color: neg ? "var(--accent-red,#c0564f)" : "var(--ink,inherit)" }}>{neg ? "−" : ""}{money(Math.abs(Number(p.amount) || 0))}</b></span>
                 <span>{(p.received_at || "").slice(0, 10)}</span>
+                {p.note && <span style={{ fontStyle: "italic" }}>· {p.note}</span>}
                 <button className="lnk danger" style={{ marginLeft: "auto" }} onClick={() => delPayment(p.id)}>刪除</button>
               </div>
             ); })}
@@ -355,13 +356,14 @@ function PayForm({ bookingId, ownerId, total, depositDue, paid, onClose, onDone 
   const [kind, setKind] = useState("deposit");
   const [method, setMethod] = useState("transfer");
   const [amount, setAmount] = useState(suggest("deposit"));
+  const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   function changeKind(k: string) { setKind(k); setAmount(suggest(k)); }
   async function save() {
     setBusy(true);
     const sb = createClient();
     const amt = Math.abs(Number(amount) || 0) * (kind === "refund" ? -1 : 1); // 退款存負數(會從已收扣掉)
-    const { error } = await sb.from("payments").insert({ booking_id: bookingId, kind, method, amount: amt, recorded_by: ownerId });
+    const { error } = await sb.from("payments").insert({ booking_id: bookingId, kind, method, amount: amt, note: note.trim(), recorded_by: ownerId });
     setBusy(false);
     if (error) { alert("失敗:" + error.message); return; }
     onDone();
@@ -371,6 +373,7 @@ function PayForm({ bookingId, ownerId, total, depositDue, paid, onClose, onDone 
       <div><label style={{ fontSize: 12 }}>類別</label><br /><select value={kind} onChange={(e) => changeKind(e.target.value)}>{Object.entries(PAY_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
       <div><label style={{ fontSize: 12 }}>方式</label><br /><select value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(PAY_METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
       <div><label style={{ fontSize: 12 }}>{kind === "refund" ? "退款金額" : "金額"}(可改)</label><br /><input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} style={{ width: 110 }} /></div>
+      <div style={{ flex: 1, minWidth: 150 }}><label style={{ fontSize: 12 }}>備註</label><br /><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="例:匯款末五碼 / 現場收" style={{ width: "100%" }} /></div>
       <button className="btn btn-primary btn-sm" disabled={busy} onClick={save}>記錄</button>
       <button className="btn btn-ghost btn-sm" onClick={onClose}>取消</button>
     </div>
