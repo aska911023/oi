@@ -15,7 +15,7 @@ async function _placeInitial(kind: PoiKind) {
   const table = KIND_TABLE[kind];
   // 失敗重試、失敗不快取空值(保留 count 當總數)
   const { data, count } = await sbRetry<Place[]>(() => sb.from(table).select("*", { count: "exact" })
-    .eq("published", true).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, PAGE - 1), "places:" + kind);
+    .eq("published", true).order("has_image", { ascending: false }).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, PAGE - 1), "places:" + kind);
   const total = count ?? 0;
   let regions: string[] = [];
   if (total) {
@@ -34,7 +34,7 @@ export async function getPublishedPlaces(kind: PoiKind): Promise<Place[]> {
   if (!hasSupabase()) return [];
   try {
     const sb = createPublicClient();
-    const { data } = await sb.from(KIND_TABLE[kind]).select("*").eq("published", true).order("created_at", { ascending: false });
+    const { data } = await sb.from(KIND_TABLE[kind]).select("*").eq("published", true).order("has_image", { ascending: false }).order("created_at", { ascending: false });
     return (data || []) as Place[];
   } catch {
     return [];

@@ -33,7 +33,7 @@ export async function getCityPlaces(kind: PoiKind, region: string, limit = 48): 
   const sb = createPublicClient();
   const { data, count } = await sbRetry<Place[]>(
     () => sb.from(KIND_TABLE[kind]).select("*", { count: "exact" }).eq("published", true).eq("region", region)
-      .order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, limit - 1),
+      .order("has_image", { ascending: false }).order("featured", { ascending: false }).order("created_at", { ascending: false }).range(0, limit - 1),
     `city-places:${kind}:${region}`);
   return { places: (data || []) as Place[], total: count ?? 0 };
 }

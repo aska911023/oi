@@ -41,6 +41,7 @@ export async function getPublishedStays(): Promise<{ stays: Stay[]; usingSamples
       .select("*")
       .eq("published", true)
       .eq("visibility", "published")
+      .order("has_image", { ascending: false })
       .order("featured", { ascending: false })
       .order("created_at", { ascending: false });
     if (error || !data || data.length === 0) return { stays: SAMPLE_STAYS, usingSamples: true };
