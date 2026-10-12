@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import SiteTheme from "@/components/site-theme";
@@ -16,7 +17,18 @@ export default async function VendorLayout({ children }: { children: React.React
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login?next=/vendor");
 
-  const { data: profile } = await sb.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle();
+  let { data: profile } = await sb.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle();
+
+  // 設定的 admin email 自動升級(直接進 /vendor 也生效,跟 /admin 一致,否則其他管理員會被踢到 /apply)
+  const adminEmails = (process.env.OUSU_ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  if (user.email && adminEmails.includes(user.email.toLowerCase()) && profile?.role !== "admin" && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      await createAdminClient().from("profiles").update({ role: "admin" }).eq("id", user.id);
+      const { data: p2 } = await sb.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle();
+      profile = p2;
+    } catch { /* 升級失敗就照原 role 把關 */ }
+  }
+
   const role = profile?.role;
   if (role !== "partner" && role !== "admin") redirect("/apply"); // 還不是業者 → 去申請(存取用真實身分)
 

@@ -13,7 +13,8 @@ export default async function VendorBookingsPage() {
 
   // admin 看全部店;partner 只看自己(RLS 也允許 admin 看全部)
   const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  const isAdmin = profile?.role === "admin";
+  const adminEmails = (process.env.OUSU_ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = profile?.role === "admin" || (!!user.email && adminEmails.includes(user.email.toLowerCase()));
 
   let staysQ = sb.from("stays").select("id,name,booking_deposit_pct,booking_enabled,booking_note").order("name");
   if (!isAdmin) staysQ = staysQ.eq("owner_id", ownerId);
