@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import AvailabilityCalendar from "@/components/vendor/availability-calendar";
 
 /* ---------- types ---------- */
 interface Stay { id: string; name: string; booking_deposit_pct: number; booking_enabled: boolean }
@@ -53,6 +54,7 @@ export default function BookingsManager({ ownerId, stays, rooms, initialBookings
   const [events, setEvents] = useState<BEvent[] | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [view, setView] = useState<"orders" | "calendar">("orders");
   const today = todayStr();
 
   const stayName = (id: string) => stays.find((s) => s.id === id)?.name || "—";
@@ -146,6 +148,14 @@ export default function BookingsManager({ ownerId, stays, rooms, initialBookings
 
   return (
     <>
+      <div className="seg" style={{ marginBottom: 16 }}>
+        <button className={view === "orders" ? "on" : ""} onClick={() => setView("orders")}>📋 訂單</button>
+        <button className={view === "calendar" ? "on" : ""} onClick={() => setView("calendar")}>📅 房況日曆</button>
+      </div>
+
+      {view === "calendar" && <AvailabilityCalendar rooms={rooms} bookings={list} ownerId={ownerId} />}
+
+      {view === "orders" && <>
       <div className="stats">
         <div className="stat-card"><div className="n" style={{ color: stats.pending ? "var(--accent-orange, #b4690e)" : undefined }}>{stats.pending}</div><div className="l">待確認(要處理)</div></div>
         <div className="stat-card"><div className="n">{stats.checkIn}</div><div className="l">今日入住</div></div>
@@ -198,6 +208,7 @@ export default function BookingsManager({ ownerId, stays, rooms, initialBookings
 
       {showCreate && <CreateModal stays={stays} roomsOf={roomsOf} remaining={remaining} ownerId={ownerId}
         onClose={() => setShowCreate(false)} onDone={async () => { setShowCreate(false); await refresh(); }} />}
+      </>}
     </>
   );
 }

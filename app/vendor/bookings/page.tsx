@@ -11,11 +11,13 @@ export default async function VendorBookingsPage() {
   if (!user) redirect("/login?next=/vendor/bookings");
   const ownerId = user.id;
 
-  const { data: stays } = await sb
-    .from("stays")
-    .select("id,name,booking_deposit_pct,booking_enabled")
-    .eq("owner_id", ownerId)
-    .order("name");
+  // admin 看全部店;partner 只看自己(RLS 也允許 admin 看全部)
+  const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const isAdmin = profile?.role === "admin";
+
+  let staysQ = sb.from("stays").select("id,name,booking_deposit_pct,booking_enabled").order("name");
+  if (!isAdmin) staysQ = staysQ.eq("owner_id", ownerId);
+  const { data: stays } = await staysQ;
   const stayIds = (stays || []).map((s) => s.id);
 
   const rooms = stayIds.length
