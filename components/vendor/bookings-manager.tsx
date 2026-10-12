@@ -223,8 +223,16 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
   onPaid: () => void; ownerId: string;
 }) {
   const [payOpen, setPayOpen] = useState(false);
-  const paid = (b.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  // 退款一律當負的扣(不管存進去的符號),其餘加
+  const paid = (b.payments || []).reduce((a, p) => a + (p.kind === "refund" ? -Math.abs(Number(p.amount) || 0) : Math.abs(Number(p.amount) || 0)), 0);
   const s = STATUS[b.status];
+  async function delPayment(id: string) {
+    if (!confirm("刪除這筆收款紀錄?(操作失誤可刪掉重記)")) return;
+    const sb = createClient();
+    const { error } = await sb.from("payments").delete().eq("id", id);
+    if (error) { alert("刪除失敗:" + error.message); return; }
+    onPaid();
+  }
 
   return (
     <>
@@ -262,8 +270,14 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           <div style={{ display: "flex", justifyContent: "space-between", color: "var(--accent-green,#2f8a58)" }}><span>已收</span><span>{money(paid)}</span></div>
         </div>
         {(b.payments || []).length > 0 && (
-          <div style={{ marginTop: 8, fontSize: 12.5, color: "var(--muted)" }}>
-            {b.payments.map((p) => <div key={p.id}>{PAY_KIND[p.kind]} · {PAY_METHOD[p.method]} {money(p.amount)}<span style={{ marginLeft: 8 }}>{(p.received_at || "").slice(0, 10)}</span></div>)}
+          <div style={{ marginTop: 8, fontSize: 12.5, display: "flex", flexDirection: "column", gap: 4 }}>
+            {b.payments.map((p) => { const neg = p.kind === "refund"; return (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--muted)" }}>
+                <span>{PAY_KIND[p.kind]} · {PAY_METHOD[p.method]} <b style={{ color: neg ? "var(--accent-red,#c0564f)" : "var(--ink,inherit)" }}>{neg ? "−" : ""}{money(Math.abs(Number(p.amount) || 0))}</b></span>
+                <span>{(p.received_at || "").slice(0, 10)}</span>
+                <button className="lnk danger" style={{ marginLeft: "auto" }} onClick={() => delPayment(p.id)}>刪除</button>
+              </div>
+            ); })}
           </div>
         )}
 
@@ -282,7 +296,7 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           {["pending", "confirmed", "checked_in"].includes(b.status) && <button className="btn btn-ghost" onClick={() => setPayOpen(true)}>記錄收款</button>}
         </div>
 
-        {payOpen && <PayForm bookingId={b.id} ownerId={ownerId} defaultAmount={Math.max(0, b.deposit_amount - paid)}
+        {payOpen && <PayForm bookingId={b.id} ownerId={ownerId} total={b.total} depositDue={b.deposit_amount} paid={paid}
           onClose={() => setPayOpen(false)} onDone={() => { setPayOpen(false); onPaid(); }} />}
 
         {/* 時間軸 */}
@@ -307,24 +321,28 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
 }
 
 /* ================= 記錄收款 ================= */
-function PayForm({ bookingId, ownerId, defaultAmount, onClose, onDone }: { bookingId: string; ownerId: string; defaultAmount: number; onClose: () => void; onDone: () => void }) {
+function PayForm({ bookingId, ownerId, total, depositDue, paid, onClose, onDone }: { bookingId: string; ownerId: string; total: number; depositDue: number; paid: number; onClose: () => void; onDone: () => void }) {
+  // 依類別預設建議金額(仍可自己改):訂金=剩餘應收訂金、尾款=剩餘未收、退款=已收可退
+  const suggest = (k: string) => k === "refund" ? Math.max(0, paid) : k === "balance" ? Math.max(0, total - paid) : Math.max(0, depositDue - paid);
   const [kind, setKind] = useState("deposit");
   const [method, setMethod] = useState("transfer");
-  const [amount, setAmount] = useState(defaultAmount || 0);
+  const [amount, setAmount] = useState(suggest("deposit"));
   const [busy, setBusy] = useState(false);
+  function changeKind(k: string) { setKind(k); setAmount(suggest(k)); }
   async function save() {
     setBusy(true);
     const sb = createClient();
-    const { error } = await sb.from("payments").insert({ booking_id: bookingId, kind, method, amount: Number(amount) || 0, recorded_by: ownerId });
+    const amt = Math.abs(Number(amount) || 0) * (kind === "refund" ? -1 : 1); // 退款存負數(會從已收扣掉)
+    const { error } = await sb.from("payments").insert({ booking_id: bookingId, kind, method, amount: amt, recorded_by: ownerId });
     setBusy(false);
     if (error) { alert("失敗:" + error.message); return; }
     onDone();
   }
   return (
     <div style={{ marginTop: 12, border: "1px solid var(--border)", borderRadius: 10, padding: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-      <div><label style={{ fontSize: 12 }}>類別</label><br /><select value={kind} onChange={(e) => setKind(e.target.value)}>{Object.entries(PAY_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
+      <div><label style={{ fontSize: 12 }}>類別</label><br /><select value={kind} onChange={(e) => changeKind(e.target.value)}>{Object.entries(PAY_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
       <div><label style={{ fontSize: 12 }}>方式</label><br /><select value={method} onChange={(e) => setMethod(e.target.value)}>{Object.entries(PAY_METHOD).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
-      <div><label style={{ fontSize: 12 }}>金額</label><br /><input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} style={{ width: 100 }} /></div>
+      <div><label style={{ fontSize: 12 }}>{kind === "refund" ? "退款金額" : "金額"}(可改)</label><br /><input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} style={{ width: 110 }} /></div>
       <button className="btn btn-primary btn-sm" disabled={busy} onClick={save}>記錄</button>
       <button className="btn btn-ghost btn-sm" onClick={onClose}>取消</button>
     </div>
