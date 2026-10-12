@@ -28,7 +28,7 @@ export default function PlacesMap({ points, height = 360, zoom, highlightId }: {
       const pts = points.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
       if (!pts.length) return;
 
-      map = L.map(ref.current, { scrollWheelZoom: false, attributionControl: true });
+      map = L.map(ref.current, { scrollWheelZoom: true, attributionControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(map);
 
       markersRef.current = {};
