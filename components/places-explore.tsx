@@ -230,7 +230,7 @@ export default function PlacesExplore({ places, total = 0, kind, regions = [], l
               <div className="card-eyebrow">{active.region}{active.town ? " · " + active.town : ""}</div>
               <h2>{active.name}</h2>
               {active.address && <div className="detail-meta"><span>{I.pin} {active.address}</span></div>}
-              {active.description && <p>{active.description}</p>}
+              {active.description && <p style={{ whiteSpace: "pre-line" }}>{active.description}</p>}
 
               {/* 分類專屬資訊 */}
               {(() => {

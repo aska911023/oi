@@ -95,7 +95,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
             <div className="detail-body">
               <div className="card-eyebrow">{active.kind === "whole" ? "包棟方案" : "房型"}</div>
               <h2>{active.name}</h2>
-              {active.description && <p>{active.description}</p>}
+              {active.description && <p style={{ whiteSpace: "pre-line" }}>{active.description}</p>}
               {active.kind === "whole" && roomsCells(active).length > 0 && (
                 <div className="room-rooms" style={{ marginTop: 10 }}>
                   {roomsCells(active).map((rm, k) => (
@@ -103,7 +103,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
                   ))}
                 </div>
               )}
-              {active.kind === "whole" && active.includes_note && <p style={{ color: "var(--text-2)" }}>🛏 {active.includes_note}</p>}
+              {active.kind === "whole" && active.includes_note && <p style={{ color: "var(--text-2)", whiteSpace: "pre-line" }}>🛏 {active.includes_note}</p>}
 
               <div className="m-amenities" style={{ marginTop: 6 }}>
                 <span className="am-chip">可住 {active.capacity} 人</span>
