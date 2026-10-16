@@ -117,9 +117,10 @@ export interface RoomPricing {
   minor_holiday?: number | null; // 小假日
   holiday?: number | null;       // 假日
   rack?: number | null;          // 定價
-  extra_weekday?: number | null; // 加人(平日)/人
-  extra_holiday?: number | null; // 加人(假日)/人
+  extra_weekday?: number | null; // 加床(平日)/床
+  extra_holiday?: number | null; // 加床(假日)/床
   extras?: { label: string; amount: number | null }[]; // 自訂價格欄(連假/春節/特殊日…)
+  rooms?: { name: string; cap?: number }[]; // 包棟房間介紹(列出包含的房間,不含價,如 2+2+4)
 }
 
 export type RoomKind = "single" | "whole"; // 獨立單間 / 包棟

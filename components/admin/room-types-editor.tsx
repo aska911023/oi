@@ -56,6 +56,13 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
   const delExtra = (i: number, xi: number) => updExtras(i, (ex) => ex.filter((_, j) => j !== xi));
   const setExtra = (i: number, xi: number, field: "label" | "amount", val: string) =>
     updExtras(i, (ex) => ex.map((e, j) => (j === xi ? { ...e, [field]: field === "amount" ? (val === "" ? null : Number(val)) : val } : e)));
+  // 包棟房間介紹(pricing.rooms,不含價)
+  const updRooms = (i: number, fn: (rs: { name: string; cap?: number }[]) => { name: string; cap?: number }[]) =>
+    setRows((r) => r.map((x, k) => (k === i ? { ...x, pricing: { ...(x.pricing || {}), rooms: fn(x.pricing?.rooms || []) }, _dirty: true } : x)));
+  const addRoom = (i: number) => updRooms(i, (rs) => [...rs, { name: "", cap: 2 }]);
+  const delRoom = (i: number, ri: number) => updRooms(i, (rs) => rs.filter((_, j) => j !== ri));
+  const setRoom = (i: number, ri: number, field: "name" | "cap", val: string) =>
+    updRooms(i, (rs) => rs.map((e, j) => (j === ri ? { ...e, [field]: field === "cap" ? (val === "" ? undefined : Number(val)) : val } : e)));
   const add = (kind: RoomKind) => setRows((r) => [...r, blank(stayId, kind)]);
 
   async function removeRow(i: number) {
@@ -80,8 +87,9 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
       const kind: RoomKind = row.kind === "whole" ? "whole" : "single";
       const pricing = row.pricing || {};
       if (pricing.extras) pricing.extras = pricing.extras.filter((e) => (e.label || "").trim() && e.amount != null);
-      // 包棟起價 = 有填的各時期價格中最低者(沒填則沿用原價);單間用自己的價格
-      const periodVals = [pricing.weekday, pricing.peak_weekday, pricing.minor_holiday, pricing.holiday, pricing.rack]
+      if (pricing.rooms) pricing.rooms = pricing.rooms.filter((rm) => (rm.name || "").trim());
+      // 包棟起價 = 各時期價 + 自訂價格欄中最低者(沒填則沿用原價);單間用自己的價格
+      const periodVals = [pricing.weekday, pricing.peak_weekday, pricing.minor_holiday, pricing.holiday, pricing.rack, ...(pricing.extras || []).map((e) => e.amount)]
         .map((v) => Number(v)).filter((v) => Number.isFinite(v) && v > 0);
       const price = kind === "whole" ? (periodVals.length ? Math.min(...periodVals) : (Number(row.price) || 0)) : (Number(row.price) || 0);
       const payload = {
@@ -114,8 +122,8 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
 
   const extraRow = (r: Row, i: number) => (
     <div className="rt-extra">
-      <span className="rt-num">加人 平日 NT$<input type="number" min={0} value={r.pricing?.extra_weekday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_weekday", e.target.value)} />/人</span>
-      <span className="rt-num">加人 假日 NT$<input type="number" min={0} value={r.pricing?.extra_holiday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_holiday", e.target.value)} />/人</span>
+      <span className="rt-num">加床 平日 NT$<input type="number" min={0} value={r.pricing?.extra_weekday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_weekday", e.target.value)} />/床</span>
+      <span className="rt-num">加床 假日 NT$<input type="number" min={0} value={r.pricing?.extra_holiday ?? ""} placeholder="—" onChange={(e) => patchPrice(i, "extra_holiday", e.target.value)} />/床</span>
     </div>
   );
 
@@ -222,6 +230,19 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
               <button type="button" className="rt-extra-add" onClick={() => addExtra(i)}>＋ 自訂價格欄</button>
             </div>
             {extraRow(r, i)}
+            <div className="rt-includes">
+              <span className="rt-photos-cap">房間介紹(選填,列出包含的房間,不含價,例:2+2+4)</span>
+              <div className="rt-extras">
+                {(r.pricing?.rooms || []).map((rm, ri) => (
+                  <span className="rt-extra-cell" key={ri}>
+                    <input className="rt-extra-label" value={rm.name} placeholder="房間(例:主臥)" onChange={(e) => setRoom(i, ri, "name", e.target.value)} />
+                    <span className="rt-price-in"><input type="number" min={1} style={{ width: 46 }} value={rm.cap ?? ""} placeholder="人" onChange={(e) => setRoom(i, ri, "cap", e.target.value)} />人</span>
+                    <button type="button" className="rt-extra-del" onClick={() => delRoom(i, ri)} title="刪除房間">×</button>
+                  </span>
+                ))}
+                <button type="button" className="rt-extra-add" onClick={() => addRoom(i)}>＋ 新增房間</button>
+              </div>
+            </div>
             <div className="rt-includes">
               <span className="rt-photos-cap">包含哪些房間 / 說明(前台會顯示)</span>
               <textarea rows={2} value={r.includes_note || ""} placeholder="例:10人包棟提供三間雙人套房及一間四人套房" onChange={(e) => patch(i, { includes_note: e.target.value })} />
