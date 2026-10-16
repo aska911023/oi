@@ -375,15 +375,17 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                         {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                       </select>
                     )}
-                    {!ownerId && (planByKey[s.ad_tier || "free"]?.name || "").includes("授權") && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11 }} title="授權期間(到期自動降免費)">
-                        <input type="date" value={s.ad_start || ""} onChange={(e) => setAdDates(s, { ad_start: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} />
-                        <span style={{ color: "var(--muted)" }}>→</span>
-                        <input type="date" value={s.ad_end || ""} onChange={(e) => setAdDates(s, { ad_end: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} />
-                      </span>
-                    )}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
+                  {!ownerId && (planByKey[s.ad_tier || "free"]?.name || "").includes("授權") && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, fontSize: 12, color: "var(--text-2)", flexWrap: "wrap" }}>
+                      <span style={{ color: "var(--muted)" }}>授權期間</span>
+                      <input type="date" value={s.ad_start || ""} onChange={(e) => setAdDates(s, { ad_start: e.target.value || null })} style={{ fontSize: 12, padding: "3px 6px", border: "1px solid var(--border-strong)", borderRadius: 6 }} title="開始" />
+                      <span style={{ color: "var(--muted)" }}>→</span>
+                      <input type="date" value={s.ad_end || ""} onChange={(e) => setAdDates(s, { ad_end: e.target.value || null })} style={{ fontSize: 12, padding: "3px 6px", border: "1px solid var(--border-strong)", borderRadius: 6 }} title="結束(到期自動降免費)" />
+                      {s.ad_end && <span style={{ color: "var(--muted)", fontSize: 11.5 }}>到期自動降免費</span>}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
