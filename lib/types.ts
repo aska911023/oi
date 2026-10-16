@@ -37,7 +37,9 @@ export interface Stay {
   published: boolean;
   sample: boolean;
   featured?: boolean; // 贊助置頂
-  ad_tier?: string; // 曝光方案:free / featured / flagship
+  ad_tier?: string; // 曝光方案:free / featured / flagship / 授權…
+  ad_start?: string | null; // 授權/曝光方案 開始日(含)
+  ad_end?: string | null; // 授權/曝光方案 結束日(含);過期自動視為 free
   save_boost?: number; // 收藏數墊高(初期社群證明;admin 設)
   phone?: string | null; // 聯絡電話
   owner_id?: string | null; // 業主(指派後該業者可自管此民宿與底下房型);null = 平台自管

@@ -21,7 +21,7 @@ const EMPTY: Form = {
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", line_url: "", embed_urls: [], rooms_left: null, address: "", lat: null, lng: null,
   license_no: "", check_in: "", check_out: "",
-  published: false, featured: false, sample: false, ad_tier: "free", save_boost: 0,
+  published: false, featured: false, sample: false, ad_tier: "free", ad_start: null, ad_end: null, save_boost: 0,
 };
 
 export interface StayBd { stay_id: string; contacted: boolean; rejected: boolean; note: string | null }
@@ -186,6 +186,8 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       published: ownerId ? undefined : form.published, // 上架只有 admin 能設(業者送審)
       featured: ownerId ? undefined : planFeatured(form.ad_tier), sample: ownerId ? undefined : form.sample,
       ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
+      ad_start: ownerId ? undefined : ((form.ad_tier && form.ad_tier !== "free") ? (form.ad_start || null) : null),
+      ad_end: ownerId ? undefined : ((form.ad_tier && form.ad_tier !== "free") ? (form.ad_end || null) : null),
       save_boost: ownerId ? undefined : (Number(form.save_boost) || 0), // 收藏數墊高只有 admin 能設
       owner_id: ownerId ?? undefined,
       approved: ownerId ? undefined : true, // admin 建立自動核准;業者建立維持待審
@@ -367,6 +369,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                         {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                       </select>
                     )}
+                    {!ownerId && s.ad_end && <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>至 {s.ad_end}</span>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>
@@ -440,6 +443,20 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                     {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                   </select>
                 </label>
+              )}
+              {!ownerId && form.ad_tier && form.ad_tier !== "free" && (
+                <div className="check" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ color: "var(--muted)", fontSize: 13 }}>授權期間</span>
+                  <input type="date" value={form.ad_start || ""} onChange={(e) => setForm({ ...form, ad_start: e.target.value || null })} style={{ padding: "5px 8px", borderRadius: 8, border: "1px solid var(--border-strong)" }} title="開始" />
+                  <span style={{ color: "var(--muted)" }}>→</span>
+                  <input type="date" value={form.ad_end || ""} onChange={(e) => setForm({ ...form, ad_end: e.target.value || null })} style={{ padding: "5px 8px", borderRadius: 8, border: "1px solid var(--border-strong)" }} title="結束(到期自動變免費)" />
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
+                    const start = form.ad_start || new Date().toISOString().slice(0, 10);
+                    const d = new Date(start + "T00:00:00Z"); d.setMonth(d.getMonth() + 3);
+                    setForm({ ...form, ad_start: start, ad_end: d.toISOString().slice(0, 10) });
+                  }}>+3 個月</button>
+                  {form.ad_end && <span style={{ color: "var(--muted)", fontSize: 12.5 }}>到期後自動降免費</span>}
+                </div>
               )}
               {!ownerId && (
                 <label className="check" style={{ gap: 6 }}>收藏數墊高
