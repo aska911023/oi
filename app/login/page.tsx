@@ -27,7 +27,9 @@ export default function LoginPage() {
     e.preventDefault();
     setErr(""); setMsg("");
     const supabase = createClient();
-    const dest = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("next")) || "/";
+    // next 只接受站內相對路徑(擋 open redirect://evil.com、/\evil 等外部/協定相對導向)
+    const rawNext = (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("next")) || "/";
+    const dest = /^\/(?![/\\])/.test(rawNext) ? rawNext : "/";
 
     if (mode === "register") {
       if (!displayName.trim() || !fullName.trim() || !phone.trim() || !address.trim() || !email.trim())

@@ -14,7 +14,7 @@ export default function HeroCarousel({ images, caption, height, links }: { image
   }, [imgs.length]);
 
   return (
-    <div className="disc-img" style={height ? { height } : undefined}>
+    <div className="disc-img hero-carousel" style={height ? { height } : undefined}>
       {imgs.map((src, k) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img key={k} src={src} alt="民宿情境" className={"hc-slide" + (k === i ? " on" : "")} />
