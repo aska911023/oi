@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Avatar from "@/components/avatar";
+import { useViewer } from "@/lib/use-viewer-client";
 
-export default function MobileMenu({ loggedIn, name, avatarUrl = null, isAdmin, isPartner = false }: { loggedIn: boolean; name: string; avatarUrl?: string | null; isAdmin: boolean; isPartner?: boolean }) {
+export default function MobileMenu() {
+  const { loggedIn, role, name, avatarUrl } = useViewer();
+  const isAdmin = role === "admin";
+  const isPartner = role === "partner" || role === "admin";
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSiteSettings } from "@/lib/site-settings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // 靜態內容頁 → ISR 進 CDN
 
 // LINE 填網址就用網址;填 @ID(或純 ID)自動轉成加好友連結
 const lineHref = (v: string) => {

@@ -4,13 +4,13 @@ import { Logo } from "@/components/logo";
 import MobileMenu from "@/components/mobile-menu";
 import DestinationsNav from "@/components/destinations-nav";
 import HeaderSearch from "@/components/header-search";
-import NotificationBell from "@/components/notification-bell";
-import Avatar from "@/components/avatar";
-import type { Viewer } from "@/lib/viewer";
+import HeaderAuth from "@/components/header-auth";
 
-export default async function SiteHeader({ viewer, onGreen = false }: { viewer: Viewer; onGreen?: boolean }) {
+// 殼層 header:logo / 搜尋 / 導覽維持伺服器端靜態(利於 CDN 快取);
+// 「登入狀態」區塊(業者/管理/通知/頭貼 或 登入鈕)交給 client 的 <HeaderAuth />,
+// 所以本元件與 (site)/layout 不必查 auth,內容頁才能進 ISR。
+export default async function SiteHeader({ onGreen = false }: { onGreen?: boolean }) {
   const settings = await getSiteSettings();
-  const { loggedIn, role, name, avatarUrl } = viewer;
 
   return (
     <header className={"topbar " + (onGreen ? "on-green" : "solid")}>
@@ -23,18 +23,9 @@ export default async function SiteHeader({ viewer, onGreen = false }: { viewer: 
           <Link href="/plan">規劃行程</Link>
           <Link href="/trips">行程分享</Link>
           <Link href="/contact">聯絡我們</Link>
-          {loggedIn ? (
-            <>
-              {(role === "partner" || role === "admin") && <Link href="/vendor">業者後台</Link>}
-              {role === "admin" && <Link href="/admin">管理後台</Link>}
-              <NotificationBell />
-              <Link href="/me/trips" className="cta cta-user"><Avatar src={avatarUrl} name={name} size={30} /> 歡迎,{name}</Link>
-            </>
-          ) : (
-            <Link href="/login" className="cta">登入 / 註冊</Link>
-          )}
+          <HeaderAuth />
         </nav>
-        <MobileMenu loggedIn={loggedIn} name={name} avatarUrl={avatarUrl} isAdmin={role === "admin"} isPartner={role === "partner" || role === "admin"} />
+        <MobileMenu />
       </div>
     </header>
   );

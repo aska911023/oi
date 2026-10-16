@@ -4,7 +4,7 @@ import { getStayBySlug, stayHref } from "@/lib/city";
 import { decodeParam } from "@/lib/slug";
 import StayDetail from "@/components/stay-detail";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR:民宿詳情進 CDN(爬蟲/分享命中快取);後台改資料最多 5 分鐘生效
 
 // 舊民宿網址 /stay/{slug|uuid}。slug 帶縣市前綴者由 middleware 308 到 /{region}/hotel/{slug};
 // 推不出縣市(uuid 等)會落到這裡 —— 正常渲染,但 canonical 指向新網址讓 Google 收斂。

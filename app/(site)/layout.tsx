@@ -7,19 +7,19 @@ import ScrollTop from "@/components/scroll-top";
 import CompareBar from "@/components/compare-bar";
 import BottomNav from "@/components/bottom-nav";
 import TripDraftBadge from "@/components/trip-draft-badge";
-import RoleViewSwitcher from "@/components/role-view-switcher";
+import RolePreviewBanner from "@/components/role-preview-banner";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
-import { getViewer } from "@/lib/viewer";
 import { POI_KINDS } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+// 殼層不再查 auth(登入狀態改由 header 的 client 島顯示),整個 (site) 子樹才能進 CDN(ISR)。
+// getSiteSettings 走 unstable_cache,殼層可靜態化;內容頁各自設 revalidate。
+export const revalidate = 300;
 
-// 共用外殼:header / 主題 / footer 常駐,導航時只換 children(不再每頁重查登入)
+// 共用外殼:header / 主題 / footer 常駐,導航時只換 children
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
-  const viewer = await getViewer();
   // 站級結構化資料:品牌實體(Organization)+ 網站(WebSite),讓 Google 建立 oi-stay 品牌 Entity
   const socials = [settings.contact_fb, settings.contact_ig].filter((u): u is string => !!u && /^https?:\/\//.test(u));
   const siteLd = {
@@ -36,8 +36,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <ScrollTop />
       <PageViewTracker />
       <EntryGate logoSrc={settings.logo_image || undefined} />
-      <RoleViewSwitcher isRealAdmin={viewer.isRealAdmin} viewAs={viewer.viewAs} compact />
-      <SiteHeader viewer={viewer} />
+      <RolePreviewBanner />
+      <SiteHeader />
       {children}
       <footer className="footer">
         <div className="shell footer-grid">

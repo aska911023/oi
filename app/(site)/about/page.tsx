@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSiteSettings } from "@/lib/site-settings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // 靜態內容頁 → ISR 進 CDN
 
 export default async function AboutPage() {
   const s = await getSiteSettings();

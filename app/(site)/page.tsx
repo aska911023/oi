@@ -4,7 +4,7 @@ import Explore from "@/components/explore";
 import { getRoomsInitial } from "@/lib/rooms";
 import { getSiteSettings } from "@/lib/site-settings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR:內容頁進 CDN,爬蟲/瀏覽命中快取;後台存檔走 revalidatePath("/") 即時更新
 
 // 首頁分享卡(og:title / og:description)吃後台「首頁設定」可編輯的欄位
 export async function generateMetadata(): Promise<Metadata> {
