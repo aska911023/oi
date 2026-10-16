@@ -1,6 +1,7 @@
 // 城市優先架構(SEO)共用設定與資料層。
 // 網址:/{縣市}/ ·  /{縣市}/{hotels|restaurants|attractions|parking|itineraries}/
 // 城市來源 = 既有地理資料的縣市清單(資料驅動,不另建表)。
+import { cache } from "react";
 import { GEOGRAPHIC_AREAS } from "./data";
 import { hasSupabase } from "./stays";
 import { createPublicClient } from "./supabase/public";
@@ -57,22 +58,23 @@ export const stayHref = (region: string, slug: string) => `/${encodeURIComponent
 export const placeHref = (kind: PoiKind, region: string, slug: string) => `/${encodeURIComponent(region)}/${KIND_SINGULAR[kind]}/${encodeURIComponent(slug)}`;
 
 // 以 slug 取單筆(找不到再用網址裡的 UUID,相容舊連結)
-export async function getStayBySlug(param: string): Promise<Stay | null> {
+// cache():同一次請求渲染內(generateMetadata + 頁面 body)只打一次 DB,不重複查。
+export const getStayBySlug = cache(async (param: string): Promise<Stay | null> => {
   if (!hasSupabase()) return null;
   const sb = createPublicClient();
   let { data } = await sb.from("stays").select("*").eq("slug", param).maybeSingle();
   if (!data) { const uuid = extractUuid(param); if (uuid) ({ data } = await sb.from("stays").select("*").eq("id", uuid).maybeSingle()); }
   return (data as Stay) || null;
-}
+});
 
-export async function getPlaceBySlug(kind: PoiKind, param: string): Promise<Place | null> {
+export const getPlaceBySlug = cache(async (kind: PoiKind, param: string): Promise<Place | null> => {
   if (!hasSupabase()) return null;
   const sb = createPublicClient();
   const table = KIND_TABLE[kind];
   let { data } = await sb.from(table).select("*").eq("slug", param).maybeSingle();
   if (!data) { const uuid = extractUuid(param); if (uuid) ({ data } = await sb.from(table).select("*").eq("id", uuid).maybeSingle()); }
   return (data as Place) || null;
-}
+});
 
 // 某縣市某類的地圖點位(有經緯度者)
 export type CityMapPoint = { id: string; name: string; lat: number; lng: number; href: string; kind: string; image?: string; price?: number; town?: string; region?: string };

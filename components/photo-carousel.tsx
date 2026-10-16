@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { imgUrl } from "@/lib/img";
 
 // 輕量輪播:把 slides + 箭頭 + dots 直接塞進外層定位容器(.photo / .shop-hero-c / .room-thumb-c)。
@@ -12,23 +12,25 @@ export default function PhotoCarousel({ images, alt, dots = true, arrows = true,
 }) {
   const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s, width));
   const [i, setI] = useState(0);
+  const prev = useRef(0); // 前一張:切換時墊在底下不動,等新圖浮現蓋上去(避免交叉淡化露底的生硬感)
+  const goTo = (next: (x: number) => number) => setI((x) => { prev.current = x; return next(x); });
 
   useEffect(() => {
     if (imgs.length <= 1) return;
-    const t = setInterval(() => setI((x) => (x + 1) % imgs.length), interval);
+    const t = setInterval(() => goTo((x) => (x + 1) % imgs.length), interval);
     return () => clearInterval(t);
   }, [imgs.length, interval]);
 
   const go = (d: number) => (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    setI((x) => (x + d + imgs.length) % imgs.length);
+    goTo((x) => (x + d + imgs.length) % imgs.length);
   };
 
   return (
     <>
       {imgs.map((src, k) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={k} src={src} alt={alt || ""} loading="lazy" className={"hc-slide" + (k === i ? " on" : "")} />
+        <img key={k} src={src} alt={alt || ""} loading="lazy" className={"hc-slide" + (k === i ? " on" : k === prev.current ? " under" : "")} />
       ))}
       {arrows && imgs.length > 1 && (
         <>
@@ -40,7 +42,7 @@ export default function PhotoCarousel({ images, alt, dots = true, arrows = true,
         <div className="hc-dots">
           {imgs.map((_, k) => (
             <button key={k} className={k === i ? "on" : ""} aria-label={`第 ${k + 1} 張`}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setI(k); }} />
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(() => k); }} />
           ))}
         </div>
       )}
