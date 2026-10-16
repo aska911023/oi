@@ -127,6 +127,13 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} />}
         </div>
 
+        {(s.notice_booking || s.notice_checkout) && (
+          <div className="shop-block">
+            {s.notice_booking && <><h2 className="serif shop-h">訂房須知</h2><p className="shop-desc" style={{ marginBottom: s.notice_checkout ? 20 : 0 }}>{s.notice_booking}</p></>}
+            {s.notice_checkout && <><h2 className="serif shop-h">退房須知</h2><p className="shop-desc">{s.notice_checkout}</p></>}
+          </div>
+        )}
+
         <div className="shop-block">
           <h2 className="serif shop-h">評價 {reviews.length > 0 && <span className="count">★ {avg.toFixed(1)} · {reviews.length} 則</span>}</h2>
           <ReviewForm stayId={s.id} />

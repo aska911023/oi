@@ -28,6 +28,8 @@ export interface Stay {
   embed_urls?: string[]; // 影片介紹 / 網紅推薦(YouTube / IG / TikTok,可多個)
   rooms_left?: number | null; // 剩餘房數(null = 未設定,不顯示)
   license_no?: string | null; // 合法民宿登記證號
+  notice_booking?: string; // 訂房須知(前台詳情顯示)
+  notice_checkout?: string; // 退房須知(前台詳情顯示)
   check_in?: string | null; // 最早入住(例 15:00)
   check_out?: string | null; // 最晚退房(例 11:00)
   address?: string; // 地址(Google Map / 導航用)
