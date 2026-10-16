@@ -14,6 +14,11 @@ const periodsOf = (r: RoomType) => {
   const extras = (pr.extras || []).map((e) => [e.label, e.amount] as [string, number | null | undefined]);
   return [...base, ...extras].filter(([, v]) => v != null) as [string, number][];
 };
+// 「/晚起」取所有時段價的最低(沒設時段才退回 price)
+const startPrice = (r: RoomType) => {
+  const ps = periodsOf(r).map(([, v]) => v).filter((v) => v > 0);
+  return ps.length ? Math.min(...ps) : r.price;
+};
 
 export default function RoomList({ rooms }: { rooms: RoomType[] }) {
   const [active, setActive] = useState<RoomType | null>(null);
@@ -31,7 +36,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
     const pr = r.pricing || {};
     if (pr.extra_weekday == null && pr.extra_holiday == null) return null;
     return (
-      <div className="room-extra">加人{pr.extra_weekday != null ? ` 平日 ${priceLabel(pr.extra_weekday)}/人` : ""}{pr.extra_holiday != null ? `${pr.extra_weekday != null ? " ·" : ""} 假日 ${priceLabel(pr.extra_holiday)}/人` : ""}</div>
+      <div className="room-extra">加床{pr.extra_weekday != null ? ` 平日 ${priceLabel(pr.extra_weekday)}/床` : ""}{pr.extra_holiday != null ? `${pr.extra_weekday != null ? " ·" : ""} 假日 ${priceLabel(pr.extra_holiday)}/床` : ""}</div>
     );
   };
 
@@ -62,7 +67,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
                 {extraLine(r)}
               </div>
               <div className="room-price-col">
-                <div className="room-price">{priceLabel(r.price)}<small>/{whole ? "晚起" : "晚"}</small></div>
+                <div className="room-price">{priceLabel(whole ? startPrice(r) : r.price)}<small>/{whole ? "晚起" : "晚"}</small></div>
                 {r.rooms_total != null && <span className="room-stock">共 {r.rooms_total} {whole ? "組" : "間"}</span>}
               </div>
             </div>
