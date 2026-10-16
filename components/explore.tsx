@@ -204,7 +204,7 @@ export default function Explore({ rooms, total = 0, regions = [], categories = [
                     : <div className="photo-ph">{I.house}</div>}
                   <div className="card-badges">
                     {r.kind === "whole" && <span className="cbadge cbadge-whole">包棟</span>}
-                    {r.ad_tier && r.ad_tier !== "free" && <span className="cbadge cbadge-feat">精選</span>}
+                    {(r.ad_prio ?? 0) > 0 && <span className="cbadge cbadge-feat">精選</span>}
                   </div>
                   {r.rooms_total != null && <span className="tag-rooms">共 {r.rooms_total} 間</span>}
                 </div>

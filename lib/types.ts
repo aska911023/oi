@@ -101,6 +101,7 @@ export interface RoomCard {
   images?: string[]; // 房型相簿;空則退回民宿相簿/封面
   featured?: boolean;
   ad_tier?: string; // 曝光方案(民宿層級)
+  ad_prio?: number; // 曝光優先序(方案 priority;>0 才算精選、才加分;授權=0)
   save_count?: number; // 收藏人數(社群證明)
   tags?: string[];
   stay_id: string;

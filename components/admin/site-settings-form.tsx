@@ -251,7 +251,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
                         style={{ width: "100%", marginTop: 6, border: "1px solid var(--border-strong)", borderRadius: 8, padding: "7px 10px", font: "inherit", fontSize: 13 }} />
                     </div>
                   ))}
-                  {(b.images || []).length < 4 && <button className="btn btn-ghost btn-sm" onClick={() => updateBlock(b.id, { images: [...(b.images || []), ""] })}>＋ 加照片</button>}
+                  {(b.images || []).length < 5 && <button className="btn btn-ghost btn-sm" onClick={() => updateBlock(b.id, { images: [...(b.images || []), ""] })}>＋ 加照片</button>}
                   <div className="style-controls" style={{ marginTop: 10 }}>
                     <span className="sc-num">寬<input type="number" min={20} max={100} value={b.width || 100} onChange={(e) => updateBlock(b.id, { width: Number(e.target.value) })} />%</span>
                     <span className="sc-num">高<input type="number" min={120} max={800} value={b.height ?? 340} onChange={(e) => updateBlock(b.id, { height: Number(e.target.value) })} />px</span>
