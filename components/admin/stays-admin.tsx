@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { logAdmin as writeAdminLog } from "@/lib/admin-log";
 import { GEOGRAPHIC_AREAS, CATEGORIES, AMENITY_OPTIONS } from "@/lib/data";
@@ -54,6 +54,14 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     return o ? (o.display_name || o.full_name || id.slice(0, 8)) : id.slice(0, 8);
   };
   const [list, setList] = useState<Stay[]>(initial);
+  // 清單「置頂」標 = 這間有沒有 ★置頂 的房型(room_types.featured),反映實際設定(不是舊的 stays.featured)
+  const [pinnedStayIds, setPinnedStayIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    (async () => {
+      const { data } = await createClient().from("room_types").select("stay_id").eq("featured", true);
+      setPinnedStayIds(new Set((data || []).map((r: { stay_id: string }) => r.stay_id)));
+    })();
+  }, []);
   // 洽談紀錄存在 stay_bd(只有 admin 讀得到),不放 stays 以免被公開 API 讀走。
   // 業者自己的 /vendor 頁(有 ownerId)不顯示這些內部欄位。
   const isAdminView = !ownerId;
@@ -121,8 +129,8 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     total: list.length,
     published: list.filter((s) => s.published).length,
     draft: list.filter((s) => !s.published).length,
-    featured: list.filter((s) => s.featured).length,
-  }), [list]);
+    featured: list.filter((s) => pinnedStayIds.has(s.id)).length,
+  }), [list, pinnedStayIds]);
 
   const filtered = useMemo(() => list.filter((s) => {
     if (status === "published" && !s.published) return false;
@@ -334,7 +342,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <tr key={s.id}>
                 {isAdminView && <td><input type="checkbox" checked={selected.has(s.id)} onChange={() => toggleSel(s.id)} /></td>}
                 <td>{s.image ? <img className="athumb" src={s.image} alt="" /> : <div className="athumb" />}</td>
-                <td><b>{s.name}</b>{s.featured && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
+                <td><b>{s.name}</b>{pinnedStayIds.has(s.id) && <span className="pill feat" style={{ marginLeft: 8 }}>置頂</span>}</td>
                 <td>{s.region} · {s.town}</td>
                 <td>{s.category}</td>
                 <td>
