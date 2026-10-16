@@ -239,8 +239,14 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   }
   async function setTier(s: Stay, ad_tier: string) {
     const sb = createClient();
-    await sb.from("stays").update({ ad_tier, featured: planFeatured(ad_tier) }).eq("id", s.id);
+    const isLicense = (planByKey[ad_tier]?.name || "").includes("授權");
+    await sb.from("stays").update({ ad_tier, featured: planFeatured(ad_tier), ...(isLicense ? {} : { ad_start: null, ad_end: null }) }).eq("id", s.id);
     await logAdmin("set_tier", s, { from: s.ad_tier || "free", to: ad_tier });
+    await refresh();
+  }
+  async function setAdDates(s: Stay, patch: { ad_start?: string | null; ad_end?: string | null }) {
+    const sb = createClient();
+    await sb.from("stays").update(patch).eq("id", s.id);
     await refresh();
   }
   async function remove(s: Stay) {
@@ -369,7 +375,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                         {planOptions.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                       </select>
                     )}
-                    {!ownerId && s.ad_end && <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>至 {s.ad_end}</span>}
+                    {!ownerId && (planByKey[s.ad_tier || "free"]?.name || "").includes("授權") && (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11 }} title="授權期間(到期自動降免費)">
+                        <input type="date" value={s.ad_start || ""} onChange={(e) => setAdDates(s, { ad_start: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} />
+                        <span style={{ color: "var(--muted)" }}>→</span>
+                        <input type="date" value={s.ad_end || ""} onChange={(e) => setAdDates(s, { ad_end: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} />
+                      </span>
+                    )}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>
                   </div>
                 </td>

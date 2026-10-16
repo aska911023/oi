@@ -1029,6 +1029,11 @@ img { display: block; max-width: 100%; }
 .rpt-cell span { font-size: 11px; color: var(--muted); }
 .rpt-cell b { font-size: 13.5px; color: var(--ink); }
 .room-extra { font-size: 12.5px; color: var(--text-2); margin-top: 6px; }
+/* 包棟房間介紹:一個框一個框(名稱上、人數下) */
+.room-rooms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.room-room-cell { display: flex; flex-direction: column; gap: 2px; padding: 7px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--page); }
+.room-room-cell .rr-name { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.room-room-cell .rr-cap { font-size: 11px; color: var(--muted); }
 /* 房型列:可點看更多 + 剩N間放價格下方 */
 .room-row.clickable { cursor: pointer; padding: 11px 10px; margin: 0 -10px; border-radius: 12px; transition: background .12s; }
 .room-row.clickable:hover { background: var(--green-soft); }

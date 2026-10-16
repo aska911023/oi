@@ -19,8 +19,8 @@ const startPrice = (r: RoomType) => {
   const ps = periodsOf(r).map(([, v]) => v).filter((v) => v > 0);
   return ps.length ? Math.min(...ps) : r.price;
 };
-// 包棟房間介紹:主臥(2人) · 次臥(2人) · 和室(4人)
-const roomsLine = (r: RoomType) => (r.pricing?.rooms || []).filter((rm) => rm && rm.name).map((rm) => `${rm.name}${rm.cap ? `(${rm.cap}人)` : ""}`).join(" · ");
+// 包棟房間介紹:一個框一個框(房間名 + 人數)
+const roomsCells = (r: RoomType) => (r.pricing?.rooms || []).filter((rm) => rm && rm.name);
 
 export default function RoomList({ rooms }: { rooms: RoomType[] }) {
   const [active, setActive] = useState<RoomType | null>(null);
@@ -55,7 +55,13 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               <div className="room-main">
                 <div className="room-name">{r.featured && <span className="room-pin">★ 置頂</span>}{whole && <span className="room-kind">包棟</span>}{r.name}<span className="room-more">看更多 ›</span></div>
                 {r.description && <div className="room-desc">{r.description}</div>}
-                {whole && roomsLine(r) && <div className="room-desc">🏠 {roomsLine(r)}</div>}
+                {whole && roomsCells(r).length > 0 && (
+                  <div className="room-rooms">
+                    {roomsCells(r).map((rm, k) => (
+                      <div key={k} className="room-room-cell"><span className="rr-name">{rm.name}</span>{rm.cap ? <span className="rr-cap">{rm.cap} 人</span> : null}</div>
+                    ))}
+                  </div>
+                )}
                 {whole && r.includes_note && <div className="room-desc">🛏 {r.includes_note}</div>}
                 <div className="room-tags">
                   <span>可住 {r.capacity} 人</span>
@@ -90,7 +96,13 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               <div className="card-eyebrow">{active.kind === "whole" ? "包棟方案" : "房型"}</div>
               <h2>{active.name}</h2>
               {active.description && <p>{active.description}</p>}
-              {active.kind === "whole" && roomsLine(active) && <p style={{ color: "var(--text-2)" }}>🏠 {roomsLine(active)}</p>}
+              {active.kind === "whole" && roomsCells(active).length > 0 && (
+                <div className="room-rooms" style={{ marginTop: 10 }}>
+                  {roomsCells(active).map((rm, k) => (
+                    <div key={k} className="room-room-cell"><span className="rr-name">{rm.name}</span>{rm.cap ? <span className="rr-cap">{rm.cap} 人</span> : null}</div>
+                  ))}
+                </div>
+              )}
               {active.kind === "whole" && active.includes_note && <p style={{ color: "var(--text-2)" }}>🛏 {active.includes_note}</p>}
 
               <div className="m-amenities" style={{ marginTop: 6 }}>
