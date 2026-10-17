@@ -9,7 +9,11 @@ import RoomTile from "@/components/room-tile";
 import PlacesMap from "@/components/places-map";
 import type { Place } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR:城市頁進 CDN
+
+export function generateStaticParams() {
+  return CITIES.map((c) => ({ city: c }));
+}
 
 const enc = encodeURIComponent;
 

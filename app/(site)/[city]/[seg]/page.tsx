@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getRoomsByRegion, STAY_THEMES } from "@/lib/rooms";
-import { isCity, SECTIONS, SECTION_SET, getCityPlaces, getCityTrips, getCityMapPoints, type Section } from "@/lib/city";
+import { isCity, CITIES, SECTIONS, SECTION_SET, getCityPlaces, getCityTrips, getCityMapPoints, type Section } from "@/lib/city";
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import PlacesExplore from "@/components/places-explore";
 import TripCard from "@/components/trip-card";
 import type { PoiKind } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR:城市分類列表頁進 CDN
+
+export function generateStaticParams() {
+  return CITIES.flatMap((c) => SECTIONS.map((s) => ({ city: c, seg: s.seg })));
+}
 
 const SEG_META: Record<Section, { word: string; kind?: PoiKind }> = {
   hotels: { word: "民宿住宿" },

@@ -3,13 +3,30 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getRoomsByRegion, STAY_THEMES } from "@/lib/rooms";
 import { isCity, ENTITY_KIND, stayHref, placeHref, getStayBySlug, getPlaceBySlug } from "@/lib/city";
+import { createPublicClient } from "@/lib/supabase/public";
 import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import StayDetail from "@/components/stay-detail";
 import PlaceDetail from "@/components/place-detail";
 import type { PoiKind, Stay, Place } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR:民宿/景點詳情頁(SEO 大宗)進 CDN;後台改資料最多 5 分鐘生效
+
+// 預產所有已發布的民宿/景點/美食/停車詳情頁(主題長尾頁靠 dynamicParams 首訪時即時產生並快取)。
+// build 時抓 DB 失敗則回空陣列,頁面改為首訪即時產生,不讓 build 失敗。
+export async function generateStaticParams() {
+  try {
+    const sb = createPublicClient();
+    const out: { city: string; seg: string; sub: string }[] = [];
+    const { data: stays } = await sb.from("stays").select("slug, id, region").eq("published", true).eq("approved", true).eq("visibility", "published");
+    for (const s of (stays || []) as { slug?: string; id: string; region?: string }[]) if (s.region) out.push({ city: s.region, seg: "hotel", sub: s.slug || s.id });
+    for (const [table, seg] of [["attractions", "attraction"], ["restaurants", "restaurant"], ["parking_lots", "parking"]] as const) {
+      const { data } = await sb.from(table).select("slug, id, region").eq("published", true);
+      for (const p of (data || []) as { slug?: string; id: string; region?: string }[]) if (p.region) out.push({ city: p.region, seg, sub: p.slug || p.id });
+    }
+    return out;
+  } catch { return []; }
+}
 
 // /{city}/hotels/{主題}      → 住宿主題長尾頁
 // /{city}/hotel/{slug}       → 民宿詳情

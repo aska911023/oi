@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getStayBySlug, stayHref } from "@/lib/city";
+import { createPublicClient } from "@/lib/supabase/public";
 import { decodeParam } from "@/lib/slug";
 import StayDetail from "@/components/stay-detail";
 
 export const revalidate = 300; // ISR:民宿詳情進 CDN(爬蟲/分享命中快取);後台改資料最多 5 分鐘生效
+
+export async function generateStaticParams() {
+  try {
+    const sb = createPublicClient();
+    const { data } = await sb.from("stays").select("slug, id").eq("published", true).eq("approved", true).eq("visibility", "published");
+    return ((data || []) as { slug?: string; id: string }[]).map((s) => ({ id: s.slug || s.id }));
+  } catch { return []; }
+}
 
 // 舊民宿網址 /stay/{slug|uuid}。slug 帶縣市前綴者由 middleware 308 到 /{region}/hotel/{slug};
 // 推不出縣市(uuid 等)會落到這裡 —— 正常渲染,但 canonical 指向新網址讓 Google 收斂。

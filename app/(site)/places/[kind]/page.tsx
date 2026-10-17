@@ -3,7 +3,11 @@ import PlacesExplore from "@/components/places-explore";
 import { getPlaceInitial } from "@/lib/places";
 import { POI_KINDS, type PoiKind } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR
+
+export function generateStaticParams() {
+  return POI_KINDS.map((k) => ({ kind: k.slug }));
+}
 
 export default async function PlacesPage({ params }: { params: Promise<{ kind: string }> }) {
   const { kind } = await params;
