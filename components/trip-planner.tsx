@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { promptLogin } from "@/lib/login-gate";
 import { revalidateTrips } from "@/app/actions";
 import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { TRANSPORTS, TRIP_ITEM_LABEL, type Trip, type TripItem, type TripItemType } from "@/lib/types";
@@ -236,7 +237,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
   }
 
   async function save() {
-    if (!loggedIn) { alert("請先登入才能把行程存到帳號。"); return; }
+    if (!loggedIn) { promptLogin("/plan", { title: "加入會員發布行程", desc: "登入後即可把行程存到帳號、公開分享給大家。" }); return; }
     setSaving(true);
     const sb = createClient();
     const { data: { user } } = await sb.auth.getUser();
