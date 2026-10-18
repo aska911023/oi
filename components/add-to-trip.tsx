@@ -1,17 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { promptLogin } from "@/lib/login-gate";
 
-// entity 頁的「加入行程」:寫進 localStorage 草稿,/plan 開新行程時自動帶入。
-// 不需登入也能先丟進草稿;到規劃頁再整理/存檔。
+// entity 頁的「加入行程」:要登入才能用(行程是會員功能);登入後寫進 localStorage 草稿,/plan 自動帶入。
 const KEY = "oi_trip_draft";
 type TripDraftType = "stay" | "attraction" | "food" | "parking" | "rental" | "station";
 type DraftItem = { type: TripDraftType; refId: string; name: string; region?: string };
 
 export default function AddToTrip({ type, refId, name, region, compact = false }: DraftItem & { compact?: boolean }) {
   const [added, setAdded] = useState(false);
+  const [uid, setUid] = useState<string | null | undefined>(undefined); // undefined=載入中
+
+  useEffect(() => {
+    let alive = true;
+    createClient().auth.getUser().then(({ data }) => { if (alive) setUid(data.user?.id ?? null); });
+    return () => { alive = false; };
+  }, []);
 
   function add() {
+    if (uid === null) {
+      promptLogin(typeof window !== "undefined" ? window.location.pathname : "/", {
+        title: "加入會員規劃行程",
+        desc: "登入後即可把喜歡的民宿、景點加進你的專屬行程。",
+      });
+      return;
+    }
     try {
       const raw = localStorage.getItem(KEY);
       const arr: DraftItem[] = raw ? JSON.parse(raw) : [];

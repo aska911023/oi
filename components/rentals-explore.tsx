@@ -10,6 +10,7 @@ import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import AddToTrip from "@/components/add-to-trip";
+import GatedOutLink from "@/components/gated-out-link";
 
 const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
 
@@ -188,8 +189,8 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
 
               <div className="detail-actions">
                 <a className="btn btn-primary" href={mapHref(active)} target="_blank" rel="noopener noreferrer" style={{ flex: 1, minWidth: 150 }}>{I.map} 取車地點</a>
-                {active.website && <a className="btn btn-ghost" href={active.website} target="_blank" rel="noopener noreferrer">官網 {I.out}</a>}
-                {active.line_url && <a className="btn btn-ghost" href={active.line_url} target="_blank" rel="noopener noreferrer">LINE 預約</a>}
+                {active.website && <GatedOutLink className="btn btn-ghost" href={active.website} title="加入會員聯絡租車店" desc="登入後即可查看租車店官網與預約管道。">官網 {I.out}</GatedOutLink>}
+                {active.line_url && <GatedOutLink className="btn btn-ghost" href={active.line_url} title="加入會員聯絡租車店" desc="登入後即可透過 LINE 預約租車。">LINE 預約</GatedOutLink>}
                 <AddToTrip type="rental" refId={active.id} name={active.name} region={active.region} />
                 <SharePlaceButton name={active.name} mapUrl={mapHref(active)} />
               </div>
