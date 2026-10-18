@@ -5,6 +5,7 @@ import SignOutButton from "@/components/signout-button";
 import FollowBar from "@/components/follow-bar";
 import TripCard from "@/components/trip-card";
 import { createClient } from "@/lib/supabase/server";
+import { getViewer } from "@/lib/viewer";
 import type { Trip } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export default async function MyTripsPage() {
   if (!user) redirect("/login?next=/me/trips");
   const { data: profile } = await sb.from("profiles").select("role, display_name").eq("id", user.id).maybeSingle();
   const { data: followStats } = await sb.rpc("follow_stats", { p_uid: user.id });
-  const role = profile?.role || "user";
+  const { role } = await getViewer(); // 用「檢視身分」調整後的角色,admin 以會員檢視時要隱藏後台按鈕
   const myName = profile?.display_name || user.email?.split("@")[0] || "我";
   const { data } = await sb.from("trips").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false });
   const { data: savedData } = await sb.from("saved_trips").select("trip_id, trips(*)").eq("user_id", user.id).order("created_at", { ascending: false });
