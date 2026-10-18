@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { promptLogin } from "@/lib/login-gate";
 
 export type SaveType = "stay" | "room" | "attraction" | "food" | "parking" | "rental" | "station";
 
@@ -13,7 +13,6 @@ export type SaveType = "stay" | "room" | "attraction" | "food" | "parking" | "re
 export default function SaveBookmark({ type, id, floating = false, nextPath = "/", onToggle }: {
   type: SaveType; id: string; floating?: boolean; nextPath?: string; onToggle?: (saved: boolean) => void;
 }) {
-  const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [uid, setUid] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +35,7 @@ export default function SaveBookmark({ type, id, floating = false, nextPath = "/
 
   async function toggle(e: React.MouseEvent) {
     e.preventDefault(); e.stopPropagation();
-    if (!uid) { router.push("/login?next=" + encodeURIComponent(nextPath)); return; }
+    if (!uid) { promptLogin(nextPath, { title: "收藏喜歡的民宿", desc: "加入會員,把心動的民宿收藏起來,下次直接找得到。" }); return; }
     setBusy(true);
     const sb = createClient();
     if (type === "stay") {

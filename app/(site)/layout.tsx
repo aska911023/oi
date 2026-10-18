@@ -8,6 +8,7 @@ import CompareBar from "@/components/compare-bar";
 import BottomNav from "@/components/bottom-nav";
 import TripDraftBadge from "@/components/trip-draft-badge";
 import RolePreviewBanner from "@/components/role-preview-banner";
+import LoginGateModal from "@/components/login-gate-modal";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -77,6 +78,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <CompareBar />
       <TripDraftBadge />
       <BottomNav />
+      <LoginGateModal />
     </CompareProvider>
   );
 }
