@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import CreatorApplyForm from "@/components/creator-apply-form";
+import { getViewer } from "@/lib/viewer";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "成為創作者", robots: { index: false } };
@@ -10,8 +11,8 @@ export default async function CreatorApplyPage() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   // 不用 redirect():(site) 的 error.tsx 自癒邊界會把頁面層 redirect 吃掉 → 未登入直接顯示登入提示
-  const profile = user ? (await sb.from("profiles").select("role").eq("id", user.id).maybeSingle()).data : null;
-  const role = profile?.role;
+  // 用「檢視身分」調整後的角色,admin 以會員檢視時要露出創作者申請入口
+  const role = user ? (await getViewer()).role : undefined;
   const app = user ? (await sb.from("creator_applications").select("status").eq("applicant_id", user.id).maybeSingle()).data : null;
 
   return (

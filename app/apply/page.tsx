@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import VendorApplyForm from "@/components/vendor-apply-form";
+import { getViewer } from "@/lib/viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,9 @@ export default async function ApplyPage() {
     .limit(1)
     .maybeSingle();
 
-  const isPartner = profile?.role === "partner" || profile?.role === "admin";
+  // 用「檢視身分」調整後的角色:admin 以會員檢視時要露出申請表單、不露後台連結
+  const { role } = await getViewer();
+  const isPartner = role === "partner" || role === "admin";
 
   return (
     <>
@@ -42,7 +45,7 @@ export default async function ApplyPage() {
         {isPartner ? (
           <div className="apply-state ok">
             你已是業者帳號,可直接
-            {profile?.role === "admin" ? <Link href="/admin"> 前往後台</Link> : <Link href="/account"> 管理帳號</Link>}。
+            {role === "admin" ? <Link href="/admin"> 前往後台</Link> : <Link href="/account"> 管理帳號</Link>}。
           </div>
         ) : latest && latest.status === "pending" ? (
           <div className="apply-state pending">
