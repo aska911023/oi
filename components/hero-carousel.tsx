@@ -20,7 +20,7 @@ export default function HeroCarousel({ images, caption, height, links }: { image
     <div className="disc-img hero-carousel" style={height ? { height } : undefined}>
       {imgs.map((src, k) => (
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={k} src={src} alt="民宿情境" className={"hc-slide" + (k === i ? " on" : k === prev.current ? " under" : "")} />
+        <img key={k} src={src} alt="民宿情境" fetchPriority={k === 0 ? "high" : "low"} loading={k === 0 ? "eager" : "lazy"} className={"hc-slide" + (k === i ? " on" : k === prev.current ? " under" : "")} />
       ))}
       {href && (
         <a className="hc-linkover" href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" aria-label="前往" />
