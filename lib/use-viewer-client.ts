@@ -46,7 +46,8 @@ export function useViewer(): ClientViewer {
       const isRealAdmin = realRole === "admin";
       const viewAs = isRealAdmin ? readViewAs() : null;
       const loggedIn = viewAs === "guest" ? false : !!user;
-      const role = viewAs && viewAs !== "guest" ? viewAs : realRole;
+      // guest 預覽:角色也降成訪客(不可留 realRole,否則 admin UI 會在訪客預覽漏出)
+      const role = viewAs ? (viewAs === "guest" ? "guest" : viewAs) : realRole;
       if (alive) setV({ loading: false, loggedIn, role, name, avatarUrl, isRealAdmin, viewAs });
     }
 
