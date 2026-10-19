@@ -34,13 +34,20 @@ export async function compressImage(file: File): Promise<File> {
   }
 }
 
+// 圖片 CDN(Cloudflare Worker 反代)base,例:https://oistay-img.xxx.workers.dev
+// 設了才生效:把「Supabase 公開 storage」的網址改走 CDN,egress 轉嫁給 Cloudflare(免費)擋。
+// 沒設 → 回傳原圖,零風險、隨時可回退(改/清 Vercel 環境變數 NEXT_PUBLIC_IMG_CDN)。
+const IMG_CDN = (process.env.NEXT_PUBLIC_IMG_CDN || "").replace(/\/+$/, "");
+const SUPA_PUBLIC = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/+$/, "") + "/storage/v1/object/public";
+
 /**
- * 顯示用網址。直接回傳原圖 —— 上傳時已壓到 1600px WebP(compressImage),
- * 不再走 Supabase Storage 的 render/image 即時轉換(Pro 每月僅含 100 張,會超額被限制)。
- * egress 有大量餘裕,原圖已是壓縮過的 WebP,直接送即可。
+ * 顯示用網址。原圖已是壓好的 1600px WebP(compressImage),不走即時轉換。
+ * 若設了 NEXT_PUBLIC_IMG_CDN,Supabase 公開圖改走 CDN(Worker 再回源 Supabase + 邊緣快取)。
  */
 export function imgUrl(src: string | null | undefined, _width?: number): string {
-  return src || "";
+  const s = src || "";
+  if (IMG_CDN && s.startsWith(SUPA_PUBLIC)) return IMG_CDN + s.slice(SUPA_PUBLIC.length);
+  return s;
 }
 
 export const imgList = (list: string[] | null | undefined, width?: number) =>

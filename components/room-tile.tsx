@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { priceLabel } from "@/lib/data";
+import { imgUrl } from "@/lib/img";
 import type { RoomCard } from "@/lib/types";
 
 // 落地頁用的民宿房型卡(SSR、純 img,利於 SEO;樣式沿用首頁 .card)
 export default function RoomTile({ r }: { r: RoomCard }) {
-  const img = (r.images && r.images[0]) || r.image || "";
+  const img = imgUrl((r.images && r.images[0]) || r.image || "");
   return (
     <div className="card-wrap">
       <Link href={`/${encodeURIComponent(r.region)}/hotel/${encodeURIComponent(r.stay_slug || r.stay_id)}`} className="card">
