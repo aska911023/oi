@@ -378,6 +378,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                     {(() => { const n = s.images?.length || (s.image ? 1 : 0);
                       return <button className={"lnk" + (n ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(s)}>📷 {n ? `照片·${n}` : "加照片"}</button>; })()}
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
+                    {s.published && s.region && <a className="lnk" href={`/${encodeURIComponent(s.region)}/hotel/${encodeURIComponent(s.slug || s.id)}`} target="_blank" rel="noopener noreferrer" title="在前台開啟這間的公開頁">🔗 前台</a>}
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     {!ownerId && (
