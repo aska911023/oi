@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RENTAL_TAGS } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { priceLabel } from "@/lib/data";
+import { imgUrl } from "@/lib/img";
 import { POI_KINDS, type RentalShop, type RentalPlan } from "@/lib/types";
 import SaveBookmark from "@/components/save-bookmark";
 import SharePlaceButton from "@/components/share-place-button";
@@ -126,7 +127,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
             <div key={s.id} className="card" role="button" tabIndex={0} style={{ cursor: "pointer" }}
               onClick={() => setActive(s)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(s); } }}>
               <div className="photo">
-                {s.image ? <img src={s.image} alt={s.name} loading="lazy" /> : <div className="photo-ph">{I.car}</div>}
+                {s.image ? <img src={imgUrl(s.image)} alt={s.name} loading="lazy" /> : <div className="photo-ph">{I.car}</div>}
                 {s.featured && <span className="tag-feat">精選</span>}
                 <SaveBookmark type="rental" id={s.id} floating nextPath="/rentals" />
               </div>
@@ -159,7 +160,7 @@ export default function RentalsExplore({ shops, total = 0 }: { shops: RentalShop
           <div className="detail" role="dialog" aria-modal="true">
             <button className="close" onClick={() => setActive(null)} aria-label="關閉">✕</button>
             <div className="detail-imgwrap">
-              {active.image ? <img className="detail-img" src={active.image} alt={active.name} /> : <div className="detail-img photo-ph">{I.car}</div>}
+              {active.image ? <img className="detail-img" src={imgUrl(active.image)} alt={active.name} /> : <div className="detail-img photo-ph">{I.car}</div>}
               <SaveBookmark type="rental" id={active.id} floating nextPath="/rentals" />
             </div>
             <div className="detail-body">

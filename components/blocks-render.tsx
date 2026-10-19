@@ -1,5 +1,6 @@
 import HeroCarousel from "@/components/hero-carousel";
 import MediaEmbed from "@/components/media-embed";
+import { imgUrl } from "@/lib/img";
 import type { Block, FontChoice, HeroLayout } from "@/lib/site-settings-types";
 
 const fam = (f?: FontChoice) =>
@@ -20,7 +21,7 @@ function renderBlock(b: Block) {
     case "image":
       return b.image ? (
         <div key={b.id} style={{ textAlign: b.align || "left" }}>
-          <img className="blk-image" src={b.image} alt="" style={
+          <img className="blk-image" src={imgUrl(b.image)} alt="" style={
             b.height ? { width: `${b.width || 100}%`, height: b.height, objectFit: "cover" } : { maxWidth: `${b.width || 100}%` }
           } />
         </div>
@@ -42,7 +43,7 @@ function renderBlock(b: Block) {
       ) : null;
     case "split": {
       const imageRight = b.align !== "left";
-      const imgEl = <div className="bs-img" key="img">{b.image ? <img src={b.image} alt="" style={b.height ? { height: b.height, objectFit: "cover" } : undefined} /> : null}</div>;
+      const imgEl = <div className="bs-img" key="img">{b.image ? <img src={imgUrl(b.image)} alt="" style={b.height ? { height: b.height, objectFit: "cover" } : undefined} /> : null}</div>;
       const txtEl = <div className="bs-text" key="txt"><p style={{ color: b.color, fontFamily: fam(b.font), fontSize: b.size, margin: 0, lineHeight: 1.8 }}>{b.text}</p></div>;
       return <div key={b.id} className="blk-split">{imageRight ? [txtEl, imgEl] : [imgEl, txtEl]}</div>;
     }

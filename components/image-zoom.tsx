@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { imgUrl } from "@/lib/img";
 
 const clamp = (v: number) => Math.min(6, Math.max(1, v));
 
 // 相簿 + 放大鏡:縮圖可左右切換,點放大鏡進全螢幕(＋/−/滾輪縮放、拖曳移動、雙擊切換、多張可左右換圖)。
 export default function ImageZoom({ images, alt, imgClassName }: { images: string[]; alt?: string; imgClassName?: string }) {
-  const imgs = images && images.length ? images : [""];
+  const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s));
   const [idx, setIdx] = useState(0);
   const [open, setOpen] = useState(false);
   const [scale, setScale] = useState(1);

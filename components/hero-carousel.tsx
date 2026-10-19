@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { imgUrl } from "@/lib/img";
 
 export default function HeroCarousel({ images, caption, height, links }: { images: string[]; caption?: string; height?: number; links?: string[] }) {
-  const imgs = images && images.length ? images : [""];
+  const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s));
   const [i, setI] = useState(0);
   const prev = useRef(0); // 前一張墊底不動,新圖在上方浮現蓋上(避免露底的生硬感)
   const goTo = (next: (x: number) => number) => setI((x) => { prev.current = x; return next(x); });

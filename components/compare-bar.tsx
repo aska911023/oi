@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useCompare } from "@/lib/compare-store";
 import { priceLabel } from "@/lib/data";
+import { imgUrl } from "@/lib/img";
 import type { RoomCard } from "@/lib/types";
 
 const ROWS: { label: string; render: (c: RoomCard) => React.ReactNode }[] = [
@@ -41,7 +42,7 @@ export default function CompareBar() {
           {items.map((c) => (
             <div className="cb-thumb" key={c.id} title={`${c.stay_name} · ${c.room_name}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {c.image ? <img src={c.image} alt="" /> : <div className="cb-ph" />}
+              {c.image ? <img src={imgUrl(c.image)} alt="" /> : <div className="cb-ph" />}
               <button className="cb-x" onClick={() => remove(c.id)} aria-label="移除">✕</button>
             </div>
           ))}
@@ -68,7 +69,7 @@ export default function CompareBar() {
                     <th />
                     {items.map((c) => (
                       <th key={c.id}>
-                        <div className="cm-colimg">{c.image ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={c.image} alt={c.stay_name} /> : <div className="cb-ph" />}</div>
+                        <div className="cm-colimg">{c.image ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={imgUrl(c.image)} alt={c.stay_name} /> : <div className="cb-ph" />}</div>
                         <button className="cm-remove" onClick={() => remove(c.id)}>移除</button>
                       </th>
                     ))}
