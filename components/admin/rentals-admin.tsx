@@ -152,6 +152,7 @@ export default function RentalsAdmin({ initial, ownerId }: { initial: RentalShop
                   <div className="row-actions">
                     <button className={"lnk" + (s.image ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(s)}>📷 {s.image ? "照片" : "加照片"}</button>
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
+                    {s.published && <a className="lnk" href="/rentals" target="_blank" rel="noopener noreferrer" title="在前台開啟租車列表">前台 ↗</a>}
                     <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     <button className="lnk danger" onClick={() => remove(s)}>刪除</button>

@@ -189,6 +189,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
                     {(() => { const n = p.images?.length || (p.image ? 1 : 0);
                       return <button className={"lnk" + (n ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(p)}>📷 {n ? `照片·${n}` : "加照片"}</button>; })()}
                     <button className="lnk" onClick={() => setForm({ ...p, details: p.details || {} })}>編輯</button>
+                    {p.published && p.region && <a className="lnk" href={`/${encodeURIComponent(p.region)}/${kind === "food" ? "restaurant" : kind}/${encodeURIComponent(p.slug || p.id)}`} target="_blank" rel="noopener noreferrer" title="在前台開啟公開頁">前台 ↗</a>}
                     <button className="lnk" onClick={() => togglePublish(p)}>{p.published ? "隱藏" : "發布"}</button>
                     <button className="lnk danger" onClick={() => remove(p)}>刪除</button>
                   </div>

@@ -502,7 +502,7 @@ img { display: block; max-width: 100%; }
 .pill.pending { background: #fdf3e0; color: #9a6a1a; }
 .pill.approved { background: #e4f3ea; color: #1f7a4d; }
 .pill.rejected { background: #fdeeec; color: #a5303a; }
-.row-actions { display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.row-actions { display: flex; gap: 10px 12px; align-items: center; flex-wrap: wrap; }
 .role-select { border: 1px solid var(--border-strong); border-radius: 8px; padding: 7px 10px; font-size: 13px; background: #fff; color: var(--text); font-family: inherit; }
 .role-select:focus { outline: none; border-color: var(--green); }
 
