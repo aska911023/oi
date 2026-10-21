@@ -383,7 +383,9 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                       return <button className={"lnk" + (n ? "" : " danger")} title="快捷匯入照片" onClick={() => openPhotos(s)}>📷 {n ? `照片·${n}` : "加照片"}</button>; })()}
                     <button className="lnk" onClick={() => setForm({ ...s })}>編輯</button>
                     {s.published && s.region && <a className="lnk" href={`/${encodeURIComponent(s.region)}/hotel/${encodeURIComponent(s.slug || s.id)}`} target="_blank" rel="noopener noreferrer" title="在前台開啟這間的公開頁">前台 ↗</a>}
-                    <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                    {!ownerId
+                      ? <button className="lnk" onClick={() => togglePublish(s)}>{s.published ? "下架" : "上架"}</button>
+                      : <span className="lnk" style={{ color: "var(--muted)", fontWeight: 600, cursor: "default" }} title="填好資料後由平台審核上架">{s.published ? "已上架" : "等待平台審核"}</span>}
                     {!ownerId && <button className="lnk" onClick={() => toggleApprove(s)}>{s.approved ? "退回審核" : "核准"}</button>}
                     {!ownerId && (
                       <select className="tier-sel" value={s.ad_tier || "free"} onChange={(e) => setTier(s, e.target.value)} title="購買方案">

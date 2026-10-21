@@ -101,7 +101,7 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
         description: row.description || "",
         pricing, includes_note: kind === "whole" ? (row.includes_note || "") : null,
         sort: Number(row.sort) || 0,
-        published: canManage ? (row.published ?? true) : (row.id ? undefined : false), // 房型上架只有 admin 能設(業者送審)
+        published: row.published ?? true, // 房型上架:業者可自管自己民宿的房型(民宿本身仍由平台審核;RLS 限 owner)
         featured: canManage ? (row.featured ?? false) : undefined, tags: row.tags || [],
       };
       if (row.id) await sb.from("room_types").update(payload).eq("id", row.id);
@@ -162,9 +162,7 @@ export default function RoomTypesEditor({ stayId, stayName, onChange, allowFeatu
 
   const toggles = (r: Row, i: number) => (
     <>
-      {canManage
-        ? <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
-        : <span className="rt-review">{r.id ? (r.published ? "✅ 已上架" : "⏳ 待偶宿審核") : "⏳ 送出後待審核"}</span>}
+      <button type="button" className={"rt-toggle" + ((r.published ?? true) ? " on" : "")} onClick={() => patch(i, { published: !(r.published ?? true) })}>{(r.published ?? true) ? "上架中" : "已隱藏"}</button>
       {allowFeatured && <button type="button" className={"rt-toggle feat" + (r.featured ? " on" : "")} onClick={() => togglePin(i, r)}>{r.featured ? "★置頂" : "置頂"}</button>}
       <button type="button" className="rt-kind-btn" onClick={() => patch(i, { kind: r.kind === "whole" ? "single" : "whole" })}>轉為{r.kind === "whole" ? "單間" : "包棟"}</button>
       <button className="lnk danger" onClick={() => removeRow(i)}>刪</button>
