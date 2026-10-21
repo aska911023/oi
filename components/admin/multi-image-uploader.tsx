@@ -37,7 +37,15 @@ export default function MultiImageUploader({
       const { error } = await sb.storage.from("site").upload(path, file, {
         upsert: true, cacheControl: "31536000", contentType: file.type,
       });
-      if (error) { alert("上傳失敗:" + error.message); continue; }
+      if (error) {
+        const msg = /row-level security|not authorized|permission|unauthorized/i.test(error.message)
+          ? "沒有上傳權限。請確認帳號有權限,或聯絡平台。"
+          : /exceeded|too large|size/i.test(error.message)
+            ? "照片太大或超過容量上限,請換張小一點的。"
+            : "照片上傳失敗,請稍後再試一次。";
+        alert(msg);
+        continue;
+      }
       added.push(sb.storage.from("site").getPublicUrl(path).data.publicUrl);
     }
     setUploading(false);
@@ -51,6 +59,21 @@ export default function MultiImageUploader({
     if (j < 0 || j >= imgs.length) return;
     const next = [...imgs]; [next[i], next[j]] = [next[j], next[i]]; onChange(next);
   };
+
+  // 貼網址防呆:擋掉 IG/FB/YT/TikTok 的「貼文頁連結」(那不是圖片檔,會變成壞掉的空白格)
+  function addUrl() {
+    const u = url.trim();
+    if (!u || imgs.length >= max) return;
+    const bad =
+      /instagram\.com\/(p|reel|tv|share)\//i.test(u) || /(facebook|fb)\.com/i.test(u) || /(youtube\.com|youtu\.be|tiktok\.com)/i.test(u)
+        ? "這是貼文/社群連結,不是圖片 ❌\n請直接「選檔上傳」照片,或貼圖片檔網址(結尾為 .jpg / .png / .webp)。"
+        : !/^https?:\/\//i.test(u)
+          ? "請貼完整的圖片網址(http 開頭),或直接上傳照片。"
+          : "";
+    if (bad) { alert(bad); return; }
+    onChange([...imgs, u]);
+    setUrl("");
+  }
 
   return (
     <div className="miu">
@@ -80,9 +103,9 @@ export default function MultiImageUploader({
             <input type="file" accept="image/*" multiple style={{ display: "none" }} disabled={uploading}
               onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }} />
           </label>
-          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="或貼圖片網址 https://…" style={{ flex: 1, minWidth: 150 }}
-            onKeyDown={(e) => { if (e.key === "Enter" && url.trim() && imgs.length < max) { e.preventDefault(); onChange([...imgs, url.trim()]); setUrl(""); } }} />
-          {url.trim() && <button type="button" className="btn btn-ghost btn-sm" onClick={() => { if (imgs.length < max) { onChange([...imgs, url.trim()]); setUrl(""); } }}>加入</button>}
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="或貼圖片檔網址(.jpg/.png/.webp)" style={{ flex: 1, minWidth: 150 }}
+            onKeyDown={(e) => { if (e.key === "Enter" && url.trim()) { e.preventDefault(); addUrl(); } }} />
+          {url.trim() && <button type="button" className="btn btn-ghost btn-sm" onClick={addUrl}>加入</button>}
         </div>
       )}
       <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>照片 <b style={{ color: full ? "#c0392b" : "var(--green)" }}>{imgs.length} / {max}</b> 張(最多 {max} 張){imgs.length > 1 ? ";第一張為封面,用 ‹ › 調整順序、★ 設為封面" : ""}。</p>
