@@ -237,14 +237,18 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
 
   async function togglePublish(s: Stay) {
     const sb = createClient();
-    await sb.from("stays").update({ published: !s.published }).eq("id", s.id);
-    await logAdmin(s.published ? "unpublish" : "publish", s);
+    const publishing = !s.published;
+    // 上架=一併視為審核通過+公開(避免「上架了卻因未審核,前台仍看不到」)
+    await sb.from("stays").update(publishing ? { published: true, approved: true, visibility: "published" } : { published: false }).eq("id", s.id);
+    await logAdmin(publishing ? "publish" : "unpublish", s);
     await refresh();
   }
   async function toggleApprove(s: Stay) {
     const sb = createClient();
-    await sb.from("stays").update({ approved: !s.approved }).eq("id", s.id);
-    await logAdmin(s.approved ? "reject" : "approve", s);
+    const approving = !s.approved;
+    // 核准=同時上架;退回審核=同時下架
+    await sb.from("stays").update(approving ? { approved: true, published: true, visibility: "published" } : { approved: false, published: false }).eq("id", s.id);
+    await logAdmin(approving ? "approve" : "reject", s);
     await refresh();
   }
   async function setTier(s: Stay, ad_tier: string) {
