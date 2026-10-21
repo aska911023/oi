@@ -72,11 +72,11 @@ export default function MultiImageUploader({
         </div>
       )}
       {full ? (
-        <p style={{ fontSize: 12, color: "var(--muted)", margin: imgs.length ? "8px 0 0" : 0 }}>已達上限 {max} 張;要換圖請先刪除。</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#c0392b", margin: imgs.length ? "8px 0 0" : 0 }}>已達上限,最多 {max} 張。要換圖請先刪掉一張。</p>
       ) : (
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: imgs.length ? 8 : 0 }}>
           <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
-            {uploading ? "上傳中…" : imgs.length ? "再加圖片" : "選檔上傳(可多選)"}
+            {uploading ? "上傳中…" : imgs.length ? `再加圖片(還可 ${max - imgs.length} 張)` : `選檔上傳(可多選,最多 ${max} 張)`}
             <input type="file" accept="image/*" multiple style={{ display: "none" }} disabled={uploading}
               onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = ""; }} />
           </label>
@@ -85,7 +85,7 @@ export default function MultiImageUploader({
           {url.trim() && <button type="button" className="btn btn-ghost btn-sm" onClick={() => { if (imgs.length < max) { onChange([...imgs, url.trim()]); setUrl(""); } }}>加入</button>}
         </div>
       )}
-      {imgs.length > 1 && <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>第一張為封面;用 ‹ › 調整順序、★ 設為封面(最多 {max} 張)。</p>}
+      <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>照片 <b style={{ color: full ? "#c0392b" : "var(--green)" }}>{imgs.length} / {max}</b> 張(最多 {max} 張){imgs.length > 1 ? ";第一張為封面,用 ‹ › 調整順序、★ 設為封面" : ""}。</p>
     </div>
   );
 }
