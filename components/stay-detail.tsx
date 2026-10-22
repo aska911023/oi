@@ -116,7 +116,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
         {s.embed_urls && s.embed_urls.length > 0 && (
           <div className="shop-block">
             <h2 className="serif shop-h">影片介紹 / 網紅推薦</h2>
-            <div className="embed-list">{s.embed_urls.map((u, i) => <MediaEmbed key={i} url={u} />)}</div>
+            <div className="embed-list">{s.embed_urls.map((u, i) => <div className="embed-cell" key={i}><MediaEmbed url={u} /></div>)}</div>
           </div>
         )}
 
