@@ -65,10 +65,17 @@ export default function NotificationBell() {
     } catch { /* ignore */ }
   }
 
+  // 純前端輪詢(非 cron/伺服器排程):只在「本分頁可見」時每 120 秒查一次自己的通知;
+  // 切到背景就停、回來再查一次 → 省請求(背景分頁完全不查)。
   useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const start = () => { if (!timer) timer = setInterval(() => { if (document.visibilityState === "visible") load(); }, 120000); };
+    const onVis = () => { if (document.visibilityState === "visible") { load(); start(); } else stop(); };
     load();
-    const t = setInterval(load, 60000);
-    return () => clearInterval(t);
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { stop(); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
   useEffect(() => {
