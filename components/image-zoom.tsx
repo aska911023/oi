@@ -7,7 +7,7 @@ import { imgUrl } from "@/lib/img";
 const clamp = (v: number) => Math.min(6, Math.max(1, v));
 
 // 相簿 + 放大鏡:縮圖可左右切換,點放大鏡進全螢幕(＋/−/滾輪縮放、拖曳移動、雙擊切換、多張可左右換圖)。
-export default function ImageZoom({ images, alt, imgClassName }: { images: string[]; alt?: string; imgClassName?: string }) {
+export default function ImageZoom({ images, alt, imgClassName, grid = false }: { images: string[]; alt?: string; imgClassName?: string; grid?: boolean }) {
   const imgs = (images && images.length ? images : [""]).map((s) => imgUrl(s));
   const [idx, setIdx] = useState(0);
   const [open, setOpen] = useState(false);
@@ -60,23 +60,36 @@ export default function ImageZoom({ images, alt, imgClassName }: { images: strin
   const multi = imgs.length > 1;
 
   return (
-    <div className="imgzoom">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={imgClassName} src={src} alt={alt || ""} />
-      {multi && (
+    <div className={"imgzoom" + (grid ? " is-grid" : "")}>
+      {grid ? (
+        <div className="imgzoom-grid">
+          {imgs.map((s, k) => (
+            <button key={k} type="button" className="izg-cell" onClick={() => { setIdx(k); setOpen(true); }} aria-label={`看第 ${k + 1} 張`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={s} alt={alt || ""} loading={k < 3 ? "eager" : "lazy"} />
+            </button>
+          ))}
+        </div>
+      ) : (
         <>
-          <button type="button" className="hc-arrow prev" onClick={nav(-1)} aria-label="上一張">‹</button>
-          <button type="button" className="hc-arrow next" onClick={nav(1)} aria-label="下一張">›</button>
-          <div className="hc-dots">
-            {imgs.map((_, k) => <button key={k} className={k === idx ? "on" : ""} onClick={go(k)} aria-label={`第 ${k + 1} 張`} />)}
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={imgClassName} src={src} alt={alt || ""} />
+          {multi && (
+            <>
+              <button type="button" className="hc-arrow prev" onClick={nav(-1)} aria-label="上一張">‹</button>
+              <button type="button" className="hc-arrow next" onClick={nav(1)} aria-label="下一張">›</button>
+              <div className="hc-dots">
+                {imgs.map((_, k) => <button key={k} className={k === idx ? "on" : ""} onClick={go(k)} aria-label={`第 ${k + 1} 張`} />)}
+              </div>
+            </>
+          )}
+          <button type="button" className="imgzoom-btn" onClick={() => setOpen(true)} aria-label="放大圖片" title="放大">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /><path d="M11 8v6M8 11h6" />
+            </svg>
+          </button>
         </>
       )}
-      <button type="button" className="imgzoom-btn" onClick={() => setOpen(true)} aria-label="放大圖片" title="放大">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /><path d="M11 8v6M8 11h6" />
-        </svg>
-      </button>
       {open && typeof document !== "undefined" && createPortal(
         <div ref={overlayRef} className="imgzoom-overlay" onClick={() => setOpen(false)} role="dialog" aria-modal="true"
           onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchMove={onMove} onTouchEnd={onUp}>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SaveButton from "@/components/save-button";
 import ReviewForm from "@/components/review-form";
-import PhotoCarousel from "@/components/photo-carousel";
+import ImageZoom from "@/components/image-zoom";
 import RoomList from "@/components/room-list";
 import BackLink from "@/components/back-link";
 import TrackView from "@/components/track-view";
@@ -78,7 +78,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
         <TrackView stayId={s.id} />
         {toImgs(s.image, s.images).length > 0 && (
           <>
-            <div className="shop-hero-c"><PhotoCarousel images={toImgs(s.image, s.images)} alt={s.name} /></div>
+            <ImageZoom images={toImgs(s.image, s.images)} alt={s.name} grid />
             <div className="hc-refnote">圖片僅供參考</div>
           </>
         )}
