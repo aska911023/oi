@@ -108,6 +108,11 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           <ShareStayButton stayId={s.id} name={s.name} />
         </div>
 
+        <div className="shop-block">
+          <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
+          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} />}
+        </div>
+
         {s.embed_urls && s.embed_urls.length > 0 && (
           <div className="shop-block">
             <h2 className="serif shop-h">影片介紹 / 網紅推薦</h2>
@@ -121,11 +126,6 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
             <div className="m-amenities">{amenities.map((a) => <span key={a} className="am-chip">{a}</span>)}</div>
           </div>
         )}
-
-        <div className="shop-block">
-          <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
-          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} />}
-        </div>
 
         {(s.notice_booking || s.notice_checkout) && (
           <div className="shop-block">

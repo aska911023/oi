@@ -109,6 +109,7 @@ export default function MultiImageUploader({
         </div>
       )}
       <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>照片 <b style={{ color: full ? "#c0392b" : "var(--green)" }}>{imgs.length} / {max}</b> 張(最多 {max} 張){imgs.length > 1 ? ";第一張為封面,用 ‹ › 調整順序、★ 設為封面" : ""}。</p>
+      <p style={{ fontSize: 12, color: "var(--muted)", margin: "3px 0 0" }}>💡 建議<b>橫式照片(比例約 4:3,例如 1600×1200)</b>;卡片/封面會依版面自動裁切,<b>主體請置中</b>才不會被切掉。</p>
     </div>
   );
 }
