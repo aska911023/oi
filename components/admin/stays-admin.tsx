@@ -248,6 +248,15 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     const approving = !s.approved;
     // 核准=同時上架;退回審核=同時下架
     await sb.from("stays").update(approving ? { approved: true, published: true, visibility: "published" } : { approved: false, published: false }).eq("id", s.id);
+    // 核准時發站內通知給業者(平台自管的 owner_id=null 不發)
+    if (approving && s.owner_id) {
+      await sb.from("notifications").insert({
+        user_id: s.owner_id,
+        kind: "stay_approved",
+        title: `你的民宿「${s.name}」已通過審核並上架 🎉`,
+        href: s.region ? `/${encodeURIComponent(s.region)}/hotel/${encodeURIComponent(s.slug || s.id)}` : "/vendor",
+      });
+    }
     await logAdmin(approving ? "approve" : "reject", s);
     await refresh();
   }
