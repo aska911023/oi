@@ -56,7 +56,7 @@ export default function NotificationBell() {
       const user = userRes.data.user;
       if (user) {
         const { data } = await sb.from("notifications").select("id, kind, title, href, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
-        sys = ((data as Sys[]) || []).map((n) => ({ id: "n" + n.id, isSys: true, mark: "✅", href: n.href || "#", created_at: n.created_at, text: n.title }));
+        sys = ((data as Sys[]) || []).map((n) => ({ id: "n" + n.id, isSys: true, mark: n.kind === "admin_stay" ? "📋" : "✅", href: n.href || "#", created_at: n.created_at, text: n.title }));
       }
       const rows = [...social, ...sys].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setList(rows);
