@@ -425,7 +425,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
           <div className="editor" role="dialog" aria-modal="true" style={{ maxWidth: 560 }}>
             <h2>匯入照片 — {photoFor.name}</h2>
             <p style={{ color: "var(--muted)", fontSize: 13, margin: "0 0 14px" }}>直接選檔(可多選)或貼網址,第一張為封面。存檔後立即套用到前台。</p>
-            <MultiImageUploader prefix="stay" value={photoImgs} onChange={setPhotoImgs} max={9} />
+            <MultiImageUploader prefix="stay" value={photoImgs} onChange={setPhotoImgs} />
             <div className="editor-actions">
               <button className="btn btn-ghost" onClick={() => setPhotoFor(null)}>取消</button>
               <button className="btn btn-primary" onClick={savePhotos} disabled={photoBusy}>{photoBusy ? "儲存中…" : "儲存照片"}</button>
@@ -460,7 +460,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                   }} />
               </div>
               <div className="wide"><label>封面相簿(可多張,第一張為封面,前台會輪播)</label>
-                <MultiImageUploader prefix="stay" max={9}
+                <MultiImageUploader prefix="stay"
                   value={form.images && form.images.length ? form.images : (form.image ? [form.image] : [])}
                   onChange={(imgs) => setForm({ ...form, images: imgs, image: imgs[0] || "" })} />
               </div>
