@@ -34,6 +34,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
   const [photoImgs, setPhotoImgs] = useState<string[]>([]);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set()); // 勾選批次上/下架
+  const [tagInput, setTagInput] = useState<Record<string, string>>({}); // 各類型標籤的「自訂新增」輸入
   const label = KIND_LABEL[kind];
 
   const filtered = useMemo(() => list.filter((p) => {
@@ -239,19 +240,33 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
             {/* 分類專屬 details */}
             <div className="details-form">
               <div className="rt-head" style={{ marginTop: 6 }}><b>{label}資訊</b></div>
-              {fields.filter((f) => f.type === "tags").map((f) => f.type === "tags" && (
-                <div key={f.key} className="dlist">
-                  <label>{f.label}(可複選)</label>
-                  <div className="fac-grid">
-                    {f.options.map((opt) => {
-                      const set = new Set(getList(f.key) as unknown as string[]);
-                      const on = set.has(opt);
-                      return <button type="button" key={opt} className={"chip" + (on ? " on" : "")}
-                        onClick={() => { on ? set.delete(opt) : set.add(opt); setDetail(f.key, [...set]); }}>{opt}</button>;
-                    })}
+              {fields.filter((f) => f.type === "tags").map((f) => f.type === "tags" && (() => {
+                const sel = getList(f.key) as unknown as string[];
+                const extras = sel.filter((t) => !f.options.includes(t)); // 已存在的自訂標籤(不在預設清單)
+                const toggle = (opt: string) => { const set = new Set(sel); set.has(opt) ? set.delete(opt) : set.add(opt); setDetail(f.key, [...set]); };
+                const addCustom = () => {
+                  const t = (tagInput[f.key] || "").trim();
+                  if (t && !sel.includes(t)) setDetail(f.key, [...sel, t]);
+                  setTagInput((m) => ({ ...m, [f.key]: "" }));
+                };
+                return (
+                  <div key={f.key} className="dlist">
+                    <label>{f.label}(可複選)</label>
+                    <div className="fac-grid">
+                      {[...f.options, ...extras].map((opt) => (
+                        <button type="button" key={opt} className={"chip" + (sel.includes(opt) ? " on" : "")}
+                          onClick={() => toggle(opt)}>{opt}</button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                      <input style={{ flex: 1 }} value={tagInput[f.key] || ""} placeholder="自訂標籤…打字後按新增(或 Enter)"
+                        onChange={(e) => setTagInput((m) => ({ ...m, [f.key]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }} />
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={addCustom}>＋ 新增</button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })())}
               <div className="form-grid">
                 {fields.filter((f) => f.type === "text").map((f) => (
                   <div key={f.key}><label>{f.label}</label>
