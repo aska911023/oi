@@ -54,6 +54,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
     return o ? (o.display_name || o.full_name || id.slice(0, 8)) : id.slice(0, 8);
   };
   const [list, setList] = useState<Stay[]>(initial);
+  // 業主欄顯示該業主名下的民宿名稱(一個業主可多間 → 以「·」串接),而非個人帳號名
+  const ownerStayNames = (id: string) => Array.from(new Set(list.filter((x) => x.owner_id === id).map((x) => x.name).filter(Boolean)));
+  const ownerLabel = (id?: string | null) => {
+    if (!id) return "平台自管";
+    const names = ownerStayNames(id);
+    return names.length ? names.join(" · ") : (ownerName(id) || id.slice(0, 8));
+  };
   // 清單「置頂」標 = 這間有沒有 ★置頂 的房型(room_types.featured),反映實際設定(不是舊的 stays.featured)
   const [pinnedStayIds, setPinnedStayIds] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -153,7 +160,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       case "region": cmp = (a, b) => (a.region + a.town).localeCompare(b.region + b.town, "zh-Hant") || byName(a, b); break;
       case "category": cmp = (a, b) => (a.category || "").localeCompare(b.category || "", "zh-Hant") || byName(a, b); break;
       case "status": cmp = (a, b) => statusRank(a) - statusRank(b) || byName(a, b); break;
-      case "owner": cmp = (a, b) => (ownerName(a.owner_id) || "平台自管").localeCompare(ownerName(b.owner_id) || "平台自管", "zh-Hant") || byName(a, b); break;
+      case "owner": cmp = (a, b) => ownerLabel(a.owner_id).localeCompare(ownerLabel(b.owner_id), "zh-Hant") || byName(a, b); break;
       default: cmp = null; // created = 預設(list 已是建立時間新→舊)
     }
     if (cmp) { arr.sort(cmp); if (sortDir === "desc") arr.reverse(); }
@@ -367,7 +374,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
                 <td>
                   <button className={"owner-cell" + (s.owner_id ? " on" : "")} onClick={() => setAssign(s)}
                     title={s.owner_id ? "業者自管中,點擊可更換或收回" : "平台自管,點擊指派給業者"}>
-                    {s.owner_id ? ownerName(s.owner_id) : "平台自管"}
+                    {ownerLabel(s.owner_id)}
                   </button>
                 </td>
                 <td>
