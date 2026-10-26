@@ -68,7 +68,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
                   {r.beds && <span>{r.beds}</span>}
                   {(r.tags || []).map((t) => <span key={t}>{t}</span>)}
                 </div>
-                {whole && periodsOf(r).length > 0 && (
+                {periodsOf(r).length > 0 && (
                   <div className="room-price-table">
                     {periodsOf(r).map(([lab, v]) => <div key={lab} className="rpt-cell"><span>{lab}</span><b>{priceLabel(v)}</b></div>)}
                   </div>
@@ -76,7 +76,7 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
                 {extraLine(r)}
               </div>
               <div className="room-price-col">
-                <div className="room-price">{priceLabel(whole ? startPrice(r) : r.price)}<small>/{whole ? "晚起" : "晚"}</small></div>
+                <div className="room-price">{priceLabel(startPrice(r))}<small>/{periodsOf(r).length > 0 ? "晚起" : "晚"}</small></div>
                 {r.rooms_total != null && <span className="room-stock">共 {r.rooms_total} {whole ? "組" : "間"}</span>}
               </div>
             </div>
@@ -112,12 +112,12 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
                 {(active.tags || []).map((t) => <span key={t} className="am-chip">{t}</span>)}
               </div>
 
-              {active.kind === "whole" && periodsOf(active).length > 0 ? (
+              {periodsOf(active).length > 0 ? (
                 <div className="room-price-table" style={{ marginTop: 14 }}>
                   {periodsOf(active).map(([lab, v]) => <div key={lab} className="rpt-cell"><span>{lab}</span><b>{priceLabel(v)}</b></div>)}
                 </div>
               ) : (
-                <div className="room-price" style={{ marginTop: 14, fontSize: 24 }}>{priceLabel(active.price)}<small>/{active.kind === "whole" ? "晚起" : "晚"}</small></div>
+                <div className="room-price" style={{ marginTop: 14, fontSize: 24 }}>{priceLabel(startPrice(active))}<small>/晚</small></div>
               )}
               {extraLine(active)}
 
