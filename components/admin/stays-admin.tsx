@@ -102,6 +102,13 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [sortCol, setSortCol] = useState<SortCol>("created");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  // 從通知點進來(/admin?stay=<id>)→ 自動把搜尋鎖到那間民宿,直接定位要審核的那筆
+  useEffect(() => {
+    const sid = new URLSearchParams(window.location.search).get("stay");
+    if (!sid) return;
+    const s = initial.find((x) => x.id === sid);
+    if (s) setQ(s.name);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // 點欄位標題排序:未選→升冪、升冪→降冪、降冪→回預設(建立時間新→舊)
   function clickSort(col: SortCol) {
     if (sortCol !== col) { setSortCol(col); setSortDir("asc"); }
