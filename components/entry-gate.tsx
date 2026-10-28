@@ -7,8 +7,13 @@ export default function EntryGate({ logoSrc }: { logoSrc?: string }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    try { if (!sessionStorage.getItem("oi_entered")) setShow(true); }
-    catch { setShow(true); }
+    try {
+      // 爬蟲/預覽機器人(含會跑 JS 的 Googlebot)不顯示閘門,否則會把「真人驗證」文字當內容收錄 → 傷 SEO。
+      const ua = navigator.userAgent || "";
+      const isBot = /(bot|crawler|spider|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|applebot|facebookexternalhit|twitterbot|linebot|whatsapp|telegrambot|pinterest|discordbot|lighthouse|headlesschrome|google-inspectiontool|gptbot|oai-searchbot|perplexitybot|claudebot|anthropic-ai|ccbot|bytespider)/i.test(ua);
+      if (isBot) return;
+      if (!sessionStorage.getItem("oi_entered")) setShow(true);
+    } catch { setShow(true); }
   }, []);
 
   useEffect(() => {
