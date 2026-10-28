@@ -7,6 +7,7 @@ import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import PlacesExplore from "@/components/places-explore";
 import TripCard from "@/components/trip-card";
+import CitySeoLinks from "@/components/city-seo-links";
 import type { PoiKind } from "@/lib/types";
 
 export const revalidate = 300; // ISR:城市分類列表頁進 CDN
@@ -89,6 +90,7 @@ export default async function CitySectionPage({ params }: { params: Promise<{ ci
             {SECTIONS.filter((s) => s.seg !== "hotels").map((s) => <Link key={s.seg} href={`/${encodeURIComponent(city)}/${s.seg}`} className="region-link">{city}{s.label}</Link>)}
           </div>
         </section>
+        <CitySeoLinks city={city} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       </main>
     );

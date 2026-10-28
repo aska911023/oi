@@ -8,6 +8,7 @@ import { decodeParam } from "@/lib/slug";
 import RoomTile from "@/components/room-tile";
 import StayDetail from "@/components/stay-detail";
 import PlaceDetail from "@/components/place-detail";
+import CitySeoLinks from "@/components/city-seo-links";
 import type { PoiKind, Stay, Place } from "@/lib/types";
 
 export const revalidate = 300; // ISR:民宿/景點詳情頁(SEO 大宗)進 CDN;後台改資料最多 5 分鐘生效
@@ -94,7 +95,7 @@ export default async function CityEntityPage({ params }: { params: Promise<{ cit
         </nav>
         <h1 className="serif" style={{ fontSize: 30, marginBottom: 8 }}>{city}{t.name}推薦</h1>
         <p style={{ color: "var(--text-2)", maxWidth: 740, lineHeight: 1.7, marginBottom: 26 }}>
-          精選 {total} 間{city}{t.name}。偶宿 O! 直接帶你前往民宿官方訂房管道,不經手訂房、不收服務費。
+          想在{city}找{t.name}?偶宿 O! 整理了 {total} 間{city}{t.name},可比較房型、人數、價格與周邊景點,挑到喜歡的直接前往民宿官方訂房管道(官網 / LINE)——不經手訂房、不收服務費。
         </p>
         {rooms.length === 0 ? (
           <div className="empty">{city}目前還沒有{t.name}。<Link href={`/${encodeURIComponent(city)}/hotels`} style={{ color: "var(--green)", textDecoration: "underline" }}>看全部{city}民宿 →</Link></div>
@@ -108,6 +109,7 @@ export default async function CityEntityPage({ params }: { params: Promise<{ cit
             <Link href={`/${encodeURIComponent(city)}/hotels`} className="region-link">{city}全部民宿</Link>
           </div>
         </section>
+        <CitySeoLinks city={city} />
       </main>
     );
   }

@@ -13,6 +13,19 @@ import type { Place, PoiKind, Stay, Trip } from "./types";
 export const CITIES: string[] = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 export const isCity = (c: string): boolean => CITIES.includes(c);
 
+// 有上架民宿的縣市(跨縣市站內連結用,只連真有內容的縣市,避免製造薄頁)。
+// cache():同一次渲染只查一次;頁面本身 ISR(revalidate),所以不會每個請求都打 DB。
+export const getStayCities = cache(async (): Promise<string[]> => {
+  if (!hasSupabase()) return [];
+  try {
+    const sb = createPublicClient();
+    const { data } = await sb.from("stays").select("region")
+      .eq("published", true).eq("approved", true).eq("visibility", "published").limit(5000);
+    const set = new Set(((data || []) as { region?: string }[]).map((r) => r.region).filter(Boolean) as string[]);
+    return CITIES.filter((c) => set.has(c)); // 依既定城市順序輸出
+  } catch { return []; }
+});
+
 export type Section = "hotels" | "restaurants" | "attractions" | "parking" | "itineraries";
 
 // 複數=列表段;kind 對應 places 分類;singular=對應的 entity 單數段(詳情頁用)
