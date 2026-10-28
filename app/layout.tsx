@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   applicationName: "偶宿 O!",
   keywords: ["民宿", "台灣民宿", "民宿推薦", "包棟民宿", "親子民宿", "訂房", "旅遊", "行程規劃", "宜蘭民宿", "花蓮民宿", "北海岸民宿"],
   alternates: { canonical: "/" },
+  // Google Search Console「HTML 標記」驗證:在 Vercel 設環境變數 GOOGLE_SITE_VERIFICATION=<token> 即生效,免改 code。
+  // (若走「網域」DNS TXT 驗證則用不到此欄,留空不影響。)
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
   openGraph: {
     type: "website",
     siteName: "偶宿 O!",
