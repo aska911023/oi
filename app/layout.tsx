@@ -5,22 +5,22 @@ import Analytics from "@/components/analytics";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.oi-stay.com"),
   title: {
-    default: "偶宿 O! · 台灣民宿搜尋",
-    template: "%s｜偶宿 O!", // 子頁標題會自動補上「｜偶宿 O!」
+    default: "偶宿 O! Oi Stay · 台灣民宿搜尋",
+    template: "%s｜偶宿 O! Oi Stay", // 子頁標題會自動補上「｜偶宿 O! Oi Stay」(含英文品牌名,利於 oistay 搜尋)
   },
-  description: "偶宿 O! 彙整全台民宿 —— 宜蘭、花蓮、北海岸的包棟、親子、海景民宿一次搜尋,附房型、價格與周邊景點,還能規劃行程。不經手訂房,直接帶你聯繫民宿官方管道。",
-  applicationName: "偶宿 O!",
-  keywords: ["民宿", "台灣民宿", "民宿推薦", "包棟民宿", "親子民宿", "訂房", "旅遊", "行程規劃", "宜蘭民宿", "花蓮民宿", "北海岸民宿"],
+  description: "偶宿 O!(Oi Stay)彙整全台民宿 —— 宜蘭、花蓮、北海岸的包棟、親子、海景民宿一次搜尋,附房型、價格與周邊景點,還能規劃行程。不經手訂房,直接帶你聯繫民宿官方管道。",
+  applicationName: "偶宿 O! (Oi Stay)",
+  keywords: ["偶宿", "Oi Stay", "oistay", "oi-stay", "oi", "民宿", "台灣民宿", "民宿推薦", "包棟民宿", "親子民宿", "訂房", "旅遊", "行程規劃", "宜蘭民宿", "花蓮民宿", "北海岸民宿"],
   alternates: { canonical: "/" },
   // Google Search Console「HTML 標記」驗證:在 Vercel 設環境變數 GOOGLE_SITE_VERIFICATION=<token> 即生效,免改 code。
   // (若走「網域」DNS TXT 驗證則用不到此欄,留空不影響。)
   ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
   openGraph: {
     type: "website",
-    siteName: "偶宿 O!",
+    siteName: "偶宿 O! (Oi Stay)",
     locale: "zh_TW",
     url: "https://www.oi-stay.com",
-    title: "偶宿 O! · 台灣民宿搜尋",
+    title: "偶宿 O! Oi Stay · 台灣民宿搜尋",
     description: "彙整全台民宿 —— 宜蘭、花蓮、北海岸的包棟、親子、海景民宿一次搜尋,看房型、價格與周邊景點。不經手訂房,直接帶你聯繫民宿。",
   },
   twitter: { card: "summary_large_image", title: "偶宿 O! · 台灣民宿搜尋", description: "彙整全台民宿,包棟/親子/海景一次搜尋,看房型價格與周邊景點。" },

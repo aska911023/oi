@@ -26,8 +26,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const siteLd = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Organization", "@id": "https://www.oi-stay.com/#org", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", logo: settings.logo_image || "https://www.oi-stay.com/icon.png", ...(socials.length ? { sameAs: socials } : {}) },
-      { "@type": "WebSite", "@id": "https://www.oi-stay.com/#website", name: "偶宿 O!", alternateName: "oi-stay", url: "https://www.oi-stay.com", inLanguage: "zh-TW", publisher: { "@id": "https://www.oi-stay.com/#org" }, potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: "https://www.oi-stay.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
+      { "@type": "Organization", "@id": "https://www.oi-stay.com/#org", name: "偶宿 O!", alternateName: ["Oi Stay", "oistay", "oi-stay", "oi", "O!"], url: "https://www.oi-stay.com", logo: settings.logo_image || "https://www.oi-stay.com/icon.png", ...(socials.length ? { sameAs: socials } : {}) },
+      { "@type": "WebSite", "@id": "https://www.oi-stay.com/#website", name: "偶宿 O!", alternateName: ["Oi Stay", "oistay", "oi-stay", "oi", "O!"], url: "https://www.oi-stay.com", inLanguage: "zh-TW", publisher: { "@id": "https://www.oi-stay.com/#org" }, potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: "https://www.oi-stay.com/search?q={search_term_string}" }, "query-input": "required name=search_term_string" } },
     ],
   };
   return (
@@ -44,6 +44,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <div className="shell footer-grid">
           <div className="footer-brand">
             <Logo src={settings.footer_logo_image || settings.logo_image || undefined} size={settings.footer_logo_image ? settings.footer_logo_size : settings.logo_size} />
+            {/* 可見的中英文品牌名 —— 幫 Google 建立「偶宿 / Oi Stay / oistay」品牌關聯 */}
+            <p style={{ fontSize: 13, opacity: 0.75, margin: "2px 0 0" }}>偶宿 O! · Oi Stay｜台灣民宿搜尋</p>
             <p style={{ whiteSpace: "pre-line" }}>{settings.footer_about}</p>
           </div>
           <div className="footer-col">
