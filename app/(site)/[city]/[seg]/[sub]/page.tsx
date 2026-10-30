@@ -21,7 +21,7 @@ export async function generateStaticParams() {
     const out: { city: string; seg: string; sub: string }[] = [];
     const { data: stays } = await sb.from("stays").select("slug, id, region").eq("published", true).eq("approved", true).eq("visibility", "published");
     for (const s of (stays || []) as { slug?: string; id: string; region?: string }[]) if (s.region) out.push({ city: s.region, seg: "hotel", sub: s.slug || s.id });
-    for (const [table, seg] of [["attractions", "attraction"], ["restaurants", "restaurant"], ["parking_lots", "parking"]] as const) {
+    for (const [table, seg] of [["attractions", "attraction"], ["restaurants", "restaurant"], ["parking_lots", "parking"], ["activities", "activity"], ["caterings", "catering"]] as const) {
       const { data } = await sb.from(table).select("slug, id, region").eq("published", true);
       for (const p of (data || []) as { slug?: string; id: string; region?: string }[]) if (p.region) out.push({ city: p.region, seg, sub: p.slug || p.id });
     }

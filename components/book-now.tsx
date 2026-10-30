@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { promptLogin } from "@/lib/login-gate";
 import type { RoomType } from "@/lib/types";
 
-// 消費者線上訂房:登入牆 → 表單 → create_booking RPC → 顯示訂單編號 + 轉帳資訊。
-// 偶宿不經手金流,款項由房客直接匯給民宿(payment_info 由業者在後台填)。
+// 消費者線上訂房:登入牆 → 表單 → create_booking RPC → 顯示訂單編號 + 確認訊息(booking_note)。
+// 偶宿不經手金流,款項由房客直接匯給民宿。
 export default function BookNow({ stayId, stayName, rooms, bookingNote, depositPct }: {
   stayId: string; stayName: string; rooms: RoomType[]; bookingNote?: string | null; depositPct?: number | null;
 }) {
@@ -23,8 +23,9 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const lock = useRef(false); // 防連點兩下重複建單(用 ref,state 非同步擋不住)
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA"); // 本地時區 YYYY-MM-DD(避免 UTC 差一天)
   const nights = (() => {
     if (!ci || !co) return 0;
     const d = (new Date(co).getTime() - new Date(ci).getTime()) / 86400000;
@@ -48,18 +49,21 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
   }
 
   async function submit() {
+    if (lock.current) return;
     setErr(null);
     if (!ci || !co) { setErr("請選擇入住與退房日期"); return; }
+    if (ci < today) { setErr("入住日不能早於今天"); return; }
     if (nights <= 0) { setErr("退房日需晚於入住日"); return; }
     if (!name.trim() || !phone.trim()) { setErr("請填寫姓名與電話"); return; }
     const roomsArr = Object.entries(picked).filter(([, q]) => q > 0).map(([room_type_id, qty]) => ({ room_type_id, qty }));
-    setBusy(true);
+    if (rooms.length > 0 && roomsArr.length === 0) { setErr("請選擇房型與數量"); return; }
+    lock.current = true; setBusy(true);
     const sb = createClient();
     const { data, error } = await sb.rpc("create_booking", {
       p_stay_id: stayId, p_check_in: ci, p_check_out: co, p_adults: adults, p_children: children,
       p_guest_name: name, p_guest_phone: phone, p_guest_email: email, p_note: note, p_rooms: roomsArr,
     });
-    setBusy(false);
+    setBusy(false); lock.current = false;
     if (error) { setErr(error.message || "送出失敗,請稍後再試"); return; }
     setDone(data as string);
   }

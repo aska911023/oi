@@ -161,7 +161,7 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
 
       <div className="admin-bar">
         <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`搜尋${label}名稱、地區…`} />
-        <PlacesImport kind={kind} existingNames={list.map((p) => p.name)} onDone={refresh} />
+        <PlacesImport kind={kind} existingNames={list.map((p) => p.name)} onDone={refresh} ownerId={ownerId} />
         <button className="btn btn-primary" onClick={() => setForm(empty())}>＋ 新增{label}</button>
       </div>
 

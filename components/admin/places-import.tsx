@@ -40,10 +40,11 @@ function firstSheetRows(res: unknown): unknown[][] {
 
 const txt = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
-export default function PlacesImport({ kind, existingNames, onDone }: {
+export default function PlacesImport({ kind, existingNames, onDone, ownerId }: {
   kind: PoiKind;
   existingNames: string[];
   onDone: () => void;
+  ownerId?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Parsed[] | null>(null);
@@ -137,6 +138,7 @@ export default function PlacesImport({ kind, existingNames, onDone }: {
         name: r.name, region: r.region, town: r.town, address: r.address,
         description: r.description, website: r.website,
         image: "", images: [], details, published: publish,
+        ...(ownerId ? { owner_id: ownerId } : {}),
       };
     });
     const { data, error } = await sb.from(KIND_TABLE[kind]).insert(payload).select("id");

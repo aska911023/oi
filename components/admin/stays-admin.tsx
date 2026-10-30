@@ -209,7 +209,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       notice_booking: (form.notice_booking || "").trim(),
       notice_checkout: (form.notice_checkout || "").trim(),
       booking_enabled: !!form.booking_enabled,
-      booking_deposit_pct: Number(form.booking_deposit_pct ?? 30),
+      booking_deposit_pct: Math.max(0, Math.min(100, Number(form.booking_deposit_pct) || 0)),
       booking_note: (form.booking_note || "").trim() || null,
       published: ownerId ? undefined : form.published, // 上架只有 admin 能設(業者送審)
       featured: ownerId ? undefined : planFeatured(form.ad_tier), sample: ownerId ? undefined : form.sample,

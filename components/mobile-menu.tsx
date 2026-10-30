@@ -44,7 +44,6 @@ export default function MobileMenu() {
           {loggedIn ? (
             <>
               <Link href="/me/trips" onClick={close}>我的行程</Link>
-              <Link href="/me/messages" onClick={close}>我的訊息</Link>
               {isAdmin && <Link href="/admin" onClick={close}>管理後台</Link>}
               {isPartner && <Link href="/vendor" onClick={close}>業者後台</Link>}
               <Link href="/account" onClick={close}>我的帳號</Link>

@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 靜態頁(含「全台」分類總覽)
   const staticRoutes: MetadataRoute.Sitemap = [
     "", "/trips", "/rentals", "/plan", "/stations",
-    "/places/attraction", "/places/food", "/places/parking",
+    "/places/food", "/places/activity", "/places/catering", "/places/attraction", "/places/parking",
     "/about", "/contact", "/apply",
   ].map((p) => mk(p, p === "" ? 1 : 0.6));
 

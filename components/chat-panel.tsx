@@ -15,14 +15,15 @@ export default function ChatPanel({ convId, meId, height = 440 }: { convId: stri
   const idSet = useRef<Set<string>>(new Set());
 
   async function markRead() {
-    try { await createClient().from("conversation_reads").upsert({ conv_id: convId, user_id: meId, last_read_at: new Date().toISOString() }); } catch { /* ignore */ }
+    try { await createClient().from("conversation_reads").upsert({ conv_id: convId, user_id: meId, last_read_at: new Date().toISOString() }, { onConflict: "conv_id,user_id" }); } catch { /* ignore */ }
   }
   function absorb(rows: Msg[]) {
     const fresh = rows.filter((r) => !idSet.current.has(r.id));
     if (!fresh.length) return false;
     fresh.forEach((r) => idSet.current.add(r.id));
-    if (fresh[fresh.length - 1].created_at > lastTs.current) lastTs.current = fresh[fresh.length - 1].created_at;
-    setMsgs((m) => [...m, ...fresh]);
+    lastTs.current = fresh.reduce((mx, r) => (r.created_at > mx ? r.created_at : mx), lastTs.current);
+    // 依時間排序:避免 Realtime 搶在歷史載入前到達造成的亂序
+    setMsgs((m) => [...m, ...fresh].sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0)));
     return true;
   }
 
