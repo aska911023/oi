@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const TOP = [
   { href: "/vendor", label: "我的民宿", inSection: (p: string) => p === "/vendor" || p.startsWith("/vendor/bookings") },
   { href: "/vendor/rentals", label: "我的租車", inSection: (p: string) => p.startsWith("/vendor/rentals") },
+  { href: "/vendor/partnerships", label: "異業合作", inSection: (p: string) => p.startsWith("/vendor/partnerships") },
 ];
 const STAY_SUB = [
   { href: "/vendor", label: "民宿資料", exact: true },
