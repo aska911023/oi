@@ -86,16 +86,14 @@ export default function PartnershipsBoard({ initial, ownerId, isAdmin, myStays }
             {isAdmin ? "平台所有業者張貼的合作需求。" : "張貼你的合作需求,或看看其他業者在找什麼夥伴,直接聯絡媒合。"}
           </p>
         </div>
-        {!isAdmin && <button className="btn btn-primary" onClick={() => setEditing({ category: CATS[0] })}>＋ 發布合作需求</button>}
+        <button className="btn btn-primary" onClick={() => setEditing({ category: CATS[0] })}>＋ 發布合作需求</button>
       </div>
 
-      {!isAdmin && (
-        <section style={{ marginTop: 24 }}>
-          <h2 className="serif shop-h">我的需求 <span className="count">{mine.length}</span></h2>
-          {mine.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>還沒有發布需求。點右上「發布合作需求」開始。</p>
-            : <div className="cards">{mine.map((p) => card(p, true))}</div>}
-        </section>
-      )}
+      <section style={{ marginTop: 24 }}>
+        <h2 className="serif shop-h">我發布的 <span className="count">{mine.length}</span></h2>
+        {mine.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>還沒有發布需求。點右上「發布合作需求」開始{isAdmin ? "(平台也可張貼合作機會給業者看)" : ""}。</p>
+          : <div className="cards">{mine.map((p) => card(p, true))}</div>}
+      </section>
 
       <section style={{ marginTop: 28 }}>
         <h2 className="serif shop-h">{isAdmin ? "全部需求" : "找合作夥伴"} <span className="count">{isAdmin ? posts.length : others.length}</span></h2>

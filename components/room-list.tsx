@@ -5,6 +5,7 @@ import { priceLabel } from "@/lib/data";
 import ImageZoom from "@/components/image-zoom";
 import PhotoCarousel from "@/components/photo-carousel";
 import SaveBookmark from "@/components/save-bookmark";
+import BookNow from "@/components/book-now";
 import type { RoomType } from "@/lib/types";
 
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
@@ -22,7 +23,7 @@ const startPrice = (r: RoomType) => {
 // 包棟房間介紹:一個框一個框(房間名 + 人數)
 const roomsCells = (r: RoomType) => (r.pricing?.rooms || []).filter((rm) => rm && rm.name);
 
-export default function RoomList({ rooms }: { rooms: RoomType[] }) {
+export default function RoomList({ rooms, stayId, stayName, paymentInfo }: { rooms: RoomType[]; stayId?: string; stayName?: string; paymentInfo?: string | null }) {
   const [active, setActive] = useState<RoomType | null>(null);
 
   useEffect(() => {
@@ -121,6 +122,9 @@ export default function RoomList({ rooms }: { rooms: RoomType[] }) {
               )}
               {extraLine(active)}
 
+              {stayId && stayName && (
+                <div style={{ marginTop: 16 }}><BookNow stayId={stayId} stayName={stayName} rooms={rooms} paymentInfo={paymentInfo ?? null} /></div>
+              )}
               <div className="notice">實際房價與空房,請向民宿確認。</div>
             </div>
           </div>
