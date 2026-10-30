@@ -21,7 +21,7 @@ const empty = (): Form => ({
 
 type ListItem = Record<string, string>;
 
-export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind: PoiKind }) {
+export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place[]; kind: PoiKind; ownerId?: string }) {
   const table = KIND_TABLE[kind];
   const fields = DETAILS[kind];
   const [list, setList] = useState<Place[]>(initial);
@@ -49,7 +49,8 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
 
   async function refresh() {
     const sb = createClient();
-    const { data } = await sb.from(table).select("*").order("created_at", { ascending: false });
+    const q = sb.from(table).select("*").order("created_at", { ascending: false });
+    const { data } = await (ownerId ? q.eq("owner_id", ownerId) : q);
     setList((data as Place[]) || []);
     revalidatePois().catch(() => {});
   }
@@ -94,6 +95,7 @@ export default function PlacesAdmin({ initial, kind }: { initial: Place[]; kind:
       website: form.website.trim(),
       lat: form.lat ?? null, lng: form.lng ?? null, details: form.details || {},
       published: form.published, featured: form.featured,
+      ...(ownerId && !form.id ? { owner_id: ownerId } : {}),
     };
     let error;
     if (form.id) ({ error } = await sb.from(table).update(payload).eq("id", form.id));

@@ -22,7 +22,6 @@ const TOP = [
   { href: "/admin/vendors", label: "業者審核" },
   { href: "/admin/partners", label: "業者名單" },
   { href: "/admin/partnerships", label: "異業合作" },
-  { href: "/admin/messages", label: "訊息" },
   { href: "/admin/creators", label: "創作者" },
   { href: "/admin/plans", label: "方案設定" },
   { href: "/admin/site", label: "首頁設定" },
