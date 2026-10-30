@@ -104,7 +104,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
         {s.license_no && <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13.5, color: "var(--muted)", marginTop: 6 }}>🏛 合法民宿登記證號:{s.license_no}</div>}
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
-          <BookNow stayId={s.id} stayName={s.name} rooms={rooms} paymentInfo={s.payment_info ?? null} />
+          {s.booking_enabled && <BookNow stayId={s.id} stayName={s.name} rooms={rooms} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
           {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-ghost">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
           {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${enc(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
           {(s.address || (s.lat != null && s.lng != null)) && (
@@ -120,7 +120,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
 
         <div className="shop-block">
           <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
-          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} stayId={s.id} stayName={s.name} paymentInfo={s.payment_info ?? null} />}
+          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} stayId={s.id} stayName={s.name} bookingEnabled={!!s.booking_enabled} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
         </div>
 
         {s.embed_urls && s.embed_urls.length > 0 && (

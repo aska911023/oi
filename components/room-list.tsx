@@ -23,7 +23,7 @@ const startPrice = (r: RoomType) => {
 // 包棟房間介紹:一個框一個框(房間名 + 人數)
 const roomsCells = (r: RoomType) => (r.pricing?.rooms || []).filter((rm) => rm && rm.name);
 
-export default function RoomList({ rooms, stayId, stayName, paymentInfo }: { rooms: RoomType[]; stayId?: string; stayName?: string; paymentInfo?: string | null }) {
+export default function RoomList({ rooms, stayId, stayName, bookingEnabled, bookingNote, depositPct }: { rooms: RoomType[]; stayId?: string; stayName?: string; bookingEnabled?: boolean; bookingNote?: string | null; depositPct?: number | null }) {
   const [active, setActive] = useState<RoomType | null>(null);
 
   useEffect(() => {
@@ -122,8 +122,8 @@ export default function RoomList({ rooms, stayId, stayName, paymentInfo }: { roo
               )}
               {extraLine(active)}
 
-              {stayId && stayName && (
-                <div style={{ marginTop: 16 }}><BookNow stayId={stayId} stayName={stayName} rooms={rooms} paymentInfo={paymentInfo ?? null} /></div>
+              {bookingEnabled && stayId && stayName && (
+                <div style={{ marginTop: 16 }}><BookNow stayId={stayId} stayName={stayName} rooms={rooms} bookingNote={bookingNote} depositPct={depositPct} /></div>
               )}
               <div className="notice">實際房價與空房,請向民宿確認。</div>
             </div>

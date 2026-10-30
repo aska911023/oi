@@ -7,8 +7,8 @@ import type { RoomType } from "@/lib/types";
 
 // 消費者線上訂房:登入牆 → 表單 → create_booking RPC → 顯示訂單編號 + 轉帳資訊。
 // 偶宿不經手金流,款項由房客直接匯給民宿(payment_info 由業者在後台填)。
-export default function BookNow({ stayId, stayName, rooms, paymentInfo }: {
-  stayId: string; stayName: string; rooms: RoomType[]; paymentInfo?: string | null;
+export default function BookNow({ stayId, stayName, rooms, bookingNote, depositPct }: {
+  stayId: string; stayName: string; rooms: RoomType[]; bookingNote?: string | null; depositPct?: number | null;
 }) {
   const [open, setOpen] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -32,6 +32,7 @@ export default function BookNow({ stayId, stayName, rooms, paymentInfo }: {
   })();
   const setQty = (id: string, q: number) => setPicked((p) => ({ ...p, [id]: Math.max(0, q) }));
   const total = rooms.reduce((s, r) => s + (Number(r.price) || 0) * (picked[r.id] || 0) * nights, 0);
+  const deposit = Math.round(total * (depositPct || 0) / 100);
 
   async function openForm() {
     const sb = createClient();
@@ -70,8 +71,8 @@ export default function BookNow({ stayId, stayName, rooms, paymentInfo }: {
       <button className="btn btn-primary" onClick={openForm}>📅 線上訂房</button>
       {open && (
         <>
-          <div className="overlay" onClick={() => !busy && setOpen(false)} />
-          <div className="detail" role="dialog" aria-modal="true" style={{ maxWidth: 540 }}>
+          <div className="overlay" onClick={() => !busy && setOpen(false)} style={{ zIndex: 1200 }} />
+          <div className="detail" role="dialog" aria-modal="true" style={{ maxWidth: 540, zIndex: 1201 }}>
             <button className="close" onClick={() => setOpen(false)} aria-label="關閉">✕</button>
             <div className="detail-body">
               {done ? (
@@ -81,10 +82,11 @@ export default function BookNow({ stayId, stayName, rooms, paymentInfo }: {
                   <p style={{ color: "var(--text-2)" }}>訂單編號 <b style={{ letterSpacing: 1 }}>{done}</b></p>
                   <p style={{ color: "var(--text-2)", fontSize: 14 }}>目前狀態:<b>待民宿確認</b>,確認後會與您聯繫。</p>
                   <div style={{ marginTop: 16, textAlign: "left", background: "var(--green-soft)", borderRadius: 11, padding: "14px 16px" }}>
-                    <div style={{ fontWeight: 700, color: "var(--green)", marginBottom: 6 }}>💳 轉帳資訊</div>
-                    {paymentInfo
-                      ? <div style={{ whiteSpace: "pre-line", fontSize: 14, lineHeight: 1.7 }}>{paymentInfo}</div>
-                      : <div style={{ fontSize: 14, color: "var(--muted)" }}>民宿確認訂單後,會提供轉帳帳戶 / 付款方式給您。</div>}
+                    {deposit > 0 && <div style={{ fontWeight: 700, color: "var(--green)", marginBottom: 8, fontSize: 15 }}>💰 請匯訂金 NT$ {deposit.toLocaleString()} <span style={{ fontWeight: 400, fontSize: 12.5, color: "var(--muted)" }}>(總價的 {depositPct}%)</span></div>}
+                    <div style={{ fontWeight: 700, color: "var(--green)", marginBottom: 6 }}>💳 匯款 / 確認訊息</div>
+                    {bookingNote
+                      ? <div style={{ whiteSpace: "pre-line", fontSize: 14, lineHeight: 1.7 }}>{bookingNote}</div>
+                      : <div style={{ fontSize: 14, color: "var(--muted)" }}>民宿確認訂單後,會提供匯款帳戶 / 付款方式給您。</div>}
                   </div>
                   <button className="btn btn-primary" style={{ marginTop: 18 }} onClick={() => { setOpen(false); setDone(null); }}>完成</button>
                 </div>

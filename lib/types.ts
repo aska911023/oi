@@ -30,7 +30,9 @@ export interface Stay {
   license_no?: string | null; // 合法民宿登記證號
   notice_booking?: string; // 訂房須知(前台詳情顯示)
   notice_checkout?: string; // 退房須知(前台詳情顯示)
-  payment_info?: string | null; // 轉帳資訊(業者填,線上訂房確認頁顯示給房客)
+  booking_enabled?: boolean | null; // 是否開放線上訂房(關→不顯示「線上訂房」)
+  booking_deposit_pct?: number | null; // 訂金比例(%)
+  booking_note?: string | null; // 訂房須知/確認訊息(含轉帳帳號),訂房後顯示給房客
   check_in?: string | null; // 最早入住(例 15:00)
   check_out?: string | null; // 最晚退房(例 11:00)
   address?: string; // 地址(Google Map / 導航用)
