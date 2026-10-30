@@ -20,7 +20,7 @@ const EMPTY: Form = {
   name: "", region: REGIONS[0], town: "", category: "設計旅宿",
   price: 0, guests: 1, image: "", images: [], description: "", amenities: "",
   website: "", line_url: "", embed_urls: [], rooms_left: null, address: "", lat: null, lng: null,
-  license_no: "", check_in: "", check_out: "", notice_booking: "", notice_checkout: "",
+  license_no: "", check_in: "", check_out: "", notice_booking: "", notice_checkout: "", payment_info: "",
   published: false, featured: false, sample: false, ad_tier: "free", ad_start: null, ad_end: null, save_boost: 0,
 };
 
@@ -207,6 +207,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
       check_out: (form.check_out || "").trim() || null,
       notice_booking: (form.notice_booking || "").trim(),
       notice_checkout: (form.notice_checkout || "").trim(),
+      payment_info: (form.payment_info || "").trim() || null,
       published: ownerId ? undefined : form.published, // 上架只有 admin 能設(業者送審)
       featured: ownerId ? undefined : planFeatured(form.ad_tier), sample: ownerId ? undefined : form.sample,
       ad_tier: ownerId ? undefined : (form.ad_tier || "free"), // 曝光方案只有 admin 能設
@@ -484,6 +485,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
               <div className="wide"><label>訂房須知</label><textarea rows={3} value={form.notice_booking || ""} onChange={(e) => setForm({ ...form, notice_booking: e.target.value })} placeholder="例:訂金 30%,匯款後請告知末五碼;可加床,詳情請私訊…" /></div>
               <div className="wide"><label>退房須知</label><textarea rows={3} value={form.notice_checkout || ""} onChange={(e) => setForm({ ...form, notice_checkout: e.target.value })} placeholder="例:退房 11:00 前;離開請關冷氣電源、垃圾集中…" /></div>
+              <div className="wide"><label>轉帳資訊(線上訂房確認後顯示給房客)</label><textarea rows={3} value={form.payment_info || ""} onChange={(e) => setForm({ ...form, payment_info: e.target.value })} placeholder="例:匯款銀行 — 國泰世華(013)/ 帳號 1234-5678-9012 / 戶名 王小明;訂金 30%,匯款後請告知末五碼。" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               {!ownerId ? (
