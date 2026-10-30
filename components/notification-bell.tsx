@@ -45,7 +45,7 @@ export default function NotificationBell() {
   async function load() {
     try {
       const sb = createClient();
-      const [socRes, userRes] = await Promise.all([sb.rpc("my_notifications", { lim: 30 }), sb.auth.getUser()]);
+      const [socRes, userRes] = await Promise.all([sb.rpc("my_notifications", { lim: 30 }), sb.auth.getSession()]);
       const social: Row[] = ((socRes.data as Social[]) || []).map((n, i) => ({
         id: "s" + i + (n.trip_id || n.actor_id || ""),
         isSys: false, mark: mark(n.kind), href: socialHref(n), created_at: n.created_at,
@@ -53,7 +53,7 @@ export default function NotificationBell() {
         text: verb(n.kind) + (n.kind !== "follow" && n.trip_title ? `「${n.trip_title}」` : ""),
       }));
       let sys: Row[] = [];
-      const user = userRes.data.user;
+      const user = userRes.data.session?.user ?? null;
       if (user) {
         const { data } = await sb.from("notifications").select("id, kind, title, href, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
         sys = ((data as Sys[]) || []).map((n) => ({ id: "n" + n.id, isSys: true, mark: n.kind === "admin_stay" ? "📋" : "✅", href: n.href || "#", created_at: n.created_at, text: n.title }));

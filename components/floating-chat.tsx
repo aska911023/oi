@@ -27,7 +27,8 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
     if (scope === "stay") return;
     let timer: ReturnType<typeof setInterval> | null = null;
     (async () => {
-      const { data: { user } } = await createClient().auth.getUser();
+      const { data: { session } } = await createClient().auth.getSession();
+      const user = session?.user ?? null;
       if (!user) return;
       uidRef.current = user.id; setMeId(user.id);
       refreshInbox(user.id);
@@ -76,7 +77,8 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
   async function toggle() {
     if (open) { setOpen(false); return; }
     const sb = createClient();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session?.user ?? null;
     if (scope === "stay") {
       if (!user) { promptLogin(typeof window !== "undefined" ? window.location.pathname : "/", { title: "私訊民宿", desc: "加入會員即可直接私訊民宿詢問。" }); return; }
       setMeId(user.id); setOpen(true); setLoading(true); setErr(null); setConvId(null);

@@ -21,7 +21,8 @@ export default function SaveBookmark({ type, id, floating = false, nextPath = "/
     let alive = true;
     (async () => {
       const sb = createClient();
-      const { data: { user } } = await sb.auth.getUser();
+      const { data: { session } } = await sb.auth.getSession();
+      const user = session?.user ?? null;
       if (!user || !alive) return;
       setUid(user.id);
       const q = type === "stay"

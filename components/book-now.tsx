@@ -36,7 +36,8 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
 
   async function openForm() {
     const sb = createClient();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session?.user ?? null;
     if (!user) {
       promptLogin(typeof window !== "undefined" ? window.location.pathname : "/", {
         title: "線上訂房", desc: "加入會員即可線上預訂,訂單會直接送到民宿。",

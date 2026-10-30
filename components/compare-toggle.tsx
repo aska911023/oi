@@ -13,7 +13,7 @@ export default function CompareToggle({ card }: { card: RoomCard }) {
 
   useEffect(() => {
     let alive = true;
-    createClient().auth.getUser().then(({ data }) => { if (alive) setUid(data.user?.id ?? null); });
+    createClient().auth.getSession().then(({ data }) => { if (alive) setUid(data.session?.user?.id ?? null); });
     return () => { alive = false; };
   }, []);
 
