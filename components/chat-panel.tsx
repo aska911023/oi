@@ -5,35 +5,60 @@ import { createClient } from "@/lib/supabase/client";
 
 interface Msg { id: string; conv_id: string; sender_id: string; body: string; created_at: string }
 
-// 單一對話視窗:載入訊息 + 每 4 秒輪詢(分頁可見時)+ 標記已讀 + 送訊息。
+// 單一對話視窗:增量輪詢(只抓比上次新的訊息,沒新的就不重繪)+ 標記已讀 + 送訊息。
 export default function ChatPanel({ convId, meId, height = 440 }: { convId: string; meId: string; height?: number }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const lastTs = useRef<string>("1970-01-01T00:00:00Z");
+  const idSet = useRef<Set<string>>(new Set());
 
-  async function load() {
-    const sb = createClient();
-    const { data } = await sb.from("messages").select("*").eq("conv_id", convId).order("created_at");
-    setMsgs((data as Msg[]) || []);
-    try { await sb.from("conversation_reads").upsert({ conv_id: convId, user_id: meId, last_read_at: new Date().toISOString() }); } catch { /* ignore */ }
+  async function markRead() {
+    try { await createClient().from("conversation_reads").upsert({ conv_id: convId, user_id: meId, last_read_at: new Date().toISOString() }); } catch { /* ignore */ }
   }
+  function absorb(rows: Msg[]) {
+    const fresh = rows.filter((r) => !idSet.current.has(r.id));
+    if (!fresh.length) return false;
+    fresh.forEach((r) => idSet.current.add(r.id));
+    if (fresh[fresh.length - 1].created_at > lastTs.current) lastTs.current = fresh[fresh.length - 1].created_at;
+    setMsgs((m) => [...m, ...fresh]);
+    return true;
+  }
+
   useEffect(() => {
-    load();
-    const t = setInterval(() => { if (document.visibilityState === "visible") load(); }, 4000);
-    return () => clearInterval(t);
+    // 切換對話:重置
+    idSet.current = new Set();
+    lastTs.current = "1970-01-01T00:00:00Z";
+    setMsgs([]);
+    let alive = true;
+    (async () => {
+      const sb = createClient();
+      const { data } = await sb.from("messages").select("*").eq("conv_id", convId).order("created_at");
+      if (!alive) return;
+      absorb((data as Msg[]) || []);
+      markRead();
+    })();
+    const t = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const sb = createClient();
+      const { data } = await sb.from("messages").select("*").eq("conv_id", convId).gt("created_at", lastTs.current).order("created_at");
+      const got = absorb((data as Msg[]) || []);
+      if (got) markRead();
+    }, 4000);
+    return () => { alive = false; clearInterval(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convId]);
+
   useEffect(() => { const el = boxRef.current; if (el) el.scrollTop = el.scrollHeight; }, [msgs]);
 
   async function send() {
     const b = text.trim();
     if (!b || busy) return;
     setBusy(true); setText("");
-    const sb = createClient();
-    const { data, error } = await sb.from("messages").insert({ conv_id: convId, sender_id: meId, body: b }).select().single();
+    const { data, error } = await createClient().from("messages").insert({ conv_id: convId, sender_id: meId, body: b }).select().single();
     setBusy(false);
-    if (!error && data) setMsgs((m) => [...m, data as Msg]);
+    if (!error && data) absorb([data as Msg]);
     else setText(b);
   }
 
