@@ -51,6 +51,7 @@ export default async function MyTripsPage() {
       <div className="account-actions" style={{ marginBottom: 26 }}>
         <Link href="/plan" className="btn btn-primary">＋ 規劃新行程</Link>
         <Link href="/me/saved" className="btn btn-ghost">我的收藏</Link>
+        <Link href="/me/messages" className="btn btn-ghost">我的訊息</Link>
         <Link href="/account" className="btn btn-ghost">我的帳號</Link>
         {role === "user" && <Link href="/apply" className="btn btn-ghost">申請成為業者</Link>}
         {(role === "partner" || role === "admin") && <Link href="/vendor" className="btn btn-ghost">業者後台</Link>}

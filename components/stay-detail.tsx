@@ -5,6 +5,7 @@ import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
 import RoomList from "@/components/room-list";
 import BookNow from "@/components/book-now";
+import ContactVendor from "@/components/contact-vendor";
 import BackLink from "@/components/back-link";
 import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
@@ -97,6 +98,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
           <BookNow stayId={s.id} stayName={s.name} rooms={rooms} paymentInfo={s.payment_info ?? null} />
+          {s.owner_id && <ContactVendor stayId={s.id} stayName={s.name} />}
           {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-ghost">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
           {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${enc(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
           {(s.address || (s.lat != null && s.lng != null)) && (
