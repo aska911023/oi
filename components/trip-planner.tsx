@@ -29,7 +29,7 @@ type Pools = { stays: PoolItem[]; rooms: PoolItem[]; attractions: PoolItem[]; fo
 const PICK_TABS: { type: TripItemType; label: string; key: keyof Pools }[] = [
   { type: "stay", label: "住宿", key: "rooms" },
   { type: "attraction", label: "景點", key: "attractions" },
-  { type: "food", label: "美食", key: "foods" },
+  { type: "food", label: "餐廳", key: "foods" },
   { type: "parking", label: "停車", key: "parkings" },
   { type: "rental", label: "租車", key: "rentals" },
   { type: "station", label: "車站", key: "stations" },

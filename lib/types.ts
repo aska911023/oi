@@ -192,9 +192,9 @@ export interface Place {
 }
 
 export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
-  { kind: "attraction", label: "探索景點", slug: "attraction" },
-  { kind: "food", label: "探索美食", slug: "food" },
-  { kind: "parking", label: "停車區域", slug: "parking" },
+  { kind: "food", label: "餐廳", slug: "food" },
+  { kind: "attraction", label: "景點", slug: "attraction" },
+  { kind: "parking", label: "停車", slug: "parking" },
 ];
 
 // ⑤ 行程規劃 / ⑥ 分享平台
@@ -245,5 +245,5 @@ export interface Trip {
 export const TRANSPORTS = ["開車", "機車", "大眾運輸", "其他"] as const;
 
 export const TRIP_ITEM_LABEL: Record<TripItemType, string> = {
-  stay: "住宿", attraction: "景點", food: "美食", parking: "停車", rental: "租車", station: "車站", note: "自訂",
+  stay: "住宿", attraction: "景點", food: "餐廳", parking: "停車", rental: "租車", station: "車站", note: "自訂",
 };

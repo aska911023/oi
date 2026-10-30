@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const city = decodeParam((await params).city);
   if (!isCity(city)) return { title: "找不到城市" };
   const title = `${city}旅遊｜住宿・景點・美食・停車・行程`;
-  const description = `${city}旅遊一站整理:精選${city}民宿住宿、必去景點、在地美食、停車資訊與推薦行程。偶宿 O! 帶你從「想去哪裡」到「怎麼玩」。`;
+  const description = `${city}旅遊一站整理:精選${city}民宿住宿、必去景點、在地餐廳、停車資訊與推薦行程。偶宿 O! 帶你從「想去哪裡」到「怎麼玩」。`;
   const canonical = `/${enc(city)}`;
   return { title, description, alternates: { canonical }, openGraph: { title: `${title}｜偶宿 O!`, description, url: canonical, type: "website" } };
 }
@@ -73,7 +73,7 @@ export default async function CityHub({ params }: { params: Promise<{ city: stri
       </nav>
       <h1 className="serif" style={{ fontSize: 32, marginBottom: 8 }}>{city}旅遊</h1>
       <p style={{ color: "var(--text-2)", maxWidth: 740, lineHeight: 1.7, marginBottom: 24 }}>
-        {city}的<b>住宿</b>、<b>景點</b>、<b>美食</b>、<b>停車</b>與<b>行程</b>,偶宿 O! 一次幫你整理好 —— 從「想去哪裡」到「怎麼玩」。
+        {city}的<b>住宿</b>、<b>景點</b>、<b>餐廳</b>、<b>停車</b>與<b>行程</b>,偶宿 O! 一次幫你整理好 —— 從「想去哪裡」到「怎麼玩」。
       </p>
 
       <div className="region-links" style={{ marginBottom: 24 }}>
@@ -88,7 +88,7 @@ export default async function CityHub({ params }: { params: Promise<{ city: stri
           <div className="map-legend">
             <span><i style={{ background: "#e8590c" }} />住宿</span>
             <span><i style={{ background: "#2f9e44" }} />景點</span>
-            <span><i style={{ background: "#e03131" }} />美食</span>
+            <span><i style={{ background: "#e03131" }} />餐廳</span>
             <span><i style={{ background: "#1971c2" }} />停車</span>
           </div>
         </section>

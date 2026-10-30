@@ -15,7 +15,7 @@ const toImgs = (image?: string, images?: string[]) => (images && images.length ?
 
 const KIND_META: Record<PoiKind, { label: string; seg: string; cta: string; schemaType: string }> = {
   attraction: { label: "景點", seg: "attractions", cta: "官方網站", schemaType: "TouristAttraction" },
-  food: { label: "美食", seg: "restaurants", cta: "官方網站 / 訂位", schemaType: "Restaurant" },
+  food: { label: "餐廳", seg: "restaurants", cta: "官方網站 / 訂位", schemaType: "Restaurant" },
   parking: { label: "停車", seg: "parking", cta: "官方資訊", schemaType: "ParkingFacility" },
 };
 

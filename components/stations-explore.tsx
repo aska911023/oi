@@ -6,7 +6,7 @@ import { GEOGRAPHIC_AREAS } from "@/lib/data";
 import { POI_KINDS, type Station } from "@/lib/types";
 import AddToTrip from "@/components/add-to-trip";
 
-const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
+const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
 
 export default function StationsExplore({ stations }: { stations: Station[] }) {
   const [kind, setKind] = useState<"all" | "hsr" | "tra">("all");

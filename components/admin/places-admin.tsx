@@ -11,7 +11,7 @@ import PlacesImport from "@/components/admin/places-import";
 import { type Place, type PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
-const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "美食", parking: "停車" };
+const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
 
 type Form = Omit<Place, "id"> & { id?: string };
 const empty = (): Form => ({

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const GROUP = [
   { href: "/admin", label: "民宿" },
   { href: "/admin/places/attraction", label: "景點" },
-  { href: "/admin/places/food", label: "美食" },
+  { href: "/admin/places/food", label: "餐廳" },
   { href: "/admin/places/parking", label: "停車" },
   { href: "/admin/rentals", label: "租車" },
 ];

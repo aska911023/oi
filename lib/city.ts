@@ -32,7 +32,7 @@ export type Section = "hotels" | "restaurants" | "attractions" | "parking" | "it
 export const SECTIONS: { seg: Section; label: string; kind?: PoiKind; singular?: string }[] = [
   { seg: "hotels", label: "住宿" },
   { seg: "attractions", label: "景點", kind: "attraction", singular: "attraction" },
-  { seg: "restaurants", label: "美食", kind: "food", singular: "restaurant" },
+  { seg: "restaurants", label: "餐廳", kind: "food", singular: "restaurant" },
   { seg: "parking", label: "停車", kind: "parking", singular: "parking" },
   { seg: "itineraries", label: "行程" },
 ];

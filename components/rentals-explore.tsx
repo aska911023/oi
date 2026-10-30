@@ -13,7 +13,7 @@ import PlaceComments from "@/components/place-comments";
 import AddToTrip from "@/components/add-to-trip";
 import GatedOutLink from "@/components/gated-out-link";
 
-const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "美食", parking: "停車" };
+const TAB_LABEL: Record<string, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
 
 const PAGE = 24;
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };

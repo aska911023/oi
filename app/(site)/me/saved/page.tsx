@@ -10,7 +10,7 @@ interface Saved { id: string; name: string; region?: string | null; town?: strin
 // 各收藏類型 → 資料表與點擊後要去的頁面
 const KINDS: { kind: string; label: string; table: string; href: (id: string) => string }[] = [
   { kind: "attraction", label: "景點", table: "attractions", href: () => "/places/attraction" },
-  { kind: "food", label: "美食", table: "restaurants", href: () => "/places/food" },
+  { kind: "food", label: "餐廳", table: "restaurants", href: () => "/places/food" },
   { kind: "parking", label: "停車", table: "parking_lots", href: () => "/places/parking" },
   { kind: "rental", label: "租車", table: "rental_shops", href: () => "/rentals" },
 ];
@@ -87,7 +87,7 @@ export default async function SavedPage() {
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 60 }}>
       <div className="plan-head">
         <h1 className="serif">我的收藏</h1>
-        <p>你收藏的民宿、景點、美食與停車,點進去看詳細資訊。</p>
+        <p>你收藏的民宿、景點、餐廳與停車,點進去看詳細資訊。</p>
       </div>
 
       {total === 0 ? (

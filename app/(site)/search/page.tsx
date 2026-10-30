@@ -4,7 +4,7 @@ import SearchAutocomplete from "@/components/search-autocomplete";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "搜尋",
-  description: "搜尋台灣旅遊 —— 城市、民宿、景點、美食,一次找齊。",
+  description: "搜尋台灣旅遊 —— 城市、民宿、景點、餐廳,一次找齊。",
   robots: { index: false }, // 搜尋頁不收錄
 };
 

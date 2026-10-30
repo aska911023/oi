@@ -26,11 +26,11 @@ const I = {
   map: <svg width="16" height="16" viewBox="0 0 24 24" {...S}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>,
 };
 
-const TAB_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "美食", parking: "停車" };
+const TAB_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
 
 const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; cta: string }> = {
   attraction: { title: "探索景點", sub: "順著民宿的距離,把附近的好去處一起收進行程。", empty: "這個地區還沒有收錄景點,換個縣市看看。", cta: "查看介紹" },
-  food: { title: "探索美食", sub: "在地小吃、風格餐廳、咖啡廳——先看看吃什麼。", empty: "這個地區還沒有收錄美食,換個縣市看看。", cta: "查看介紹" },
+  food: { title: "探索餐廳", sub: "在地小吃、風格餐廳、咖啡廳——先看看吃什麼。", empty: "這個地區還沒有收錄餐廳,換個縣市看看。", cta: "查看介紹" },
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
 };
 

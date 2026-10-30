@@ -18,7 +18,7 @@ export function generateStaticParams() {
 
 const SEG_META: Record<Section, { word: string; kind?: PoiKind }> = {
   hotels: { word: "民宿住宿" },
-  restaurants: { word: "美食餐廳", kind: "food" },
+  restaurants: { word: "餐廳", kind: "food" },
   attractions: { word: "景點", kind: "attraction" },
   parking: { word: "停車場", kind: "parking" },
   itineraries: { word: "旅遊行程" },
@@ -104,7 +104,7 @@ export default async function CitySectionPage({ params }: { params: Promise<{ ci
         {cityCrumb(city)}
         <h1 className="serif" style={{ fontSize: 30, marginBottom: 8 }}>{city}旅遊行程推薦</h1>
         <p style={{ color: "var(--text-2)", maxWidth: 740, lineHeight: 1.7, marginBottom: 26 }}>
-          看看旅人怎麼玩{city} —— 住宿、景點、美食、停車串成一趟{city}行程,收藏後可一鍵複製成自己的規劃。
+          看看旅人怎麼玩{city} —— 住宿、景點、餐廳、停車串成一趟{city}行程,收藏後可一鍵複製成自己的規劃。
         </p>
         {trips.length === 0 ? (
           <div className="empty">{city}還沒有公開行程。<Link href="/plan" style={{ color: "var(--green)", textDecoration: "underline" }}>來規劃第一個 →</Link></div>
