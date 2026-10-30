@@ -32,21 +32,26 @@ export default function ChatPanel({ convId, meId, height = 440 }: { convId: stri
     lastTs.current = "1970-01-01T00:00:00Z";
     setMsgs([]);
     let alive = true;
+    const sb = createClient();
     (async () => {
-      const sb = createClient();
       const { data } = await sb.from("messages").select("*").eq("conv_id", convId).order("created_at");
       if (!alive) return;
       absorb((data as Msg[]) || []);
       markRead();
     })();
+    // 即時推送:新訊息瞬間到(不用等輪詢)
+    const ch = sb.channel(`conv-${convId}`).on("postgres_changes",
+      { event: "INSERT", schema: "public", table: "messages", filter: `conv_id=eq.${convId}` },
+      (payload) => { const got = absorb([payload.new as Msg]); if (got && (payload.new as Msg).sender_id !== meId) markRead(); },
+    ).subscribe();
+    // 備援輪詢:即時連線斷掉時補抓(12 秒,只抓新的)
     const t = setInterval(async () => {
       if (document.visibilityState !== "visible") return;
-      const sb = createClient();
       const { data } = await sb.from("messages").select("*").eq("conv_id", convId).gt("created_at", lastTs.current).order("created_at");
       const got = absorb((data as Msg[]) || []);
       if (got) markRead();
-    }, 4000);
-    return () => { alive = false; clearInterval(t); };
+    }, 12000);
+    return () => { alive = false; clearInterval(t); sb.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convId]);
 
