@@ -6,6 +6,8 @@ import PhotoCarousel from "@/components/photo-carousel";
 import RoomList from "@/components/room-list";
 import BookNow from "@/components/book-now";
 import ContactVendor from "@/components/contact-vendor";
+import RoomTile from "@/components/room-tile";
+import { getRoomsByRegion } from "@/lib/rooms";
 import BackLink from "@/components/back-link";
 import TrackView from "@/components/track-view";
 import OutboundLink from "@/components/outbound-link";
@@ -25,6 +27,11 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
   const sb = await createClient();
   const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", s.id).eq("published", true).order("sort").order("price");
   const rooms = (roomsData as RoomType[]) || [];
+  // 其他民宿推薦(曝光版位):同縣市、付費/精選方案優先(search_rooms 已依 ad_prio 排序),去重排除本間。
+  const { rooms: recoAll } = await getRoomsByRegion(s.region);
+  const seen = new Set<string>([s.id]);
+  const recos: typeof recoAll = [];
+  for (const r of recoAll) { if (!seen.has(r.stay_id)) { seen.add(r.stay_id); recos.push(r); } if (recos.length >= 4) break; }
   const amenities = (s.amenities || "").split("、").map((a) => a.trim()).filter(Boolean);
 
   const { data: revData } = await sb.from("reviews").select("rating, comment, created_at, profiles(display_name)").eq("stay_id", s.id).order("created_at", { ascending: false });
@@ -186,6 +193,13 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
 
         <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>
       </div>
+
+      {recos.length > 0 && (
+        <section className="shell" style={{ paddingTop: 6, paddingBottom: 54 }}>
+          <h2 className="serif shop-h" style={{ marginBottom: 14 }}>{s.region}其他民宿推薦</h2>
+          <div className="cards">{recos.map((r) => <RoomTile key={r.stay_id} r={r} />)}</div>
+        </section>
+      )}
     </main>
   );
 }
