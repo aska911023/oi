@@ -44,13 +44,13 @@ export default function ChatPanel({ convId, meId, height = 440 }: { convId: stri
       { event: "INSERT", schema: "public", table: "messages", filter: `conv_id=eq.${convId}` },
       (payload) => { const got = absorb([payload.new as Msg]); if (got && (payload.new as Msg).sender_id !== meId) markRead(); },
     ).subscribe();
-    // 備援輪詢:即時連線斷掉時補抓(12 秒,只抓新的)
+    // 備援輪詢:即時連線斷掉時補抓(5 秒,只抓新的;有即時推送時幾乎不會撈到東西,很省)
     const t = setInterval(async () => {
       if (document.visibilityState !== "visible") return;
       const { data } = await sb.from("messages").select("*").eq("conv_id", convId).gt("created_at", lastTs.current).order("created_at");
       const got = absorb((data as Msg[]) || []);
       if (got) markRead();
-    }, 12000);
+    }, 5000);
     return () => { alive = false; clearInterval(t); sb.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [convId]);
