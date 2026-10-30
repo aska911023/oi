@@ -8,9 +8,9 @@ import type { PoiKind } from "@/lib/types";
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 
-const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
+const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車", activity: "娛樂", catering: "外燴" };
 // 第 9 欄(門票/價位/收費)依類型寫進不同的 details key
-const PRICE_KEY: Record<PoiKind, string> = { attraction: "ticket", food: "price_level", parking: "fee" };
+const PRICE_KEY: Record<PoiKind, string> = { attraction: "ticket", food: "price_level", parking: "fee", activity: "price", catering: "price" };
 
 const HEADER_MAP: Record<string, string> = {
   名稱: "name", 縣市: "region", 鄉鎮市區: "town", 地址: "address",

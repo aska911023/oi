@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { promptLogin } from "@/lib/login-gate";
 
-export type SaveType = "stay" | "room" | "attraction" | "food" | "parking" | "rental" | "station";
+export type SaveType = "stay" | "room" | "attraction" | "food" | "parking" | "rental" | "station" | "activity" | "catering";
 
 // 書籤收藏 icon。type=stay 用 saved 表;其餘用 saved_places(kind+place_id)。
 // floating=true 時浮在圖片右上角。

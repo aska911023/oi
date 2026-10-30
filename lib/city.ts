@@ -26,20 +26,22 @@ export const getStayCities = cache(async (): Promise<string[]> => {
   } catch { return []; }
 });
 
-export type Section = "hotels" | "restaurants" | "attractions" | "parking" | "itineraries";
+export type Section = "hotels" | "restaurants" | "activities" | "caterings" | "attractions" | "parking" | "itineraries";
 
 // 複數=列表段;kind 對應 places 分類;singular=對應的 entity 單數段(詳情頁用)
 export const SECTIONS: { seg: Section; label: string; kind?: PoiKind; singular?: string }[] = [
   { seg: "hotels", label: "住宿" },
-  { seg: "attractions", label: "景點", kind: "attraction", singular: "attraction" },
   { seg: "restaurants", label: "餐廳", kind: "food", singular: "restaurant" },
+  { seg: "activities", label: "娛樂", kind: "activity", singular: "activity" },
+  { seg: "caterings", label: "外燴", kind: "catering", singular: "catering" },
+  { seg: "attractions", label: "景點", kind: "attraction", singular: "attraction" },
   { seg: "parking", label: "停車", kind: "parking", singular: "parking" },
   { seg: "itineraries", label: "行程" },
 ];
 export const SECTION_SET = new Set<string>(SECTIONS.map((s) => s.seg));
 
 // 單數 entity 段 → places kind(hotel 另走 stays,不在此表)
-export const ENTITY_KIND: Record<string, PoiKind> = { attraction: "attraction", restaurant: "food", parking: "parking" };
+export const ENTITY_KIND: Record<string, PoiKind> = { attraction: "attraction", restaurant: "food", parking: "parking", activity: "activity", catering: "catering" };
 
 // 某縣市某類已發布 places(列表第一頁 + 總數)
 export async function getCityPlaces(kind: PoiKind, region: string, limit = 48): Promise<{ places: Place[]; total: number }> {
@@ -64,7 +66,7 @@ export async function getCityTrips(region: string): Promise<Trip[]> {
 }
 
 // kind → entity 單數段(詳情頁網址用)
-export const KIND_SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking" };
+export const KIND_SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking", activity: "activity", catering: "catering" };
 
 // 乾淨 entity 網址
 export const stayHref = (region: string, slug: string) => `/${encodeURIComponent(region)}/hotel/${encodeURIComponent(slug)}`;

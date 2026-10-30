@@ -19,6 +19,8 @@ export function generateStaticParams() {
 const SEG_META: Record<Section, { word: string; kind?: PoiKind }> = {
   hotels: { word: "民宿住宿" },
   restaurants: { word: "餐廳", kind: "food" },
+  activities: { word: "娛樂", kind: "activity" },
+  caterings: { word: "外燴", kind: "catering" },
   attractions: { word: "景點", kind: "attraction" },
   parking: { word: "停車場", kind: "parking" },
   itineraries: { word: "旅遊行程" },

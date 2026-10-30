@@ -17,6 +17,8 @@ const KIND_META: Record<PoiKind, { label: string; seg: string; cta: string; sche
   attraction: { label: "景點", seg: "attractions", cta: "官方網站", schemaType: "TouristAttraction" },
   food: { label: "餐廳", seg: "restaurants", cta: "官方網站 / 訂位", schemaType: "Restaurant" },
   parking: { label: "停車", seg: "parking", cta: "官方資訊", schemaType: "ParkingFacility" },
+  activity: { label: "娛樂", seg: "activities", cta: "官方網站 / 預約", schemaType: "LocalBusiness" },
+  catering: { label: "外燴", seg: "caterings", cta: "官方網站 / 洽詢", schemaType: "FoodEstablishment" },
 };
 
 const MAP = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>;

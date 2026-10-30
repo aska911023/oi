@@ -11,6 +11,8 @@ interface Saved { id: string; name: string; region?: string | null; town?: strin
 const KINDS: { kind: string; label: string; table: string; href: (id: string) => string }[] = [
   { kind: "attraction", label: "景點", table: "attractions", href: () => "/places/attraction" },
   { kind: "food", label: "餐廳", table: "restaurants", href: () => "/places/food" },
+  { kind: "activity", label: "娛樂", table: "activities", href: () => "/places/activity" },
+  { kind: "catering", label: "外燴", table: "caterings", href: () => "/places/catering" },
   { kind: "parking", label: "停車", table: "parking_lots", href: () => "/places/parking" },
   { kind: "rental", label: "租車", table: "rental_shops", href: () => "/rentals" },
 ];

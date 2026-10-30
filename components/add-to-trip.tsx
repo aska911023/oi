@@ -6,7 +6,7 @@ import { promptLogin } from "@/lib/login-gate";
 
 // entity 頁的「加入行程」:要登入才能用(行程是會員功能);登入後寫進 localStorage 草稿,/plan 自動帶入。
 const KEY = "oi_trip_draft";
-type TripDraftType = "stay" | "attraction" | "food" | "parking" | "rental" | "station";
+type TripDraftType = "stay" | "attraction" | "food" | "parking" | "rental" | "station" | "activity" | "catering";
 type DraftItem = { type: TripDraftType; refId: string; name: string; region?: string };
 
 export default function AddToTrip({ type, refId, name, region, compact = false }: DraftItem & { compact?: boolean }) {

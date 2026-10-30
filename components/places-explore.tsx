@@ -16,7 +16,7 @@ import PlacesMap, { type MapPoint, type MapBounds } from "@/components/places-ma
 
 const PAGE = 24;
 const toImgs = (image?: string, images?: string[]) => (images && images.length ? images : image ? [image] : []);
-const SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking" }; // kind → entity 單數段
+const SINGULAR: Record<PoiKind, string> = { attraction: "attraction", food: "restaurant", parking: "parking", activity: "activity", catering: "catering" }; // kind → entity 單數段
 
 const S = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 const I = {
@@ -26,12 +26,14 @@ const I = {
   map: <svg width="16" height="16" viewBox="0 0 24 24" {...S}><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z" /><path d="M9 4v14M15 6v14" /></svg>,
 };
 
-const TAB_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
+const TAB_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車", activity: "娛樂", catering: "外燴" };
 
 const KIND_COPY: Record<PoiKind, { title: string; sub: string; empty: string; cta: string }> = {
   attraction: { title: "探索景點", sub: "順著民宿的距離,把附近的好去處一起收進行程。", empty: "這個地區還沒有收錄景點,換個縣市看看。", cta: "查看介紹" },
   food: { title: "探索餐廳", sub: "在地小吃、風格餐廳、咖啡廳——先看看吃什麼。", empty: "這個地區還沒有收錄餐廳,換個縣市看看。", cta: "查看介紹" },
   parking: { title: "停車區域", sub: "出發前先確認停車點,少走冤枉路。", empty: "這個地區還沒有收錄停車點,換個縣市看看。", cta: "查看資訊" },
+  activity: { title: "探索娛樂", sub: "潛水、衝浪、SUP、親子體驗——玩點不一樣的。", empty: "這個地區還沒有收錄娛樂活動,換個縣市看看。", cta: "查看介紹" },
+  catering: { title: "探索外燴", sub: "到府烤肉、辦桌、桌菜——包棟聚餐一次搞定。", empty: "這個地區還沒有收錄外燴,換個縣市看看。", cta: "查看介紹" },
 };
 
 export default function PlacesExplore({ places, total = 0, kind, regions = [], lockedRegion, mapPoints }: { places: Place[]; total?: number; kind: PoiKind; regions?: string[]; lockedRegion?: string; mapPoints?: MapPoint[] }) {

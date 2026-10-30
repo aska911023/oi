@@ -154,7 +154,7 @@ export interface RoomType {
 }
 
 // 二級分類:探索景點 / 探索美食 / 停車區域
-export type PoiKind = "attraction" | "food" | "parking";
+export type PoiKind = "attraction" | "food" | "parking" | "activity" | "catering";
 
 export interface Poi {
   id: string;
@@ -193,6 +193,8 @@ export interface Place {
 
 export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [
   { kind: "food", label: "餐廳", slug: "food" },
+  { kind: "activity", label: "娛樂", slug: "activity" },
+  { kind: "catering", label: "外燴", slug: "catering" },
   { kind: "attraction", label: "景點", slug: "attraction" },
   { kind: "parking", label: "停車", slug: "parking" },
 ];

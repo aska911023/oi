@@ -33,7 +33,7 @@ export async function generateStaticParams() {
 // /{city}/hotel/{slug}       → 民宿詳情
 // /{city}/{attraction|restaurant|parking}/{slug} → 景點/美食/停車 詳情
 const themeByCat = (cat: string) => STAY_THEMES.find((t) => t.cat === cat);
-const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車" };
+const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車", activity: "娛樂", catering: "外燴" };
 const firstImg = (image?: string, images?: string[]) => (images && images[0]) || image || undefined;
 
 export async function generateMetadata({ params }: { params: Promise<{ city: string; seg: string; sub: string }> }): Promise<Metadata> {

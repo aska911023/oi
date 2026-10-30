@@ -5,6 +5,8 @@ export const KIND_TABLE: Record<PoiKind, string> = {
   attraction: "attractions",
   food: "restaurants",
   parking: "parking_lots",
+  activity: "activities",
+  catering: "caterings",
 };
 
 export type DetailField =
@@ -42,6 +44,20 @@ export const DETAILS: Record<PoiKind, DetailField[]> = {
     { key: "height_limit", label: "限高", type: "text" },
     { key: "fee", label: "收費方式", type: "text" },
     { key: "week_hours", label: "營業時間(每天可不同)", type: "weekhours" },
+  ],
+  activity: [
+    { key: "tags", label: "類型", type: "tags", options: ["潛水", "浮潛", "自由潛水", "衝浪", "SUP 立槳", "獨木舟", "溯溪", "賞鯨", "包船海釣", "親子體驗", "DIY 手作", "戶外探險"] },
+    { key: "price", label: "費用 / 方案", type: "text" },
+    { key: "week_hours", label: "營業時間(每天可不同)", type: "weekhours" },
+    { key: "booking_phone", label: "預約電話", type: "text" },
+    { key: "events", label: "方案 / 優惠", type: "list", cols: [{ key: "title", label: "標題" }, { key: "note", label: "說明" }] },
+  ],
+  catering: [
+    { key: "tags", label: "類型", type: "tags", options: ["到府烤肉", "辦桌", "桌菜合菜", "中式", "西式", "BBQ", "Buffet 自助", "素食", "包棟外送", "下午茶"] },
+    { key: "price", label: "價位 / 每人", type: "text" },
+    { key: "booking_phone", label: "洽詢電話", type: "text" },
+    { key: "menu_pdf", label: "菜單(PDF)", type: "pdf" },
+    { key: "events", label: "方案 / 優惠", type: "list", cols: [{ key: "title", label: "標題" }, { key: "note", label: "說明" }] },
   ],
 };
 
