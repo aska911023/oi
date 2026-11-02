@@ -131,7 +131,8 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
                       ? <div style={{ whiteSpace: "pre-line", fontSize: 14, lineHeight: 1.7 }}>{bookingNote}</div>
                       : <div style={{ fontSize: 14, color: "var(--muted)" }}>民宿確認訂單後,會提供匯款帳戶 / 付款方式給您。</div>}
                   </div>
-                  <button className="btn btn-primary" style={{ marginTop: 18 }} onClick={() => { setOpen(false); setDone(null); }}>完成</button>
+                  <p style={{ fontSize: 13, color: "var(--muted)", marginTop: 12 }}>可隨時到 <a href="/me/bookings" style={{ color: "var(--green)", textDecoration: "underline" }}>我的訂房</a> 查看狀態;民宿確認後會通知你。</p>
+                  <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => { setOpen(false); setDone(null); }}>完成</button>
                 </div>
               ) : (
                 <>

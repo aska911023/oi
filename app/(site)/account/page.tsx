@@ -50,7 +50,8 @@ export default async function Account() {
         </div>
 
         <div className="account-actions">
-          <Link href="/me/trips" className="btn btn-primary">← 回我的行程</Link>
+          <Link href="/me/bookings" className="btn btn-primary">我的訂房</Link>
+          <Link href="/me/trips" className="btn btn-ghost">我的行程</Link>
           <span className="signout-right"><SignOutButton /></span>
         </div>
       </div>

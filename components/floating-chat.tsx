@@ -108,7 +108,7 @@ export default function FloatingChat() {
 
   return (
     <>
-      <button onClick={toggle} aria-label="聊天"
+      <button onClick={toggle} aria-label="聊天" className="oi-chat-fab"
         style={{ position: "fixed", right: 18, bottom: 18, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "var(--green)", color: "#fff", fontSize: 24, boxShadow: "0 6px 20px rgba(15,74,66,.4)", zIndex: 90, display: "grid", placeItems: "center" }}>
         {open ? "✕" : "💬"}
         {!open && unreadTotal > 0 && (
@@ -116,7 +116,7 @@ export default function FloatingChat() {
         )}
       </button>
       {open && (
-        <div style={{ position: "fixed", right: 18, bottom: 84, width: 350, maxWidth: "calc(100vw - 32px)", height: 530, maxHeight: "calc(100vh - 130px)", background: "#fff", borderRadius: 16, boxShadow: "0 12px 44px rgba(0,0,0,.28)", zIndex: 91, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div className="oi-chat-pop" style={{ position: "fixed", right: 18, bottom: 84, width: 350, maxWidth: "calc(100vw - 32px)", height: 530, maxHeight: "calc(100vh - 130px)", background: "#fff", borderRadius: 16, boxShadow: "0 12px 44px rgba(0,0,0,.28)", zIndex: 91, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <div style={{ background: "linear-gradient(120deg,#1b7366,#0f4a42)", color: "#fff", padding: "11px 14px", display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15 }}>
             {convId && <button onClick={() => setConvId(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>‹</button>}
             <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convId ? title : "訊息"}</span>
