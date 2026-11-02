@@ -28,15 +28,17 @@ const TOP = [
   { href: "/admin/analytics", label: "數據" },
 ];
 
-export default function AdminTabs() {
+export default function AdminTabs({ bookingLive = false }: { bookingLive?: boolean }) {
   const path = usePathname();
   const inGroup =
     path === "/admin" || path.startsWith("/admin/places") || path.startsWith("/admin/rentals");
+  // 線上訂房總開關關閉時,後台也先藏「訂房」
+  const top = bookingLive ? TOP : TOP.filter((t) => t.href !== "/admin/bookings");
 
   return (
     <>
       <nav className="admin-tabs">
-        {TOP.map((t) => {
+        {top.map((t) => {
           const on = t.group ? inGroup : path.startsWith(t.href);
           return (
             <Link key={t.href} href={t.href} className={on ? "on" : ""}>{t.label}</Link>

@@ -53,7 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <h1>偶宿營運後台</h1>
           <p>管理民宿、會員、業者與數據。</p>
         </div>
-        <AdminTabs />
+        <AdminTabs bookingLive={settings.booking_live} />
         {children}
       </div>
     </>

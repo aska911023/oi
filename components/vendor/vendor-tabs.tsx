@@ -19,11 +19,13 @@ const STAY_SUB = [
 ];
 const PLACE_SUB = POI_KINDS.map((k) => ({ href: `/vendor/places/${k.slug}`, label: k.label }));
 
-export default function VendorTabs() {
+export default function VendorTabs({ bookingLive = false }: { bookingLive?: boolean }) {
   const path = usePathname();
   const inStay = path === "/vendor" || path.startsWith("/vendor/bookings");
   const inPlaces = path.startsWith("/vendor/places");
-  const sub = inStay ? STAY_SUB.map((s) => ({ ...s })) : inPlaces ? PLACE_SUB.map((s) => ({ ...s, exact: false })) : null;
+  // 線上訂房總開關關閉時,後台也先藏「訂房管理」
+  const staySub = bookingLive ? STAY_SUB : STAY_SUB.filter((s) => s.href !== "/vendor/bookings");
+  const sub = inStay ? staySub.map((s) => ({ ...s })) : inPlaces ? PLACE_SUB.map((s) => ({ ...s, exact: false })) : null;
   return (
     <>
       <nav className="admin-tabs">

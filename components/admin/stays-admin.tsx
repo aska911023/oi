@@ -41,9 +41,9 @@ const TYPE_LABEL: Record<string, string> = {
   stay: "民宿", room: "房型", vendor: "業者", plan: "方案", site: "首頁設定", member: "會員", place: "景點", rental: "租車",
 };
 
-export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null, plans = [] }: {
+export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersInitial = [], loadError = null, plans = [], bookingLive = false }: {
   initial: Stay[]; ownerId?: string; bdInitial?: StayBd[]; ownersInitial?: OwnerProfile[];
-  loadError?: string | null; plans?: Plan[];
+  loadError?: string | null; plans?: Plan[]; bookingLive?: boolean;
 }) {
   const planByKey = Object.fromEntries(plans.map((p) => [p.key, p]));
   const planFeatured = (tier?: string | null) => (planByKey[tier || "free"]?.priority ?? 0) > 0; // 付費方案(優先序>0)= 上精選曝光
@@ -486,9 +486,11 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <div className="wide"><label>介紹</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="一句話賣點" /></div>
               <div className="wide"><label>訂房須知</label><textarea rows={3} value={form.notice_booking || ""} onChange={(e) => setForm({ ...form, notice_booking: e.target.value })} placeholder="例:訂金 30%,匯款後請告知末五碼;可加床,詳情請私訊…" /></div>
               <div className="wide"><label>退房須知</label><textarea rows={3} value={form.notice_checkout || ""} onChange={(e) => setForm({ ...form, notice_checkout: e.target.value })} placeholder="例:退房 11:00 前;離開請關冷氣電源、垃圾集中…" /></div>
+              {bookingLive && <>
               <div><label>啟用線上訂房</label><div style={{ paddingTop: 9 }}><label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 400, cursor: "pointer" }}><input type="checkbox" checked={!!form.booking_enabled} onChange={(e) => setForm({ ...form, booking_enabled: e.target.checked })} /> 開啟後民宿頁才顯示「線上訂房」</label></div></div>
               <div><label>訂金比例(%)</label><input type="number" min={0} max={100} value={form.booking_deposit_pct ?? 30} onChange={(e) => setForm({ ...form, booking_deposit_pct: Number(e.target.value) })} /></div>
               <div className="wide"><label>💳 付款 / 轉帳資訊(訂房後顯示給房客)</label><textarea rows={3} value={form.booking_note || ""} onChange={(e) => setForm({ ...form, booking_note: e.target.value })} placeholder="例:匯款 國泰世華(013)帳號 1234-5678-9012,戶名 王小明;訂金請於 3 日內匯款,逾期取消。" /></div>
+              </>}
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               {!ownerId ? (

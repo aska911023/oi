@@ -62,7 +62,7 @@ export default async function VendorLayout({ children }: { children: React.React
           <h1>業者後台</h1>
           <p>管理你自己的商品。上架後即公開(你隨時可自行下架);價格與剩餘數以你設定的房型 / 方案為準。</p>
         </div>
-        <VendorTabs />
+        <VendorTabs bookingLive={settings.booking_live} />
         {children}
       </div>
       <FloatingChat />

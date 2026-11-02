@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import StaysAdmin from "@/components/admin/stays-admin";
+import { getSiteSettings } from "@/lib/site-settings";
 import type { Stay } from "@/lib/types";
 import type { Plan } from "@/components/admin/plans-editor";
 
@@ -51,7 +52,7 @@ export default async function VendorStaysPage() {
         </div>
       )}
 
-      <StaysAdmin initial={(data as Stay[]) || []} ownerId={user.id} plans={(plans as Plan[]) || []} />
+      <StaysAdmin initial={(data as Stay[]) || []} ownerId={user.id} plans={(plans as Plan[]) || []} bookingLive={(await getSiteSettings()).booking_live} />
     </>
   );
 }

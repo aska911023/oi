@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import StaysAdmin from "@/components/admin/stays-admin";
+import { getSiteSettings } from "@/lib/site-settings";
 import type { Stay } from "@/lib/types";
 import type { Plan } from "@/components/admin/plans-editor";
 
@@ -28,6 +29,7 @@ export default async function AdminStaysPage() {
       ownersInitial={owners || []}
       loadError={error ? error.message : null}
       plans={(plans as Plan[]) || []}
+      bookingLive={(await getSiteSettings()).booking_live}
     />
   );
 }
