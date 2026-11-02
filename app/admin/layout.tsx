@@ -7,7 +7,6 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { Logo } from "@/components/logo";
 import SiteTheme from "@/components/site-theme";
 import AdminTabs from "@/components/admin/admin-tabs";
-import FloatingChat from "@/components/floating-chat";
 import RoleViewSwitcher from "@/components/role-view-switcher";
 import type { ViewRole } from "@/lib/viewer";
 
@@ -57,7 +56,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminTabs />
         {children}
       </div>
-      <FloatingChat scope="support" />
     </>
   );
 }

@@ -50,6 +50,9 @@ export default async function VendorLayout({ children }: { children: React.React
           <nav className="topnav">
             <Link href="/">看前台</Link>
             {effRole === "admin" && <Link href="/admin">總後台</Link>}
+            {settings.contact_line
+              ? <a href={settings.contact_line} target="_blank" rel="noopener noreferrer">聯絡平台客服</a>
+              : <Link href="/contact">聯絡平台客服</Link>}
             <Link href="/account">我的帳號</Link>
           </nav>
         </div>
@@ -62,7 +65,7 @@ export default async function VendorLayout({ children }: { children: React.React
         <VendorTabs />
         {children}
       </div>
-      <FloatingChat scope="mine" />
+      <FloatingChat />
     </>
   );
 }

@@ -9,6 +9,7 @@ import BottomNav from "@/components/bottom-nav";
 import TripDraftBadge from "@/components/trip-draft-badge";
 import RolePreviewBanner from "@/components/role-preview-banner";
 import LoginGateModal from "@/components/login-gate-modal";
+import FloatingChat from "@/components/floating-chat";
 import { CompareProvider } from "@/lib/compare-store";
 import { Logo } from "@/components/logo";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -81,6 +82,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <TripDraftBadge />
       <BottomNav />
       <LoginGateModal />
+      <FloatingChat />
     </CompareProvider>
   );
 }

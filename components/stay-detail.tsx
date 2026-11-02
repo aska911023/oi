@@ -5,7 +5,7 @@ import ReviewForm from "@/components/review-form";
 import PhotoCarousel from "@/components/photo-carousel";
 import RoomList from "@/components/room-list";
 import BookNow from "@/components/book-now";
-import FloatingChat from "@/components/floating-chat";
+import ChatStayButton from "@/components/chat-stay-button";
 import RoomTile from "@/components/room-tile";
 import { getRoomsByRegion } from "@/lib/rooms";
 import BackLink from "@/components/back-link";
@@ -107,6 +107,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           {s.booking_enabled && <BookNow stayId={s.id} stayName={s.name} rooms={rooms} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
           {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-ghost">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
           {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${enc(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
+          {s.owner_id && <ChatStayButton stayId={s.id} stayName={s.name} />}
           {(s.address || (s.lat != null && s.lng != null)) && (
             <OutboundLink type="click_map" stayId={s.id} className="btn btn-ghost"
               href={s.lat != null && s.lng != null
@@ -199,7 +200,6 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           <div className="cards">{recos.map((r) => <RoomTile key={r.stay_id} r={r} />)}</div>
         </section>
       )}
-      {s.owner_id && <FloatingChat scope="stay" stayId={s.id} stayName={s.name} />}
     </main>
   );
 }

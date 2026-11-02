@@ -5,13 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 import { promptLogin } from "@/lib/login-gate";
 import ChatPanel from "./chat-panel";
 
-type Scope = "stay" | "mine" | "support";
 interface Conv { id: string; kind: string; stay_id: string | null; vendor_id: string | null; customer_id: string | null; last_at: string }
 interface Item { id: string; label: string; sub: string; preview: string; unread: boolean }
 
-// 右下角浮動聊天(蝦皮 / Messenger 風):對話清單(最後訊息預覽 + 未讀紅點)→ 進單一對話。
-//  scope="stay" 消費者民宿頁(單一民宿) · "mine" 業者後台 · "support" 總後台(業者客服)
-export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope; stayId?: string; stayName?: string }) {
+// 右下角浮動聊天 = 收件匣(蝦皮 / Messenger 風):
+//  消費者 → 我跟各民宿的對話;業者 → 房客諮詢。登入後才顯示 FAB。
+//  業者↔平台客服走官方 LINE(不在站內);民宿頁「私訊民宿」會派 oi-chat-stay 事件來開對話。
+export default function FloatingChat() {
+  const [show, setShow] = useState(false); // 登入後才出現
   const [open, setOpen] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [convId, setConvId] = useState<string | null>(null);
@@ -22,80 +23,79 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
   const [err, setErr] = useState<string | null>(null);
   const uidRef = useRef<string | null>(null);
 
-  // 背景:收件匣 scope 載入未讀數並每 30 秒更新(FAB 紅點)
+  // 登入偵測 + 收件匣未讀(每 30 秒刷,FAB 紅點)
   useEffect(() => {
-    if (scope === "stay") return;
     let timer: ReturnType<typeof setInterval> | null = null;
     (async () => {
       const { data: { session } } = await createClient().auth.getSession();
       const user = session?.user ?? null;
       if (!user) return;
-      uidRef.current = user.id; setMeId(user.id);
+      setShow(true); uidRef.current = user.id; setMeId(user.id);
       refreshInbox(user.id);
       timer = setInterval(() => { if (document.visibilityState === "visible") refreshInbox(user.id); }, 30000);
     })();
     return () => { if (timer) clearInterval(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope]);
+  }, []);
+
+  // 民宿頁「私訊民宿」鈕派這個事件來開對話
+  useEffect(() => {
+    function onOpenStay(e: Event) {
+      const d = (e as CustomEvent).detail as { stayId: string; stayName?: string };
+      if (d?.stayId) startStay(d.stayId, d.stayName);
+    }
+    window.addEventListener("oi-chat-stay", onOpenStay as EventListener);
+    return () => window.removeEventListener("oi-chat-stay", onOpenStay as EventListener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function startStay(stayId: string, stayName?: string) {
+    const sb = createClient();
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session?.user ?? null;
+    if (!user) { promptLogin(typeof window !== "undefined" ? window.location.pathname : "/", { title: "私訊民宿", desc: "加入會員即可直接私訊民宿詢問。" }); return; }
+    setShow(true); setMeId(user.id); uidRef.current = user.id;
+    setOpen(true); setLoading(true); setErr(null); setConvId(null);
+    const { data, error } = await sb.rpc("get_or_create_conversation", { p_kind: "booking", p_stay_id: stayId });
+    setLoading(false);
+    if (error) { setErr(error.message); return; }
+    setConvId(data as string); setTitle(stayName || "民宿");
+  }
 
   async function refreshInbox(uid: string) {
     const sb = createClient();
-    let q = sb.from("conversations").select("*").order("last_at", { ascending: false }).limit(40);
-    if (scope === "support") q = q.eq("kind", "support");
-    else q = q.or(`vendor_id.eq.${uid},customer_id.eq.${uid}`);
-    const { data } = await q;
-    const convs = (data as Conv[]) || [];
+    const { data } = await sb.from("conversations").select("*").order("last_at", { ascending: false }).limit(40)
+      .or(`vendor_id.eq.${uid},customer_id.eq.${uid}`);
+    const convs = ((data as Conv[]) || []).filter((c) => c.kind !== "support"); // 平台客服走官方 LINE,不在站內
     if (convs.length === 0) { setItems([]); setUnreadTotal(0); return; }
     const ids = convs.map((c) => c.id);
     const sIds = [...new Set(convs.map((c) => c.stay_id).filter(Boolean))] as string[];
-    const vIds = [...new Set(convs.filter((c) => c.kind === "support").map((c) => c.vendor_id).filter(Boolean))] as string[];
-    const [msgsR, readsR, staysR, profsR] = await Promise.all([
+    const [msgsR, readsR, staysR] = await Promise.all([
       sb.from("messages").select("conv_id,body,sender_id,created_at").in("conv_id", ids).order("created_at", { ascending: false }).limit(300),
       sb.from("conversation_reads").select("conv_id,last_read_at").in("conv_id", ids),
       sIds.length ? sb.from("stays").select("id,name").in("id", sIds) : Promise.resolve({ data: [] }),
-      vIds.length ? sb.from("profiles").select("id,display_name,full_name").in("id", vIds) : Promise.resolve({ data: [] }),
     ]);
     const lastBy = new Map<string, { body: string; sender_id: string; created_at: string }>();
     for (const m of (msgsR.data || []) as { conv_id: string; body: string; sender_id: string; created_at: string }[]) if (!lastBy.has(m.conv_id)) lastBy.set(m.conv_id, m);
     const readBy = new Map(((readsR.data || []) as { conv_id: string; last_read_at: string }[]).map((r) => [r.conv_id, r.last_read_at]));
     const sm = new Map(((staysR.data || []) as { id: string; name: string }[]).map((s) => [s.id, s.name]));
-    const vm = new Map(((profsR.data || []) as { id: string; display_name?: string; full_name?: string }[]).map((p) => [p.id, p.display_name || p.full_name || "業者"]));
     let total = 0;
     const its: Item[] = convs.map((c) => {
       const lm = lastBy.get(c.id);
       const read = readBy.get(c.id);
       const unread = !!lm && lm.sender_id !== uid && (!read || new Date(lm.created_at) > new Date(read));
       if (unread) total++;
-      let label: string;
-      if (c.kind === "support") label = scope === "support" ? `業者 · ${vm.get(c.vendor_id || "") || "—"}` : "平台客服";
-      else label = c.customer_id === uid ? (sm.get(c.stay_id || "") || "民宿") : `房客諮詢 · ${sm.get(c.stay_id || "") || "民宿"}`;
+      // 我是房客 → 顯示民宿名;我是業者 → 顯示「房客諮詢 · 民宿名」
+      const label = c.customer_id === uid ? (sm.get(c.stay_id || "") || "民宿") : `房客諮詢 · ${sm.get(c.stay_id || "") || "民宿"}`;
       return { id: c.id, label, preview: lm?.body || "尚無訊息", unread, sub: new Date(c.last_at).toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) };
     });
     setItems(its); setUnreadTotal(total);
   }
 
-  async function toggle() {
+  function toggle() {
     if (open) { setOpen(false); return; }
-    const sb = createClient();
-    const { data: { session } } = await sb.auth.getSession();
-    const user = session?.user ?? null;
-    if (scope === "stay") {
-      if (!user) { promptLogin(typeof window !== "undefined" ? window.location.pathname : "/", { title: "私訊民宿", desc: "加入會員即可直接私訊民宿詢問。" }); return; }
-      setMeId(user.id); setOpen(true); setLoading(true); setErr(null); setConvId(null);
-      const { data, error } = await sb.rpc("get_or_create_conversation", { p_kind: "booking", p_stay_id: stayId });
-      setLoading(false);
-      if (error) { setErr(error.message); return; }
-      setConvId(data as string); setTitle(stayName || "民宿");
-    } else {
-      setOpen(true); setConvId(null);
-      if (user) { uidRef.current = user.id; setMeId(user.id); refreshInbox(user.id); }
-    }
-  }
-
-  async function startSupport() {
-    const sb = createClient();
-    const { data } = await sb.rpc("get_or_create_conversation", { p_kind: "support", p_stay_id: null });
-    if (data) { setConvId(data as string); setTitle("平台客服"); }
+    setOpen(true); setConvId(null);
+    if (uidRef.current) refreshInbox(uidRef.current);
   }
 
   function openConv(it: Item) {
@@ -103,6 +103,8 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
     setItems((xs) => xs.map((x) => (x.id === it.id ? { ...x, unread: false } : x)));
     setUnreadTotal((n) => (it.unread ? Math.max(0, n - 1) : n));
   }
+
+  if (!show) return null;
 
   return (
     <>
@@ -116,7 +118,7 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
       {open && (
         <div style={{ position: "fixed", right: 18, bottom: 84, width: 350, maxWidth: "calc(100vw - 32px)", height: 530, maxHeight: "calc(100vh - 130px)", background: "#fff", borderRadius: 16, boxShadow: "0 12px 44px rgba(0,0,0,.28)", zIndex: 91, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <div style={{ background: "linear-gradient(120deg,#1b7366,#0f4a42)", color: "#fff", padding: "11px 14px", display: "flex", alignItems: "center", gap: 8, fontWeight: 600, fontSize: 15 }}>
-            {convId && scope !== "stay" && <button onClick={() => setConvId(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>‹</button>}
+            {convId && <button onClick={() => setConvId(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>‹</button>}
             <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{convId ? title : "訊息"}</span>
             <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 16, cursor: "pointer" }}>✕</button>
           </div>
@@ -124,28 +126,21 @@ export default function FloatingChat({ scope, stayId, stayName }: { scope: Scope
             {err ? <p style={{ padding: 16, color: "#c0392b", fontSize: 14 }}>{err}</p>
               : loading ? <p style={{ padding: 16, color: "var(--muted)", fontSize: 14 }}>載入中…</p>
               : convId && meId ? <ChatPanel convId={convId} meId={meId} height={440} />
-              : (
-                <>
-                  {scope === "mine" && (
-                    <button onClick={startSupport} style={{ textAlign: "left", padding: "12px 14px", border: "none", borderBottom: "1px solid var(--border)", background: "var(--green-soft)", color: "var(--green)", fontWeight: 600, cursor: "pointer", fontSize: 14 }}>＋ 聯絡平台客服</button>
-                  )}
-                  {items.length === 0
-                    ? <p style={{ padding: 16, color: "var(--muted)", fontSize: 14 }}>還沒有對話。</p>
-                    : items.map((it) => (
-                      <button key={it.id} onClick={() => openConv(it)}
-                        style={{ textAlign: "left", padding: "11px 14px", border: "none", borderBottom: "1px solid var(--border)", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                            <b style={{ fontSize: 14, fontWeight: it.unread ? 700 : 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</b>
-                            <span style={{ fontSize: 11, color: "var(--muted)", flex: "none" }}>{it.sub}</span>
-                          </span>
-                          <span style={{ display: "block", fontSize: 12.5, color: it.unread ? "var(--text)" : "var(--muted)", fontWeight: it.unread ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{it.preview}</span>
-                        </span>
-                        {it.unread && <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#e03131", flex: "none" }} />}
-                      </button>
-                    ))}
-                </>
-              )}
+              : items.length === 0
+                ? <p style={{ padding: 16, color: "var(--muted)", fontSize: 14 }}>還沒有對話。到民宿頁點「私訊民宿」就能開始詢問。</p>
+                : items.map((it) => (
+                  <button key={it.id} onClick={() => openConv(it)}
+                    style={{ textAlign: "left", padding: "11px 14px", border: "none", borderBottom: "1px solid var(--border)", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                        <b style={{ fontSize: 14, fontWeight: it.unread ? 700 : 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</b>
+                        <span style={{ fontSize: 11, color: "var(--muted)", flex: "none" }}>{it.sub}</span>
+                      </span>
+                      <span style={{ display: "block", fontSize: 12.5, color: it.unread ? "var(--text)" : "var(--muted)", fontWeight: it.unread ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{it.preview}</span>
+                    </span>
+                    {it.unread && <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#e03131", flex: "none" }} />}
+                  </button>
+                ))}
           </div>
         </div>
       )}
