@@ -6,7 +6,7 @@ import Link from "next/link";
 import Avatar from "@/components/avatar";
 import { useViewer } from "@/lib/use-viewer-client";
 
-export default function MobileMenu() {
+export default function MobileMenu({ bookingLive = false }: { bookingLive?: boolean }) {
   const { loggedIn, role, name, avatarUrl } = useViewer();
   const isAdmin = role === "admin";
   const isPartner = role === "partner" || role === "admin";
@@ -44,7 +44,7 @@ export default function MobileMenu() {
           {loggedIn ? (
             <>
               <Link href="/me/trips" onClick={close}>我的行程</Link>
-              <Link href="/me/bookings" onClick={close}>我的訂房</Link>
+              {bookingLive && <Link href="/me/bookings" onClick={close}>我的訂房</Link>}
               {isAdmin && <Link href="/admin" onClick={close}>管理後台</Link>}
               {isPartner && <Link href="/vendor" onClick={close}>業者後台</Link>}
               <Link href="/account" onClick={close}>我的帳號</Link>

@@ -16,6 +16,7 @@ import MediaEmbed from "@/components/media-embed";
 import PlacesMap from "@/components/places-map";
 import AddToTrip from "@/components/add-to-trip";
 import { breadcrumbLd } from "@/lib/seo";
+import { getSiteSettings } from "@/lib/site-settings";
 import type { Stay, RoomType } from "@/lib/types";
 
 const toImgs = (image?: string, images?: string[] | null) => (images && images.length ? images : image ? [image] : []);
@@ -27,6 +28,8 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
   const sb = await createClient();
   const { data: roomsData } = await sb.from("room_types").select("*").eq("stay_id", s.id).eq("published", true).order("sort").order("price");
   const rooms = (roomsData as RoomType[]) || [];
+  // 線上訂房總開關(下週補完前先全站隱藏);各民宿仍需自己「啟用訂房」才顯示
+  const bookingLive = (await getSiteSettings()).booking_live;
   // 其他民宿推薦(曝光版位):同縣市、付費/精選方案優先(search_rooms 已依 ad_prio 排序),去重排除本間。
   const { rooms: recoAll } = await getRoomsByRegion(s.region);
   const seen = new Set<string>([s.id]);
@@ -104,7 +107,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
         {s.license_no && <div className="card-eyebrow" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13.5, color: "var(--muted)", marginTop: 6 }}>🏛 合法民宿登記證號:{s.license_no}</div>}
 
         <div className="detail-actions" style={{ margin: "16px 0 4px" }}>
-          {s.booking_enabled && <BookNow stayId={s.id} stayName={s.name} rooms={rooms} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
+          {bookingLive && s.booking_enabled && <BookNow stayId={s.id} stayName={s.name} rooms={rooms} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
           {s.website && <OutboundLink type="click_website" stayId={s.id} href={s.website} utm className="btn btn-ghost">前往預訂 / 民宿官網 {OUT}</OutboundLink>}
           {s.line_url && <OutboundLink type="click_line" stayId={s.id} href={s.line_url.startsWith("http") ? s.line_url : `https://line.me/R/ti/p/${enc(s.line_url)}`} className="btn btn-ghost">官方 LINE {OUT}</OutboundLink>}
           {s.owner_id && <ChatStayButton stayId={s.id} stayName={s.name} />}
@@ -121,7 +124,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
 
         <div className="shop-block">
           <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
-          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} stayId={s.id} stayName={s.name} bookingEnabled={!!s.booking_enabled} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
+          {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} stayId={s.id} stayName={s.name} bookingEnabled={bookingLive && !!s.booking_enabled} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
         </div>
 
         {s.embed_urls && s.embed_urls.length > 0 && (

@@ -883,13 +883,13 @@ img { display: block; max-width: 100%; }
 /* YouTube / IG 嵌入 */
 .media-embed.yt { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; }
 .media-embed.yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.media-embed.ig { max-width: 500px; }
+/* IG 貼文天生高度不一且偏長 → 只對 IG 限高 + 底部漸層收邊;YouTube / 連結用自然高度不留空白 */
+.media-embed.ig { max-width: 500px; max-height: 560px; overflow: hidden; position: relative; border-radius: 12px; }
+.media-embed.ig::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46px; background: linear-gradient(transparent, #fff); pointer-events: none; }
 .media-embed.tt { max-width: 340px; }
 .media-embed.tt iframe { width: 100%; height: 600px; border: 0; border-radius: 12px; }
 .embed-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
-/* 每格裁成一樣高(IG widget 高度天生不一);底部漸層讓裁切自然,影片與點進 IG 仍可用 */
-.embed-cell { position: relative; height: 480px; overflow: hidden; border-radius: 14px; }
-.embed-cell::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 46px; background: linear-gradient(transparent, #fff); pointer-events: none; }
+.embed-cell { position: relative; overflow: hidden; border-radius: 14px; }
 
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }

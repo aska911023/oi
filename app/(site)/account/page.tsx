@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/signout-button";
 import AccountEditor from "@/components/account-editor";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function Account() {
 
   const role = profile?.role || "user";
   const created = profile?.created_at ? new Date(profile.created_at).toLocaleDateString("zh-TW") : "—";
+  const bookingLive = (await getSiteSettings()).booking_live;
 
   return (
       <div className="account">
@@ -50,8 +52,8 @@ export default async function Account() {
         </div>
 
         <div className="account-actions">
-          <Link href="/me/bookings" className="btn btn-primary">我的訂房</Link>
-          <Link href="/me/trips" className="btn btn-ghost">我的行程</Link>
+          {bookingLive && <Link href="/me/bookings" className="btn btn-primary">我的訂房</Link>}
+          <Link href="/me/trips" className={bookingLive ? "btn btn-ghost" : "btn btn-primary"}>我的行程</Link>
           <span className="signout-right"><SignOutButton /></span>
         </div>
       </div>

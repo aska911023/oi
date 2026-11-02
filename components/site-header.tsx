@@ -25,7 +25,7 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
           <Link href="/contact">聯絡我們</Link>
           <HeaderAuth />
         </nav>
-        <MobileMenu />
+        <MobileMenu bookingLive={settings.booking_live} />
       </div>
     </header>
   );
