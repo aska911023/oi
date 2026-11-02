@@ -488,7 +488,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
               <div className="wide"><label>退房須知</label><textarea rows={3} value={form.notice_checkout || ""} onChange={(e) => setForm({ ...form, notice_checkout: e.target.value })} placeholder="例:退房 11:00 前;離開請關冷氣電源、垃圾集中…" /></div>
               <div><label>啟用線上訂房</label><div style={{ paddingTop: 9 }}><label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 400, cursor: "pointer" }}><input type="checkbox" checked={!!form.booking_enabled} onChange={(e) => setForm({ ...form, booking_enabled: e.target.checked })} /> 開啟後民宿頁才顯示「線上訂房」</label></div></div>
               <div><label>訂金比例(%)</label><input type="number" min={0} max={100} value={form.booking_deposit_pct ?? 30} onChange={(e) => setForm({ ...form, booking_deposit_pct: Number(e.target.value) })} /></div>
-              <div className="wide"><label>訂房確認訊息 / 轉帳帳號(訂房後顯示給房客)</label><textarea rows={3} value={form.booking_note || ""} onChange={(e) => setForm({ ...form, booking_note: e.target.value })} placeholder="例:匯款 國泰世華(013)帳號 1234-5678-9012,戶名 王小明;訂金請於 3 日內匯款,逾期取消。" /></div>
+              <div className="wide"><label>💳 付款 / 轉帳資訊(訂房後顯示給房客)</label><textarea rows={3} value={form.booking_note || ""} onChange={(e) => setForm({ ...form, booking_note: e.target.value })} placeholder="例:匯款 國泰世華(013)帳號 1234-5678-9012,戶名 王小明;訂金請於 3 日內匯款,逾期取消。" /></div>
             </div>
             <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
               {!ownerId ? (

@@ -546,7 +546,7 @@ function SettingsPanel({ stays, onUpdate }: { stays: Stay[]; onUpdate: (s: Stay[
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <p style={{ fontSize: 13, color: "var(--muted,#808b83)", margin: 0 }}>每間民宿可各自設定。訂金比例會用在手動建單自動算應收訂金;關閉「啟用訂房」= 這間先不收訂房(前台上線後也不會顯示)。</p>
+      <p style={{ fontSize: 13, color: "var(--muted,#808b83)", margin: 0 }}>每間民宿可各自設定。開「啟用訂房」前台才會顯示「線上訂房」;「付款/轉帳資訊」會在房客訂房後顯示給他匯款;訂金比例用於自動算應收訂金。</p>
       {draft.map((s) => (
         <div key={s.id} style={{ border: "1px solid var(--border,#e1e6dc)", borderRadius: 12, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -562,9 +562,9 @@ function SettingsPanel({ stays, onUpdate }: { stays: Stay[]; onUpdate: (s: Stay[
                 onChange={(e) => setField(s.id, { booking_deposit_pct: Number(e.target.value) })} style={{ width: 90 }} />
             </div>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <label style={{ fontSize: 12, color: "var(--muted,#808b83)" }}>訂房須知 / 確認訊息</label><br />
-              <input value={s.booking_note || ""} placeholder="例:訂金請於 3 日內匯款,逾期取消…"
-                onChange={(e) => setField(s.id, { booking_note: e.target.value })} style={{ width: "100%" }} />
+              <label style={{ fontSize: 12, color: "var(--muted,#808b83)", fontWeight: 600 }}>💳 付款 / 轉帳資訊(訂房後顯示給房客)</label><br />
+              <textarea value={s.booking_note || ""} rows={3} placeholder="例:轉帳 國泰世華(013)帳號 1234-5678-9012,戶名 王小明;訂金請於 3 日內匯款,逾期不保留。"
+                onChange={(e) => setField(s.id, { booking_note: e.target.value })} style={{ width: "100%", resize: "vertical" }} />
             </div>
             <button className="btn btn-primary btn-sm" disabled={savingId === s.id} onClick={() => save(s)}>{savingId === s.id ? "儲存中…" : "儲存"}</button>
           </div>
