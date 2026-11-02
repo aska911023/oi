@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { promptLogin } from "@/lib/login-gate";
 import type { RoomType } from "@/lib/types";
+
+interface AvailRow { room_type_id: string; date: string; inventory: number | null; closed: boolean | null; price_override: number | null }
 
 // 消費者線上訂房:登入牆 → 表單 → create_booking RPC → 顯示訂單編號 + 確認訊息(booking_note)。
 // 偶宿不經手金流,款項由房客直接匯給民宿。
@@ -23,6 +25,7 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const [availRows, setAvailRows] = useState<AvailRow[]>([]);
   const lock = useRef(false); // 防連點兩下重複建單(用 ref,state 非同步擋不住)
 
   const today = new Date().toLocaleDateString("en-CA"); // 本地時區 YYYY-MM-DD(避免 UTC 差一天)
@@ -31,8 +34,43 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
     const d = (new Date(co).getTime() - new Date(ci).getTime()) / 86400000;
     return d > 0 ? Math.round(d) : 0;
   })();
-  const setQty = (id: string, q: number) => setPicked((p) => ({ ...p, [id]: Math.max(0, q) }));
-  const total = rooms.reduce((s, r) => s + (Number(r.price) || 0) * (picked[r.id] || 0) * nights, 0);
+  // 入住期間每一晚(含入住、不含退房)
+  const nightsList = (() => {
+    if (!ci || !co || nights <= 0) return [] as string[];
+    const out: string[] = []; const d = new Date(ci + "T00:00:00"); const end = new Date(co + "T00:00:00");
+    while (d < end) { out.push(d.toLocaleDateString("en-CA")); d.setDate(d.getDate() + 1); }
+    return out;
+  })();
+  // 選好日期 → 撈該期間房況(room_availability 公開可讀)
+  useEffect(() => {
+    if (!ci || !co || nights <= 0 || rooms.length === 0) { setAvailRows([]); return; }
+    let alive = true;
+    createClient().from("room_availability").select("room_type_id,date,inventory,closed,price_override")
+      .in("room_type_id", rooms.map((r) => r.id)).gte("date", ci).lt("date", co)
+      .then(({ data }) => { if (alive) setAvailRows((data as AvailRow[]) || []); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ci, co]);
+  // 某房型整段入住期間:可不可訂、最多幾間、該期間總價(有特殊日價就用特殊價)
+  function roomAvail(r: RoomType) {
+    const base = Number(r.price) || 0;
+    const byDate = new Map(availRows.filter((a) => a.room_type_id === r.id).map((a) => [a.date, a]));
+    let closed = false; let cap = Infinity; let price = 0;
+    for (const d of nightsList) {
+      const row = byDate.get(d);
+      if (row?.closed) closed = true;
+      if (row && row.inventory != null) cap = Math.min(cap, row.inventory);
+      price += (row && row.price_override != null ? Number(row.price_override) : base);
+    }
+    const maxQty = closed ? 0 : (cap === Infinity ? null : cap);
+    return { available: !closed && (maxQty === null || maxQty > 0), maxQty, price };
+  }
+  const setQty = (id: string, q: number) => {
+    const r = rooms.find((x) => x.id === id);
+    const mx = r && nightsList.length ? roomAvail(r).maxQty : null;
+    setPicked((p) => ({ ...p, [id]: Math.max(0, mx == null ? q : Math.min(q, mx)) }));
+  };
+  const total = rooms.reduce((s, r) => s + (nightsList.length ? roomAvail(r).price : (Number(r.price) || 0) * nights) * (picked[r.id] || 0), 0);
   const deposit = Math.round(total * (depositPct || 0) / 100);
 
   async function openForm() {
@@ -111,19 +149,25 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
                     <div style={{ marginTop: 14 }}>
                       <label style={lbl}>選擇房型 / 數量</label>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {rooms.map((r) => (
-                          <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid var(--border)", borderRadius: 9, padding: "8px 10px" }}>
+                        {rooms.map((r) => {
+                          const av = roomAvail(r); const sel = nightsList.length > 0; const full = sel && !av.available;
+                          return (
+                          <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, border: "1px solid var(--border)", borderRadius: 9, padding: "8px 10px", opacity: full ? 0.55 : 1 }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontWeight: 600, fontSize: 14 }}>{r.kind === "whole" ? "包棟 · " : ""}{r.name}</div>
-                              {Number(r.price) > 0 && <div style={{ fontSize: 12.5, color: "var(--muted)" }}>NT$ {Number(r.price).toLocaleString()} / 晚</div>}
+                              <div style={{ fontWeight: 600, fontSize: 14 }}>{r.kind === "whole" ? "包棟 · " : ""}{r.name}
+                                {sel && (full ? <span style={{ color: "#c0392b", fontSize: 12, marginLeft: 6 }}>· 此日期不可訂</span>
+                                  : av.maxQty != null ? <span style={{ color: "var(--green)", fontSize: 12, marginLeft: 6 }}>· 剩 {av.maxQty} 間</span>
+                                  : <span style={{ color: "var(--green)", fontSize: 12, marginLeft: 6 }}>· 可訂</span>)}
+                              </div>
+                              {Number(r.price) > 0 && <div style={{ fontSize: 12.5, color: "var(--muted)" }}>NT$ {Number(r.price).toLocaleString()} / 晚{sel && av.price > 0 ? ` · ${nights} 晚 NT$ ${av.price.toLocaleString()}` : ""}</div>}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setQty(r.id, (picked[r.id] || 0) - 1)}>−</button>
+                              <button type="button" className="btn btn-ghost btn-sm" disabled={full} onClick={() => setQty(r.id, (picked[r.id] || 0) - 1)}>−</button>
                               <span style={{ minWidth: 20, textAlign: "center", fontWeight: 600 }}>{picked[r.id] || 0}</span>
-                              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setQty(r.id, (picked[r.id] || 0) + 1)}>＋</button>
+                              <button type="button" className="btn btn-ghost btn-sm" disabled={full || (av.maxQty != null && (picked[r.id] || 0) >= av.maxQty)} onClick={() => setQty(r.id, (picked[r.id] || 0) + 1)}>＋</button>
                             </div>
                           </div>
-                        ))}
+                        );})}
                       </div>
                     </div>
                   )}
