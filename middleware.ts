@@ -54,6 +54,10 @@ function tooMany(ip: string, t: number): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 伺服器對伺服器 webhook(訂房 email):自帶 x-oi-secret 驗證,放行不經反爬蟲。
+  //   pg_net 從 Supabase 打來無瀏覽器 UA,否則會被下方 Bot UA 擋成 403 → 信永遠寄不出。
+  if (pathname === "/api/booking-notify") return NextResponse.next();
+
   // 舊網址 → 城市優先新結構(308 永久轉址,邊緣層處理,所有客戶端含搜尋引擎都吃得到)。
   //   /stays/{area}            → /{area}/hotels
   //   /stays/{area}/{theme}    → /{area}/hotels/{theme}
