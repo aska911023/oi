@@ -75,6 +75,10 @@ export async function POST(req: NextRequest) {
   }
 
   const resend = new Resend(key);
+  const send = async (to: string, subject: string, html: string) => {
+    const { error } = await resend.emails.send({ from: FROM, to, subject, html });
+    if (error) throw new Error(typeof error === "string" ? error : JSON.stringify(error)); // Resend 不 throw,錯誤在 error 欄位
+  };
   try {
     if (event === "new") {
       const to = await emailOf(stay.owner_id);
@@ -82,8 +86,8 @@ export async function POST(req: NextRequest) {
       const body = `<p style="margin:0 0 14px;font-size:15px">你有一筆<b>新的線上訂房</b>,請盡快確認。</p>
         ${rowsHtml(b, stay)}
         <div style="margin-top:14px;font-size:14px;color:#415049">訂房人:${esc(b.guest_name)}　電話:${esc(b.guest_phone)}</div>`;
-      await resend.emails.send({ from: FROM, to, subject: `【偶宿】新訂房待確認 — ${stay.name}(${b.code})`,
-        html: shell("新訂房待確認", body, { href: `${SITE}/vendor/bookings`, label: "前往確認訂單" }) });
+      await send(to, `【偶宿】新訂房待確認 — ${stay.name}(${b.code})`,
+        shell("新訂房待確認", body, { href: `${SITE}/vendor/bookings`, label: "前往確認訂單" }));
     } else {
       const to = b.guest_email || await emailOf(b.created_by);
       if (!to) return NextResponse.json({ ok: true, skipped: "no guest email" });
@@ -93,14 +97,14 @@ export async function POST(req: NextRequest) {
           ${b.deposit_amount > 0 ? `<div>請匯訂金 <b>${ntd(b.deposit_amount)}</b></div>` : ""}
           ${stay.booking_note ? `<div style="white-space:pre-line">${esc(stay.booking_note)}</div>` : `<div style="color:#7a877f">匯款方式請洽民宿。</div>`}
         </div>`;
-        await resend.emails.send({ from: FROM, to, subject: `【偶宿】訂房已確認 — ${stay.name}(${b.code})`,
-          html: shell("訂房已確認 ✅", `<p style="margin:0 0 14px;font-size:15px">你的訂房已由民宿確認,詳情如下:</p>${rowsHtml(b, stay)}${pay}`,
-            { href: `${SITE}/me/bookings`, label: "查看我的訂房" }) });
+        await send(to, `【偶宿】訂房已確認 — ${stay.name}(${b.code})`,
+          shell("訂房已確認 ✅", `<p style="margin:0 0 14px;font-size:15px">你的訂房已由民宿確認,詳情如下:</p>${rowsHtml(b, stay)}${pay}`,
+            { href: `${SITE}/me/bookings`, label: "查看我的訂房" }));
       } else {
         const word = event === "rejected" ? "未成立" : "已取消";
-        await resend.emails.send({ from: FROM, to, subject: `【偶宿】訂房${word} — ${stay.name}(${b.code})`,
-          html: shell(`訂房${word}`, `<p style="margin:0 0 14px;font-size:15px">很抱歉,你的這筆訂房${word}。如有疑問,可到民宿頁「私訊民宿」詢問。</p>${rowsHtml(b, stay)}`,
-            { href: `${SITE}/me/bookings`, label: "查看我的訂房" }) });
+        await send(to, `【偶宿】訂房${word} — ${stay.name}(${b.code})`,
+          shell(`訂房${word}`, `<p style="margin:0 0 14px;font-size:15px">很抱歉,你的這筆訂房${word}。如有疑問,可到民宿頁「私訊民宿」詢問。</p>${rowsHtml(b, stay)}`,
+            { href: `${SITE}/me/bookings`, label: "查看我的訂房" }));
       }
     }
   } catch (e) {
