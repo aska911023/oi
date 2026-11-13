@@ -6,6 +6,7 @@ import PhotoCarousel from "@/components/photo-carousel";
 import RoomList from "@/components/room-list";
 import BookNow from "@/components/book-now";
 import ChatStayButton from "@/components/chat-stay-button";
+import AdCarousel from "@/components/ad-carousel";
 import RoomTile from "@/components/room-tile";
 import { getRoomsByRegion } from "@/lib/rooms";
 import BackLink from "@/components/back-link";
@@ -196,6 +197,8 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
 
         <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>
       </div>
+
+      <AdCarousel region={s.region} />
 
       {recos.length > 0 && (
         <section className="shell" style={{ paddingTop: 6, paddingBottom: 54 }}>

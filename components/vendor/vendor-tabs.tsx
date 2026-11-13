@@ -12,6 +12,7 @@ const TOP = [
   { href: "/vendor/places", label: "我的據點", inSection: (p: string) => p.startsWith("/vendor/places") },
   { href: "/vendor/rentals", label: "我的租車", inSection: (p: string) => p.startsWith("/vendor/rentals") },
   { href: "/vendor/partnerships", label: "異業合作", inSection: (p: string) => p.startsWith("/vendor/partnerships") },
+  { href: "/vendor/ads", label: "活動廣告", inSection: (p: string) => p.startsWith("/vendor/ads") },
 ];
 const STAY_SUB = [
   { href: "/vendor", label: "民宿資料", exact: true },

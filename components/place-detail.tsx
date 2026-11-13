@@ -5,6 +5,7 @@ import SharePlaceButton from "@/components/share-place-button";
 import PlaceComments from "@/components/place-comments";
 import PlacesMap from "@/components/places-map";
 import AddToTrip from "@/components/add-to-trip";
+import AdCarousel from "@/components/ad-carousel";
 import { DETAILS, type WeekHour } from "@/lib/places-config";
 import { KIND_SINGULAR, getNearby } from "@/lib/city";
 import { breadcrumbLd } from "@/lib/seo";
@@ -148,6 +149,8 @@ export default async function PlaceDetail({ place: p, kind }: { place: Place; ki
         {dText("attribution") && (
           <p className="data-src">資料來源:{dText("attribution")}{dText("data_updated") && `,更新於 ${dText("data_updated")}`}。實際營業狀況請以店家公告為準。</p>
         )}
+
+        <AdCarousel region={p.region} />
 
         {nearbyGroups.length > 0 && (
           <div className="shop-block">
