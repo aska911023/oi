@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import ReportDepositButton from "@/components/report-deposit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -8,12 +9,14 @@ interface Row {
   id: string; code: string; status: string; stay_id: string; stay_name: string;
   check_in: string; check_out: string; nights: number; adults: number; children: number;
   total: number; deposit_amount: number; booking_note: string | null; created_at: string;
-  rooms: { name: string; qty: number }[];
+  rooms: { name: string; qty: number }[]; payer_last5: string | null; paid_reported_at: string | null;
 }
 
 const STATUS: Record<string, { label: string; pill: string }> = {
   pending: { label: "待確認", pill: "pending" },
-  confirmed: { label: "已確認", pill: "live" },
+  confirmed: { label: "已確認·待匯訂金", pill: "live" },
+  deposit_reported: { label: "已回報匯款·待核對", pill: "pending" },
+  booked: { label: "訂房完成", pill: "live" },
   checked_in: { label: "已入住", pill: "live" },
   completed: { label: "已完成", pill: "live" },
   rejected: { label: "未成立", pill: "draft" },
@@ -64,11 +67,28 @@ export default async function MyBookings() {
                 {b.total > 0 && <div style={{ fontSize: 14, marginTop: 6 }}>金額 NT$ {Number(b.total).toLocaleString()}{b.deposit_amount > 0 && <span style={{ color: "var(--green)", fontWeight: 600 }}> · 訂金 NT$ {Number(b.deposit_amount).toLocaleString()}</span>}</div>}
 
                 {b.status === "pending" && <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>⏳ 等待民宿確認,確認後會通知你並顯示匯款方式。</div>}
-                {b.status === "confirmed" && showPay && (
+                {b.status === "confirmed" && (
+                  <>
+                    {showPay && (
+                      <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--green-soft)", borderRadius: 10, fontSize: 13.5, lineHeight: 1.7 }}>
+                        <b style={{ color: "var(--green)" }}>💳 付款 / 轉帳資訊</b>
+                        {b.deposit_amount > 0 && <div>請匯訂金 NT$ {Number(b.deposit_amount).toLocaleString()}</div>}
+                        {b.booking_note ? <div style={{ whiteSpace: "pre-line" }}>{b.booking_note}</div> : <div style={{ color: "var(--muted)" }}>匯款方式請洽民宿。</div>}
+                      </div>
+                    )}
+                    <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>匯款完成後,請按下方回報匯款資訊,民宿核對後即完成訂房。</div>
+                    <ReportDepositButton bookingId={b.id} />
+                  </>
+                )}
+                {b.status === "deposit_reported" && (
                   <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--green-soft)", borderRadius: 10, fontSize: 13.5, lineHeight: 1.7 }}>
-                    <b style={{ color: "var(--green)" }}>💳 付款 / 轉帳資訊</b>
-                    {b.deposit_amount > 0 && <div>請匯訂金 NT$ {Number(b.deposit_amount).toLocaleString()}</div>}
-                    {b.booking_note ? <div style={{ whiteSpace: "pre-line" }}>{b.booking_note}</div> : <div style={{ color: "var(--muted)" }}>匯款方式請洽民宿。</div>}
+                    ✅ 已回報匯款{b.payer_last5 ? `(帳號後五碼 ${b.payer_last5})` : ""},<b>等待民宿核對入帳</b>,核對後會通知你訂房完成。
+                  </div>
+                )}
+                {b.status === "booked" && (
+                  <div style={{ marginTop: 10, padding: "10px 12px", background: "var(--green-soft)", borderRadius: 10, fontSize: 13.5, lineHeight: 1.7 }}>
+                    🎉 <b style={{ color: "var(--green)" }}>訂房完成!</b>這筆訂房已成立,請保留此紀錄。{b.deposit_amount > 0 && ` 剩餘款項 NT$ ${Number(b.total - b.deposit_amount).toLocaleString()} 依民宿規定於入住時支付。`}
+                    {b.booking_note && <div style={{ whiteSpace: "pre-line", marginTop: 4, color: "var(--text-2)" }}>{b.booking_note}</div>}
                   </div>
                 )}
                 {(b.status === "rejected" || b.status === "cancelled") && <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8 }}>此訂單已{st.label}。如有疑問可到民宿頁「私訊民宿」詢問。</div>}

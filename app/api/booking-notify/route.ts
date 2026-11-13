@@ -14,6 +14,7 @@ interface Booking {
   code: string; guest_name: string; guest_phone: string; guest_email: string | null;
   check_in: string; check_out: string; nights: number; adults: number; children: number;
   total: number; deposit_amount: number; created_by: string | null; stay_id: string;
+  payer_last5: string | null; payer_name: string | null; payer_phone: string | null; payment_note: string | null;
 }
 interface Stay { name: string; owner_id: string | null; booking_note: string | null }
 interface Room { room_name: string; qty: number }
@@ -73,11 +74,11 @@ export async function POST(req: NextRequest) {
   try { payload = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   const { booking_id, event } = payload;
   if (!booking_id || !event) return NextResponse.json({ ok: false }, { status: 400 });
-  if (!["new", "confirmed", "rejected", "cancelled"].includes(event)) return NextResponse.json({ ok: true, skipped: event });
+  if (!["new", "confirmed", "rejected", "cancelled", "deposit_reported", "booked"].includes(event)) return NextResponse.json({ ok: true, skipped: event });
 
   const sb = createAdminClient();
   const { data: b } = await sb.from("bookings")
-    .select("code,guest_name,guest_phone,guest_email,check_in,check_out,nights,adults,children,total,deposit_amount,created_by,stay_id")
+    .select("code,guest_name,guest_phone,guest_email,check_in,check_out,nights,adults,children,total,deposit_amount,created_by,stay_id,payer_last5,payer_name,payer_phone,payment_note")
     .eq("id", booking_id).maybeSingle<Booking>();
   if (!b) return NextResponse.json({ ok: true, skipped: "no booking" });
   const [{ data: s }, { data: rd }] = await Promise.all([
@@ -125,10 +126,33 @@ export async function POST(req: NextRequest) {
         sent.push("guest");
       }
       if (!sent.length) return NextResponse.json({ ok: true, skipped: "no email" });
+    } else if (event === "deposit_reported") {
+      // 房客回報匯款 → 通知業者核對入帳
+      const to = await emailOf(stay.owner_id);
+      if (!to) return NextResponse.json({ ok: true, skipped: "no owner email" });
+      const info = noteBox(
+        `<div style="font-weight:700;margin-bottom:4px">房客回報的匯款資訊</div>
+        <div>匯款帳號後五碼:<b>${esc(b.payer_last5 || "-")}</b></div>
+        ${b.payer_name ? `<div>匯款人:${esc(b.payer_name)}</div>` : ""}
+        ${b.payer_phone ? `<div>電話:${esc(b.payer_phone)}</div>` : ""}
+        ${b.payment_note ? `<div>備註:${esc(b.payment_note)}</div>` : ""}`, "#fff6e9", "#8a5a12");
+      const body = `<p style="margin:0 0 14px;font-size:15px"><b>${esc(b.guest_name)}</b> 回報已匯訂金,請核對入帳。</p>
+        ${detail(b, stay, rooms, true)}${info}
+        ${noteBox("👉 確認收到訂金後,到「訂房管理」按<b>「確認收到訂金」</b>,房客就會收到「訂房完成」通知。")}`;
+      await send(to, `【偶宿】房客已回報匯款 — ${stay.name}(${b.code})`,
+        shell("房客已回報匯款,請核對", body, { href: `${SITE}/vendor/bookings`, label: "前往核對訂金" }));
     } else {
       const to = await guestEmail();
       if (!to) return NextResponse.json({ ok: true, skipped: "no guest email" });
-      if (event === "confirmed") {
+      if (event === "booked") {
+        const body = `<p style="margin:0 0 6px;font-size:15px">${esc(b.guest_name)} 你好,<b>訂房完成!</b> 🎉</p>
+          <p style="margin:0 0 14px;font-size:14px;color:#415049">民宿已確認收到你的訂金,這筆訂房正式成立。以下是你的完整訂房資訊,請妥善保存:</p>
+          ${detail(b, stay, rooms)}
+          ${b.deposit_amount > 0 ? noteBox(`已付訂金 <b>${ntd(b.deposit_amount)}</b>,剩餘款項 <b>${ntd(b.total - b.deposit_amount)}</b> 依民宿規定於入住時支付。`) : ""}
+          ${stay.booking_note ? noteBox(`<div style="font-weight:700;margin-bottom:4px">民宿備註</div><div style="white-space:pre-line">${esc(stay.booking_note)}</div>`, "#f4f6f5", "#415049") : ""}`;
+        await send(to, `【偶宿】訂房完成 — ${stay.name}(${b.code})`,
+          shell("訂房完成 🎉", body, { href: `${SITE}/me/bookings`, label: "查看我的訂房" }));
+      } else if (event === "confirmed") {
         const pay = noteBox(
           `<div style="font-weight:700;margin-bottom:4px">💳 付款 / 轉帳資訊</div>
           ${b.deposit_amount > 0 ? `<div>請匯<b>訂金 ${ntd(b.deposit_amount)}</b>(總金額 ${ntd(b.total)})</div>` : ""}

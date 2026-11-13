@@ -17,18 +17,21 @@ interface Booking {
   subtotal: number; discount: number; total: number; deposit_amount: number;
   guest_note: string; staff_note: string; cancel_reason: string;
   confirmed_at: string | null; cancelled_at: string | null; created_at: string;
+  payer_last5: string | null; payer_name: string | null; payer_phone: string | null; payment_note: string | null; paid_reported_at: string | null; deposit_confirmed_at: string | null;
   booking_rooms: BRoom[]; payments: Payment[];
 }
 
 /* ---------- consts ---------- */
 const STATUS: Record<string, { label: string; pill: string }> = {
-  pending:    { label: "待確認", pill: "pending" },
-  confirmed:  { label: "已確認", pill: "live" },
-  rejected:   { label: "已拒絕", pill: "draft" },
-  checked_in: { label: "已入住", pill: "feat" },
-  completed:  { label: "已完成", pill: "draft" },
-  cancelled:  { label: "已取消", pill: "draft" },
-  no_show:    { label: "未到",   pill: "draft" },
+  pending:          { label: "待確認", pill: "pending" },
+  confirmed:        { label: "已確認·待匯訂金", pill: "live" },
+  deposit_reported: { label: "待核對訂金", pill: "pending" },
+  booked:           { label: "訂房完成", pill: "feat" },
+  rejected:         { label: "已拒絕", pill: "draft" },
+  checked_in:       { label: "已入住", pill: "feat" },
+  completed:        { label: "已完成", pill: "draft" },
+  cancelled:        { label: "已取消", pill: "draft" },
+  no_show:          { label: "未到",   pill: "draft" },
 };
 const SOURCE_LABEL: Record<string, string> = { manual: "手動", web: "網站", line: "LINE", ota: "OTA" };
 const PAY_KIND: Record<string, string> = { deposit: "訂金", balance: "尾款", refund: "退款" };
@@ -50,7 +53,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
   { ownerId: string; isAdmin: boolean; stays: Stay[]; rooms: Room[]; initialBookings: Booking[] }) {
   const [stays, setStays] = useState<Stay[]>(initialStays);
   const [list, setList] = useState<Booking[]>(initialBookings);
-  const [tab, setTab] = useState<"pending" | "confirmed" | "today" | "all">("pending");
+  const [tab, setTab] = useState<"pending" | "deposit" | "confirmed" | "today" | "all">("pending");
   const [storeFilter, setStoreFilter] = useState("all"); // 挑單一民宿看(管理員看全部店用)
   const [q, setQ] = useState(""); // 搜尋:客人/電話/Email/訂單碼/民宿
   const [sel, setSel] = useState<Booking | null>(null);
@@ -85,6 +88,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
     }));
     return {
       pending: scoped.filter((b) => b.status === "pending").length,
+      depositReported: scoped.filter((b) => b.status === "deposit_reported").length,
       checkIn: scoped.filter((b) => ["confirmed", "checked_in"].includes(b.status) && b.check_in === today).length,
       checkOut: scoped.filter((b) => ["checked_in", "confirmed"].includes(b.status) && b.check_out === today).length,
       received,
@@ -99,6 +103,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
         return `${b.code} ${b.guest_name} ${b.guest_phone} ${b.guest_email} ${sName}`.toLowerCase().includes(kw);
       }
       if (tab === "pending") return b.status === "pending";
+      if (tab === "deposit") return b.status === "deposit_reported";
       if (tab === "confirmed") return b.status === "confirmed";
       if (tab === "today") return b.check_in === today || b.check_out === today;
       return true;
@@ -140,6 +145,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
     await refresh();
   }
   const doConfirm = (b: Booking) => advance(b, "confirmed", { confirmed_at: new Date().toISOString() });
+  const doConfirmDeposit = (b: Booking) => advance(b, "booked", { deposit_confirmed_at: new Date().toISOString() }); // 確認收到訂金 → 訂房完成
   const doReject = (b: Booking) => { const r = prompt("拒絕原因(選填):") ?? ""; advance(b, "rejected", { cancel_reason: r }, r); };
   const doCheckIn = (b: Booking) => advance(b, "checked_in");
   const doCheckOut = (b: Booking) => advance(b, "completed");
@@ -192,6 +198,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
       {view === "orders" && <>
       <div className="stats">
         <div className="stat-card"><div className="n" style={{ color: stats.pending ? "var(--accent-orange, #b4690e)" : undefined }}>{stats.pending}</div><div className="l">待確認(要處理)</div></div>
+        <div className="stat-card"><div className="n" style={{ color: stats.depositReported ? "var(--accent-orange, #b4690e)" : undefined }}>{stats.depositReported}</div><div className="l">待核對訂金</div></div>
         <div className="stat-card"><div className="n">{stats.checkIn}</div><div className="l">今日入住</div></div>
         <div className="stat-card"><div className="n">{stats.checkOut}</div><div className="l">今日退房</div></div>
         <div className="stat-card"><div className="n">{money(stats.received)}</div><div className="l">本月已收(記帳)</div></div>
@@ -207,7 +214,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
           </select>
         )}
         <div className="seg">
-          {([["pending", `待確認${stats.pending ? " " + stats.pending : ""}`], ["confirmed", "已確認"], ["today", "今日"], ["all", "全部"]] as const).map(([v, label]) => (
+          {([["pending", `待確認${stats.pending ? " " + stats.pending : ""}`], ["deposit", `待核對訂金${stats.depositReported ? " " + stats.depositReported : ""}`], ["confirmed", "已確認"], ["today", "今日"], ["all", "全部"]] as const).map(([v, label]) => (
             <button key={v} className={tab === v ? "on" : ""} onClick={() => setTab(v)}>{label}</button>
           ))}
         </div>
@@ -226,13 +233,16 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
                 <td style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{b.check_in}<br /><span style={{ fontSize: 11, color: "var(--muted)" }}>→ {b.check_out} · {b.nights}晚</span></td>
                 <td style={{ fontSize: 12.5 }}>{(b.booking_rooms || []).map((r) => `${r.room_name}×${r.qty}`).join("、") || "—"}</td>
                 <td style={{ whiteSpace: "nowrap" }}>{money(b.total)}</td>
-                <td><span className={"pill " + (STATUS[b.status]?.pill || "draft")}>{STATUS[b.status]?.label || b.status}</span></td>
+                <td><span className={"pill " + (STATUS[b.status]?.pill || "draft")}>{STATUS[b.status]?.label || b.status}</span>
+                  {b.status === "deposit_reported" && b.payer_last5 && <div style={{ fontSize: 11, color: "var(--accent-orange,#b4690e)", marginTop: 3 }}>後五碼 {b.payer_last5}</div>}
+                </td>
                 <td>
                   <div className="row-actions">
                     {b.status === "pending" && <>
                       <button className="lnk" disabled={busy} onClick={() => doConfirm(b)}>確認</button>
                       <button className="lnk danger" disabled={busy} onClick={() => doReject(b)}>拒絕</button>
                     </>}
+                    {b.status === "deposit_reported" && <button className="lnk" disabled={busy} onClick={() => doConfirmDeposit(b)}>確認收到訂金</button>}
                     <button className="lnk" onClick={() => openDetail(b)}>詳情</button>
                   </div>
                 </td>
@@ -245,7 +255,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
       {sel && <DetailDrawer b={sel} stayName={stayName(sel.stay_id)} events={events} busy={busy}
         onClose={() => { setSel(null); setEvents(null); }}
         onConfirm={() => doConfirm(sel)} onReject={() => doReject(sel)} onCheckIn={() => doCheckIn(sel)}
-        onCheckOut={() => doCheckOut(sel)} onCancel={() => doCancel(sel)} onNoShow={() => doNoShow(sel)}
+        onCheckOut={() => doCheckOut(sel)} onCancel={() => doCancel(sel)} onNoShow={() => doNoShow(sel)} onConfirmDeposit={() => doConfirmDeposit(sel)}
         onRestore={() => doRestore(sel)} onDelete={() => doDelete(sel)} onSetStatus={(to) => doSetStatus(sel, to)} onPaid={refresh} ownerId={ownerId} isAdmin={isAdmin} />}
 
       {showCreate && <CreateModal stays={stays} roomsOf={roomsOf} remaining={remaining} ownerId={ownerId}
@@ -256,9 +266,9 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
 }
 
 /* ================= 詳情抽屜 ================= */
-function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onRestore, onDelete, onSetStatus, onPaid, ownerId, isAdmin }: {
+function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject, onCheckIn, onCheckOut, onCancel, onNoShow, onConfirmDeposit, onRestore, onDelete, onSetStatus, onPaid, ownerId, isAdmin }: {
   b: Booking; stayName: string; events: BEvent[] | null; busy: boolean; onClose: () => void;
-  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onRestore: () => void; onDelete: () => void; onSetStatus: (to: string) => void;
+  onConfirm: () => void; onReject: () => void; onCheckIn: () => void; onCheckOut: () => void; onCancel: () => void; onNoShow: () => void; onConfirmDeposit: () => void; onRestore: () => void; onDelete: () => void; onSetStatus: (to: string) => void;
   onPaid: () => void; ownerId: string; isAdmin: boolean;
 }) {
   const [payOpen, setPayOpen] = useState(false);
@@ -321,11 +331,26 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           </div>
         )}
 
+        {(b.status === "deposit_reported" || b.payer_last5) && (
+          <div style={{ marginTop: 12, background: "#fff6e9", border: "1px solid #f0d9ad", borderRadius: 10, padding: "10px 14px", fontSize: 13.5, lineHeight: 1.8 }}>
+            <b style={{ color: "#8a5a12" }}>房客回報的匯款資訊</b>
+            <div>帳號後五碼:<b>{b.payer_last5 || "—"}</b></div>
+            {b.payer_name && <div>匯款人:{b.payer_name}</div>}
+            {b.payer_phone && <div>電話:{b.payer_phone}</div>}
+            {b.payment_note && <div>備註:{b.payment_note}</div>}
+            {b.paid_reported_at && <div style={{ color: "var(--muted)", fontSize: 12 }}>回報時間:{new Date(b.paid_reported_at).toLocaleString("zh-TW")}</div>}
+          </div>
+        )}
+
         {/* 動作 */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
           {b.status === "pending" && <>
             <button className="btn btn-primary" disabled={busy} onClick={onConfirm}>確認訂房</button>
             <button className="btn btn-ghost" disabled={busy} onClick={onReject}>拒絕</button>
+          </>}
+          {b.status === "deposit_reported" && <>
+            <button className="btn btn-primary" disabled={busy} onClick={onConfirmDeposit}>確認收到訂金</button>
+            <button className="btn btn-ghost" disabled={busy} onClick={onCancel}>取消</button>
           </>}
           {b.status === "confirmed" && <>
             <button className="btn btn-primary" disabled={busy} onClick={onCheckIn}>報到(入住)</button>
