@@ -192,6 +192,12 @@ export interface Place {
   details: Record<string, unknown>;
   published: boolean;
   featured?: boolean;
+  owner_id?: string | null;
+  ad_tier?: string | null;    // 曝光方案
+  ad_start?: string | null;   // 授權期間
+  ad_end?: string | null;
+  save_boost?: number | null; // 收藏數墊高
+  approved?: boolean;         // 審核
 }
 
 export const POI_KINDS: { kind: PoiKind; label: string; slug: string }[] = [

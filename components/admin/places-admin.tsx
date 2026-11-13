@@ -9,6 +9,10 @@ import { KIND_TABLE, DETAILS, WEEKDAYS, type WeekHour } from "@/lib/places-confi
 import MultiImageUploader from "@/components/admin/multi-image-uploader";
 import PlacesImport from "@/components/admin/places-import";
 import { type Place, type PoiKind } from "@/lib/types";
+import type { Plan } from "@/components/admin/plans-editor";
+
+export interface OwnerProfile { id: string; display_name: string | null; full_name: string | null; role: string }
+export interface PlaceBd { kind: string; place_id: string; contacted: boolean; rejected: boolean; note: string | null }
 
 const REGIONS = GEOGRAPHIC_AREAS.flatMap((a) => a.regions);
 const KIND_LABEL: Record<PoiKind, string> = { attraction: "景點", food: "餐廳", parking: "停車", activity: "娛樂", catering: "外燴" };
@@ -21,10 +25,24 @@ const empty = (): Form => ({
 
 type ListItem = Record<string, string>;
 
-export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place[]; kind: PoiKind; ownerId?: string }) {
+export default function PlacesAdmin({ initial, kind, ownerId, ownersInitial = [], bdInitial = [], plans = [] }: {
+  initial: Place[]; kind: PoiKind; ownerId?: string; ownersInitial?: OwnerProfile[]; bdInitial?: PlaceBd[]; plans?: Plan[];
+}) {
   const table = KIND_TABLE[kind];
   const fields = DETAILS[kind];
+  const isAdminView = !ownerId; // 業者自己的 /vendor 頁(有 ownerId)不顯示業主/洽談/授權等內部欄位
+  const planByKey = Object.fromEntries(plans.map((p) => [p.key, p]));
+  const planFeatured = (tier?: string | null) => (planByKey[tier || "free"]?.priority ?? 0) > 0;
+  const planOptions = plans.length ? plans : [{ key: "free", name: "免費方案", room_pins: 0, priority: 0, sort: 0 }];
+  const owners = Object.fromEntries(ownersInitial.map((o) => [o.id, o]));
+  const ownerLabel = (id?: string | null) => {
+    if (!id) return "平台自管";
+    const o = owners[id];
+    return o ? (o.display_name || o.full_name || id.slice(0, 8)) : id.slice(0, 8);
+  };
   const [list, setList] = useState<Place[]>(initial);
+  const [bd, setBd] = useState<Record<string, PlaceBd>>(() => Object.fromEntries(bdInitial.map((b) => [b.place_id, b])));
+  const [tab, setTab] = useState<"all" | "published" | "draft">("all");
   const [q, setQ] = useState("");
   const [form, setForm] = useState<Form | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,9 +56,11 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
   const label = KIND_LABEL[kind];
 
   const filtered = useMemo(() => list.filter((p) => {
-    if (!q.trim()) return true;
-    return (p.name + p.region + p.town + p.address).toLowerCase().includes(q.trim().toLowerCase());
-  }), [list, q]);
+    if (q.trim()) return (p.name + p.region + p.town + p.address).toLowerCase().includes(q.trim().toLowerCase());
+    if (tab === "published") return p.published;
+    if (tab === "draft") return !p.published;
+    return true;
+  }), [list, q, tab]);
 
   const stats = useMemo(() => ({
     total: list.length, published: list.filter((p) => p.published).length,
@@ -53,6 +73,35 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
     const { data } = await (ownerId ? q.eq("owner_id", ownerId) : q);
     setList((data as Place[]) || []);
     revalidatePois().catch(() => {});
+  }
+
+  // 洽談紀錄(place_bd,只有 admin)
+  async function saveBd(placeId: string, patch: Partial<PlaceBd>) {
+    const next: PlaceBd = { kind, place_id: placeId, contacted: bd[placeId]?.contacted ?? false, rejected: bd[placeId]?.rejected ?? false, note: bd[placeId]?.note ?? null, ...patch };
+    setBd((p) => ({ ...p, [placeId]: next }));
+    const { error } = await createClient().from("place_bd").upsert(next, { onConflict: "kind,place_id" });
+    if (error) { alert("洽談紀錄儲存失敗:" + error.message); setBd((p) => ({ ...p, [placeId]: { ...next, ...bd[placeId] } })); }
+  }
+  // 審核:核准=同時上架;退回=同時下架
+  async function toggleApprove(p: Place) {
+    const approving = !p.approved;
+    await createClient().from(table).update(approving ? { approved: true, published: true } : { approved: false, published: false }).eq("id", p.id);
+    if (approving && p.owner_id) {
+      await createClient().from("notifications").insert({ user_id: p.owner_id, kind: "place_approved", title: `你的${label}「${p.name}」已通過審核並上架 🎉`, href: "/vendor/places" });
+    }
+    logAdmin(approving ? "approve" : "reject", { type: "place", id: p.id, name: p.name, detail: { 類別: label } });
+    await refresh();
+  }
+  // 曝光方案 / 授權期間
+  async function setTier(p: Place, ad_tier: string) {
+    const isLicense = (planByKey[ad_tier]?.name || "").includes("授權");
+    await createClient().from(table).update({ ad_tier, featured: planFeatured(ad_tier), ...(isLicense ? {} : { ad_start: null, ad_end: null }) }).eq("id", p.id);
+    logAdmin("set_tier", { type: "place", id: p.id, name: p.name, detail: { 類別: label, to: ad_tier } });
+    await refresh();
+  }
+  async function setAdDates(p: Place, patch: { ad_start?: string | null; ad_end?: string | null }) {
+    await createClient().from(table).update(patch).eq("id", p.id);
+    await refresh();
   }
 
   // details 操作
@@ -94,7 +143,8 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
       images: form.images || [],
       website: form.website.trim(),
       lat: form.lat ?? null, lng: form.lng ?? null, details: form.details || {},
-      published: form.published, featured: form.featured,
+      published: form.published,
+      ...(isAdminView ? { featured: form.featured, ad_tier: form.ad_tier || "free", save_boost: Number(form.save_boost) || 0, approved: form.approved ?? true } : {}),
       ...(ownerId && !form.id ? { owner_id: ownerId } : {}),
     };
     let error;
@@ -161,6 +211,11 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
 
       <div className="admin-bar">
         <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={`搜尋${label}名稱、地區…`} />
+        <div className="seg">
+          {(["all", "published", "draft"] as const).map((v) => (
+            <button key={v} className={tab === v ? "on" : ""} onClick={() => setTab(v)}>{v === "all" ? "全部" : v === "published" ? "已上架" : "草稿"}</button>
+          ))}
+        </div>
         <PlacesImport kind={kind} existingNames={list.map((p) => p.name)} onDone={refresh} ownerId={ownerId} />
         <button className="btn btn-primary" onClick={() => setForm(empty())}>＋ 新增{label}</button>
       </div>
@@ -176,9 +231,9 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
 
       <div className="atable-wrap">
         <table className="atable">
-          <thead><tr><th style={{ width: 30 }}><input type="checkbox" checked={allFilteredSelected} onChange={toggleAll} title="全選本頁" /></th><th></th><th>名稱</th><th>地區</th><th>地址</th><th>狀態</th><th>操作</th></tr></thead>
+          <thead><tr><th style={{ width: 30 }}><input type="checkbox" checked={allFilteredSelected} onChange={toggleAll} title="全選本頁" /></th><th></th><th>名稱</th><th>地區</th><th>地址</th><th>狀態</th>{isAdminView && <><th>業主</th><th>洽談</th><th>內部備註</th></>}<th>操作</th></tr></thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">還沒有{label},點右上「新增{label}」開始。</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={isAdminView ? 10 : 7} className="empty-row">還沒有{label},點右上「新增{label}」開始。</td></tr>}
             {filtered.map((p) => (
               <tr key={p.id}>
                 <td><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSel(p.id)} /></td>
@@ -186,7 +241,17 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
                 <td><b>{p.name}</b>{p.featured && <span className="pill feat" style={{ marginLeft: 8 }}>精選</span>}</td>
                 <td>{p.region}{p.town ? " · " + p.town : ""}</td>
                 <td style={{ maxWidth: 260, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.address || "—"}</td>
-                <td><span className={"pill " + (p.published ? "live" : "draft")}>{p.published ? "已發布" : "隱藏"}</span></td>
+                <td>{isAdminView
+                  ? (p.approved === false ? <span className="pill draft">待審核</span> : <span className={"pill " + (p.published ? "live" : "draft")}>{p.published ? "已上架" : "草稿"}</span>)
+                  : <span className={"pill " + (p.published ? "live" : "draft")}>{p.published ? "已發布" : "隱藏"}</span>}</td>
+                {isAdminView && <>
+                  <td style={{ fontSize: 12.5 }}>{ownerLabel(p.owner_id)}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <label style={{ display: "block", fontSize: 12 }}><input type="checkbox" checked={!!bd[p.id]?.contacted} onChange={(e) => saveBd(p.id, { contacted: e.target.checked })} /> 已聯繫</label>
+                    <label style={{ display: "block", fontSize: 12 }}><input type="checkbox" checked={!!bd[p.id]?.rejected} onChange={(e) => saveBd(p.id, { rejected: e.target.checked })} /> 拒絕</label>
+                  </td>
+                  <td><input defaultValue={bd[p.id]?.note || ""} placeholder="聯絡結果、報價…" onBlur={(e) => { if ((e.target.value || "") !== (bd[p.id]?.note || "")) saveBd(p.id, { note: e.target.value || null }); }} style={{ width: 150, fontSize: 12, padding: "4px 6px", border: "1px solid var(--border)", borderRadius: 6 }} /></td>
+                </>}
                 <td>
                   <div className="row-actions">
                     {(() => { const n = p.images?.length || (p.image ? 1 : 0);
@@ -194,8 +259,22 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
                     <button className="lnk" onClick={() => setForm({ ...p, details: p.details || {} })}>編輯</button>
                     {p.published && p.region && <a className="lnk" href={`/${encodeURIComponent(p.region)}/${kind === "food" ? "restaurant" : kind}/${encodeURIComponent(p.slug || p.id)}`} target="_blank" rel="noopener noreferrer" title="在前台開啟公開頁">前台 ↗</a>}
                     <button className="lnk" onClick={() => togglePublish(p)}>{p.published ? "隱藏" : "發布"}</button>
+                    {isAdminView && <button className="lnk" onClick={() => toggleApprove(p)}>{p.approved === false ? "核准" : "退回審核"}</button>}
+                    {isAdminView && (
+                      <select className="tier-sel" value={p.ad_tier || "free"} onChange={(e) => setTier(p, e.target.value)} title="曝光方案">
+                        {planOptions.map((pl) => <option key={pl.key} value={pl.key}>{pl.name}</option>)}
+                      </select>
+                    )}
                     <button className="lnk danger" onClick={() => remove(p)}>刪除</button>
                   </div>
+                  {isAdminView && (planByKey[p.ad_tier || "free"]?.name || "").includes("授權") && (
+                    <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4, fontSize: 11 }}>
+                      <span style={{ color: "var(--muted)" }}>授權</span>
+                      <input type="date" value={p.ad_start || ""} onChange={(e) => setAdDates(p, { ad_start: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} title="開始" />
+                      <span>→</span>
+                      <input type="date" value={p.ad_end || ""} onChange={(e) => setAdDates(p, { ad_end: e.target.value || null })} style={{ fontSize: 11, padding: "2px 4px", border: "1px solid var(--border-strong)", borderRadius: 6 }} title="結束(到期自動降免費)" />
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -326,9 +405,19 @@ export default function PlacesAdmin({ initial, kind, ownerId }: { initial: Place
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap", alignItems: "center" }}>
               <label className="check"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> 發布(前台可見)</label>
-              <label className="check"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選</label>
+              {isAdminView && <>
+                <label className="check"><input type="checkbox" checked={!!form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> 精選</label>
+                <label className="check" style={{ gap: 6 }}><span>曝光方案</span>
+                  <select value={form.ad_tier || "free"} onChange={(e) => setForm({ ...form, ad_tier: e.target.value })} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-strong)" }}>
+                    {planOptions.map((pl) => <option key={pl.key} value={pl.key}>{pl.name}</option>)}
+                  </select>
+                </label>
+                <label className="check" style={{ gap: 6 }}><span>收藏數墊高</span>
+                  <input type="number" min={0} value={form.save_boost ?? 0} onChange={(e) => setForm({ ...form, save_boost: Number(e.target.value) || 0 })} style={{ width: 80, padding: "6px 8px", borderRadius: 8, border: "1px solid var(--border-strong)" }} />
+                </label>
+              </>}
             </div>
             <div className="editor-actions">
               <button className="btn btn-ghost" onClick={() => setForm(null)}>取消</button>

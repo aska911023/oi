@@ -8,6 +8,10 @@ alter table public.bookings add column if not exists payment_note text;         
 alter table public.bookings add column if not exists paid_reported_at timestamptz;   -- A 回報時間
 alter table public.bookings add column if not exists deposit_confirmed_at timestamptz; -- B 核對時間
 
+-- status CHECK 約束補上新狀態(deposit_reported 待核對訂金、booked 訂房完成)
+alter table public.bookings drop constraint if exists bookings_status_check;
+alter table public.bookings add constraint bookings_status_check check (status = any (array['pending','confirmed','deposit_reported','booked','rejected','checked_in','completed','cancelled','no_show']::text[]));
+
 -- A(房客本人)回報匯款:bookings RLS 只給 admin/業主,房客走 DEFINER RPC
 CREATE OR REPLACE FUNCTION public.report_deposit(p_booking_id uuid, p_last5 text, p_name text, p_phone text, p_note text)
 RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $fn$
