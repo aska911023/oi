@@ -17,10 +17,10 @@ begin
   v_nights := p_check_out - p_check_in;
   v_code := 'OI'||to_char(now(),'YYMMDD')||upper(substr(md5(random()::text),1,4));
   insert into public.bookings (stay_id, code, source, status, guest_name, guest_phone, guest_email,
-    adults, children, check_in, check_out, nights, subtotal, discount, total, deposit_amount, guest_note, created_by)
-    values (p_stay_id, v_code, 'web', 'pending', trim(p_guest_name), trim(p_guest_phone), nullif(trim(p_guest_email),''),
-    coalesce(p_adults,1), coalesce(p_children,0), p_check_in, p_check_out, v_nights, 0, 0, 0, 0, nullif(trim(p_note),''), v_uid)
-    returning id into v_bid;
+    adults, children, check_in, check_out, subtotal, discount, total, deposit_amount, guest_note, created_by)
+    values (p_stay_id, v_code, 'web', 'pending', trim(p_guest_name), trim(p_guest_phone), coalesce(nullif(trim(p_guest_email),''), ''),
+    coalesce(p_adults,1), coalesce(p_children,0), p_check_in, p_check_out, 0, 0, 0, 0, coalesce(nullif(trim(p_note),''), ''), v_uid)
+    returning id into v_bid;  -- nights 是 generated column,不可寫入
   for r in select value from jsonb_array_elements(coalesce(p_rooms,'[]'::jsonb)) loop
     v_qty := greatest(coalesce((r->>'qty')::int,1),1);
     select id, name, price, rooms_total, kind into rt from public.room_types where id=(r->>'room_type_id')::uuid and stay_id=p_stay_id;
