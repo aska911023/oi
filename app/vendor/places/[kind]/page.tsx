@@ -15,5 +15,13 @@ export default async function VendorPlacesKindPage({ params }: { params: Promise
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect(`/login?next=/vendor/places/${kind}`);
   const { data } = await sb.from(KIND_TABLE[meta.kind as PoiKind]).select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
-  return <PlacesAdmin initial={(data as Place[]) || []} kind={meta.kind as PoiKind} ownerId={user.id} />;
+  return (
+    <>
+      <div className="vendor-page-head">
+        <h2>我的據點 · {meta.label}</h2>
+        <p>上架你的{meta.label}並送審;上架後出現在前台的「{meta.label}」與地區頁。用上方分頁切換類別。</p>
+      </div>
+      <PlacesAdmin initial={(data as Place[]) || []} kind={meta.kind as PoiKind} ownerId={user.id} />
+    </>
+  );
 }

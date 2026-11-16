@@ -29,12 +29,18 @@ export default async function VendorBookingsPage() {
     : [];
 
   return (
-    <BookingsManager
-      ownerId={ownerId}
-      isAdmin={false}
-      stays={(stays as never) || []}
-      rooms={(rooms as never) || []}
-      initialBookings={(bookings as never) || []}
-    />
+    <>
+      <div className="vendor-page-head">
+        <h2>訂房管理</h2>
+        <p>設定房況與付款資訊、確認訂單、核對訂金。一筆訂房走四步:待確認 → 待匯訂金 → 待核對訂金 → 訂房完成。</p>
+      </div>
+      <BookingsManager
+        ownerId={ownerId}
+        isAdmin={false}
+        stays={(stays as never) || []}
+        rooms={(rooms as never) || []}
+        initialBookings={(bookings as never) || []}
+      />
+    </>
   );
 }

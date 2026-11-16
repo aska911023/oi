@@ -14,11 +14,17 @@ export default async function VendorPartnershipsPage() {
     sb.from("stays").select("id,name").eq("owner_id", user.id).order("name"),
   ]);
   return (
-    <PartnershipsBoard
-      initial={(posts as Post[]) || []}
-      ownerId={user.id}
-      isAdmin={false}
-      myStays={(stays as { id: string; name: string }[]) || []}
-    />
+    <>
+      <div className="vendor-page-head">
+        <h2>異業合作</h2>
+        <p>發布你的合作需求(找包棟代訂、活動串接…),或瀏覽、聯繫其他業者的需求。</p>
+      </div>
+      <PartnershipsBoard
+        initial={(posts as Post[]) || []}
+        ownerId={user.id}
+        isAdmin={false}
+        myStays={(stays as { id: string; name: string }[]) || []}
+      />
+    </>
   );
 }

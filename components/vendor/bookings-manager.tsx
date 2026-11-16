@@ -88,7 +88,9 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
     }));
     return {
       pending: scoped.filter((b) => b.status === "pending").length,
+      confirmed: scoped.filter((b) => b.status === "confirmed").length,
       depositReported: scoped.filter((b) => b.status === "deposit_reported").length,
+      booked: scoped.filter((b) => b.status === "booked").length,
       checkIn: scoped.filter((b) => ["confirmed", "checked_in"].includes(b.status) && b.check_in === today).length,
       checkOut: scoped.filter((b) => ["checked_in", "confirmed"].includes(b.status) && b.check_out === today).length,
       received,
@@ -196,9 +198,26 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
       {view === "settings" && <SettingsPanel stays={stays} onUpdate={setStays} />}
 
       {view === "orders" && <>
+      {/* 訂房流程步驟條:一眼看懂四步 + 每步幾筆要處理,點了篩選該步 */}
+      <div style={{ display: "flex", flexWrap: "wrap", marginBottom: 14, border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
+        {([
+          { label: "① 待確認", act: "你確認接單", n: stats.pending, t: "pending" },
+          { label: "② 待匯訂金", act: "等房客匯款", n: stats.confirmed, t: "confirmed" },
+          { label: "③ 待核對訂金", act: "你核對入帳", n: stats.depositReported, t: "deposit" },
+          { label: "④ 訂房完成", act: "訂房成立", n: stats.booked, t: "all" },
+        ] as const).map((s, i) => {
+          const need = (s.t === "pending" || s.t === "deposit") && s.n > 0;
+          return (
+            <button key={i} onClick={() => setTab(s.t)} title={`點看${s.label}`}
+              style={{ flex: "1 1 130px", minWidth: 118, border: "none", borderRight: i < 3 ? "1px solid var(--border)" : "none", background: need ? "#fff6e9" : "var(--surface)", padding: "11px 12px", cursor: "pointer", textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{s.label}{s.n > 0 && <span style={{ color: need ? "var(--accent-orange,#b4690e)" : "var(--muted)" }}> · {s.n}</span>}</div>
+              <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 2 }}>{need ? "👉 " : ""}{s.act}</div>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="stats">
-        <div className="stat-card"><div className="n" style={{ color: stats.pending ? "var(--accent-orange, #b4690e)" : undefined }}>{stats.pending}</div><div className="l">待確認(要處理)</div></div>
-        <div className="stat-card"><div className="n" style={{ color: stats.depositReported ? "var(--accent-orange, #b4690e)" : undefined }}>{stats.depositReported}</div><div className="l">待核對訂金</div></div>
         <div className="stat-card"><div className="n">{stats.checkIn}</div><div className="l">今日入住</div></div>
         <div className="stat-card"><div className="n">{stats.checkOut}</div><div className="l">今日退房</div></div>
         <div className="stat-card"><div className="n">{money(stats.received)}</div><div className="l">本月已收(記帳)</div></div>

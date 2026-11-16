@@ -13,5 +13,13 @@ export default async function VendorAdsPage() {
     sb.from("ad_campaigns").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
     sb.from("plans").select("*").order("sort"),
   ]);
-  return <AdsManager initial={(ads as Ad[]) || []} mode="vendor" ownerId={user.id} plans={(plans as Plan[]) || []} />;
+  return (
+    <>
+      <div className="vendor-page-head">
+        <h2>活動廣告</h2>
+        <p>上傳廣告圖、選投放地區與檔期,送審通過後會在該地區的詳情頁中間輪播曝光。</p>
+      </div>
+      <AdsManager initial={(ads as Ad[]) || []} mode="vendor" ownerId={user.id} plans={(plans as Plan[]) || []} />
+    </>
+  );
 }
