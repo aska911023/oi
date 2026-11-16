@@ -246,7 +246,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
           <tbody>
             {filtered.length === 0 && <tr><td colSpan={7} className="empty-row">{q.trim() ? "找不到符合的訂單。" : "這個分類沒有訂單。"}</td></tr>}
             {filtered.map((b) => (
-              <tr key={b.id}>
+              <tr key={b.id} onClick={() => openDetail(b)} style={{ cursor: "pointer" }} title="點開看詳情與操作">
                 <td><b>{stayName(b.stay_id)}</b><br /><span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "var(--mono,monospace)" }}>{b.code} · {SOURCE_LABEL[b.source] || b.source}</span></td>
                 <td>{b.guest_name || "—"}<br /><span style={{ fontSize: 11, color: "var(--muted)" }}>{b.guest_phone}</span></td>
                 <td style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{b.check_in}<br /><span style={{ fontSize: 11, color: "var(--muted)" }}>→ {b.check_out} · {b.nights}晚</span></td>
@@ -255,7 +255,7 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
                 <td><span className={"pill " + (STATUS[b.status]?.pill || "draft")}>{STATUS[b.status]?.label || b.status}</span>
                   {b.status === "deposit_reported" && b.payer_last5 && <div style={{ fontSize: 11, color: "var(--accent-orange,#b4690e)", marginTop: 3 }}>後五碼 {b.payer_last5}</div>}
                 </td>
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <div className="row-actions">
                     {b.status === "pending" && <>
                       <button className="lnk" disabled={busy} onClick={() => doConfirm(b)}>確認</button>
@@ -372,9 +372,9 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
             <button className="btn btn-ghost" disabled={busy} onClick={onCancel}>取消</button>
           </>}
           {b.status === "confirmed" && <>
-            <button className="btn btn-primary" disabled={busy} onClick={onCheckIn}>報到(入住)</button>
+            <div style={{ width: "100%", fontSize: 13, color: "var(--muted)", marginBottom: 2 }}>⏳ 等房客匯訂金並回報(他會在「我的訂房」按『我已匯款』)。收到回報後再核對入帳。</div>
+            <button className="btn btn-primary" disabled={busy} onClick={onConfirmDeposit}>房客已付訂金 → 直接完成</button>
             <button className="btn btn-ghost" disabled={busy} onClick={onCancel}>取消</button>
-            <button className="btn btn-ghost" disabled={busy} onClick={onNoShow}>未到</button>
           </>}
           {b.status === "checked_in" && <button className="btn btn-primary" disabled={busy} onClick={onCheckOut}>退房(完成)</button>}
           {["cancelled", "no_show", "rejected"].includes(b.status) && <button className="btn btn-primary" disabled={busy} onClick={onRestore}>復原訂單</button>}

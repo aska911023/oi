@@ -272,7 +272,7 @@ export default function StaysAdmin({ initial, ownerId, bdInitial = [], ownersIni
         user_id: s.owner_id,
         kind: "stay_approved",
         title: `你的民宿「${s.name}」已通過審核並上架 🎉`,
-        href: s.region ? `/${encodeURIComponent(s.region)}/hotel/${encodeURIComponent(s.slug || s.id)}` : "/vendor",
+        href: s.region ? `/${encodeURIComponent(s.region)}/hotel/${encodeURIComponent(s.slug || s.id)}` : "/vendor/stays",
       });
     }
     await logAdmin(approving ? "approve" : "reject", s);
