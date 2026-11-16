@@ -145,27 +145,17 @@ export async function getNearby(region: string, lat?: number | null, lng?: numbe
   if (!hasSupabase()) return empty;
   try {
     const sb = createPublicClient();
-    const cols = "id,name,slug,lat,lng";
-    const [st, at, fo, pa] = await Promise.all([
-      sb.from("stays").select(cols).eq("published", true).eq("approved", true).eq("visibility", "published").eq("region", region).limit(30),
-      sb.from("attractions").select(cols).eq("published", true).eq("region", region).limit(30),
-      sb.from("restaurants").select(cols).eq("published", true).eq("region", region).limit(30),
-      sb.from("parking_lots").select(cols).eq("published", true).eq("region", region).limit(30),
-    ]);
+    // nearby_pois:DB 端依距離排序(近的先、其餘最新),不受資料量限制、也真的「附近」
+    const { data } = await sb.rpc("nearby_pois", { p_region: region, p_lat: lat ?? null, p_lng: lng ?? null, p_exclude: excludeId ?? null });
+    const nb = (data || {}) as { hotels?: Geo[]; attractions?: Geo[]; restaurants?: Geo[]; parking?: Geo[] };
     const enc = encodeURIComponent;
-    const near = (rows: Geo[] | null, hrefFn: (r: Geo) => string): NearItem[] => {
-      const items = (rows || []).filter((r) => r.id !== excludeId).map((r) => ({
-        id: r.id, name: r.name, href: hrefFn(r),
-        dist: (lat != null && lng != null && r.lat != null && r.lng != null) ? haversineKm(lat, lng, r.lat, r.lng) : undefined,
-      }));
-      items.sort((a, b) => (a.dist ?? 1e9) - (b.dist ?? 1e9));
-      return items.slice(0, 6);
-    };
+    const map = (rows: Geo[] | undefined, hrefFn: (r: Geo) => string): NearItem[] =>
+      (rows || []).map((r) => ({ id: r.id, name: r.name, href: hrefFn(r) }));
     return {
-      hotels: near(st.data as Geo[], (r) => `/${enc(region)}/hotel/${enc(r.slug || r.id)}`),
-      attractions: near(at.data as Geo[], (r) => `/${enc(region)}/attraction/${enc(r.slug || r.id)}`),
-      restaurants: near(fo.data as Geo[], (r) => `/${enc(region)}/restaurant/${enc(r.slug || r.id)}`),
-      parking: near(pa.data as Geo[], (r) => `/${enc(region)}/parking/${enc(r.slug || r.id)}`),
+      hotels: map(nb.hotels, (r) => `/${enc(region)}/hotel/${enc(r.slug || r.id)}`),
+      attractions: map(nb.attractions, (r) => `/${enc(region)}/attraction/${enc(r.slug || r.id)}`),
+      restaurants: map(nb.restaurants, (r) => `/${enc(region)}/restaurant/${enc(r.slug || r.id)}`),
+      parking: map(nb.parking, (r) => `/${enc(region)}/parking/${enc(r.slug || r.id)}`),
     };
   } catch { return empty; }
 }

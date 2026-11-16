@@ -42,19 +42,15 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
   const reviews = (revData || []) as unknown as { rating: number; comment: string; created_at: string; profiles: { display_name: string } | null }[];
   const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
-  // 附近推薦(同縣市),chip 直接連到該 entity 的乾淨頁
-  const [na, nf, np, nr] = await Promise.all([
-    sb.from("attractions").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
-    sb.from("restaurants").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
-    sb.from("parking_lots").select("id,name,slug,town").eq("published", true).eq("region", s.region).limit(6),
-    sb.from("rental_shops").select("id,name,town").eq("published", true).eq("approved", true).eq("region", s.region).limit(6),
-  ]);
-  type NB = { id: string; name: string; slug?: string; town?: string };
+  // 附近推薦:用 nearby_pois RPC 依「與這間民宿的距離」排序(真的附近,不是同縣市取最舊 N 筆)
+  type NB = { id: string; name: string; slug?: string };
+  const { data: nbRaw } = await sb.rpc("nearby_pois", { p_region: s.region, p_lat: s.lat ?? null, p_lng: s.lng ?? null, p_exclude: s.id });
+  const nb = (nbRaw || {}) as { attractions?: NB[]; restaurants?: NB[]; parking?: NB[]; rentals?: NB[] };
   const nearby: { label: string; more: string; items: { id: string; name: string; href: string }[] }[] = [
-    { label: "附近景點", more: `/${enc(s.region)}/attractions`, items: ((na.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/attraction/${enc(x.slug || x.id)}` })) },
-    { label: "附近美食", more: `/${enc(s.region)}/restaurants`, items: ((nf.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/restaurant/${enc(x.slug || x.id)}` })) },
-    { label: "附近停車", more: `/${enc(s.region)}/parking`, items: ((np.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/parking/${enc(x.slug || x.id)}` })) },
-    { label: "附近租車", more: `/rentals`, items: ((nr.data || []) as NB[]).map((x) => ({ id: x.id, name: x.name, href: `/rentals` })) },
+    { label: "附近景點", more: `/${enc(s.region)}/attractions`, items: (nb.attractions || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/attraction/${enc(x.slug || x.id)}` })) },
+    { label: "附近美食", more: `/${enc(s.region)}/restaurants`, items: (nb.restaurants || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/restaurant/${enc(x.slug || x.id)}` })) },
+    { label: "附近停車", more: `/${enc(s.region)}/parking`, items: (nb.parking || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/parking/${enc(x.slug || x.id)}` })) },
+    { label: "附近租車", more: `/rentals`, items: (nb.rentals || []).map((x) => ({ id: x.id, name: x.name, href: `/rentals` })) },
   ].filter((g) => g.items.length > 0);
 
   const ldImgs = toImgs(s.image, s.images);
