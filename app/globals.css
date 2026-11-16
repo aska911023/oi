@@ -891,6 +891,11 @@ img { display: block; max-width: 100%; }
 .embed-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
 .embed-cell { position: relative; overflow: hidden; border-radius: 14px; }
 
+/* 業者後台:每頁統一頁首(標題 + 一句說明) */
+.vendor-page-head { margin-bottom: 14px; }
+.vendor-page-head h2 { font-size: 20px; margin: 0 0 2px; }
+.vendor-page-head p { color: var(--text-2); margin: 0; font-size: 14px; }
+
 /* ⑥ 行程檢視 */
 .trip-view { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 30px; margin-top: 14px; }
 .trip-view h1 { font-family: var(--serif); font-size: clamp(24px, 3.4vw, 32px); font-weight: 800; margin: 0 0 6px; color: var(--ink); }

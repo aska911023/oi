@@ -8,7 +8,8 @@ import { POI_KINDS } from "@/lib/types";
 //  頂層「我的民宿 / 我的據點 / 我的租車 / 異業合作」;
 //  「訂房」收進「我的民宿」底下;景點/餐廳/娛樂/外燴/停車 收進「我的據點」底下。
 const TOP = [
-  { href: "/vendor", label: "我的民宿", inSection: (p: string) => p === "/vendor" || p.startsWith("/vendor/bookings") },
+  { href: "/vendor", label: "總覽", inSection: (p: string) => p === "/vendor" },
+  { href: "/vendor/stays", label: "我的民宿", inSection: (p: string) => p.startsWith("/vendor/stays") || p.startsWith("/vendor/bookings") },
   { href: "/vendor/places", label: "我的據點", inSection: (p: string) => p.startsWith("/vendor/places") },
   { href: "/vendor/rentals", label: "我的租車", inSection: (p: string) => p.startsWith("/vendor/rentals") },
   { href: "/vendor/partnerships", label: "異業合作", inSection: (p: string) => p.startsWith("/vendor/partnerships") },
@@ -16,14 +17,14 @@ const TOP = [
   { href: "/vendor/analytics", label: "數據分析", inSection: (p: string) => p.startsWith("/vendor/analytics") },
 ];
 const STAY_SUB = [
-  { href: "/vendor", label: "民宿資料", exact: true },
+  { href: "/vendor/stays", label: "民宿資料", exact: true },
   { href: "/vendor/bookings", label: "訂房管理", exact: false },
 ];
 const PLACE_SUB = POI_KINDS.map((k) => ({ href: `/vendor/places/${k.slug}`, label: k.label }));
 
 export default function VendorTabs({ bookingLive = false }: { bookingLive?: boolean }) {
   const path = usePathname();
-  const inStay = path === "/vendor" || path.startsWith("/vendor/bookings");
+  const inStay = path.startsWith("/vendor/stays") || path.startsWith("/vendor/bookings");
   const inPlaces = path.startsWith("/vendor/places");
   // 線上訂房總開關關閉時,後台也先藏「訂房管理」
   const staySub = bookingLive ? STAY_SUB : STAY_SUB.filter((s) => s.href !== "/vendor/bookings");

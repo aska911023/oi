@@ -49,6 +49,7 @@ export default async function VendorLayout({ children }: { children: React.React
           <Logo href="/vendor" src={settings.logo_image || undefined} size={settings.logo_size} />
           <nav className="topnav">
             <Link href="/">看前台</Link>
+            <Link href="/vendor/guide">📖 使用教學</Link>
             {effRole === "admin" && <Link href="/admin">總後台</Link>}
             {settings.contact_line
               ? <a href={settings.contact_line} target="_blank" rel="noopener noreferrer">聯絡平台客服</a>
@@ -58,9 +59,8 @@ export default async function VendorLayout({ children }: { children: React.React
         </div>
       </header>
       <div className="admin-shell">
-        <div className="admin-head">
+        <div className="admin-head" style={{ marginBottom: 10 }}>
           <h1>業者後台</h1>
-          <p>管理你自己的商品。上架後即公開(你隨時可自行下架);價格與剩餘數以你設定的房型 / 方案為準。</p>
         </div>
         <VendorTabs bookingLive={settings.booking_live} />
         {children}
