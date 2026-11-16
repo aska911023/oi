@@ -56,7 +56,9 @@ export default async function VendorHome() {
       <section>
         <h3 className="serif shop-h" style={{ fontSize: 18, marginBottom: 10 }}>待辦事項</h3>
         {todos.length === 0 ? (
-          <div style={{ padding: "18px 20px", background: "var(--green-soft)", borderRadius: 12, color: "var(--green)", fontWeight: 600 }}>✅ 目前沒有待辦,一切順利!</div>
+          <div style={{ padding: "18px 20px", background: "var(--green-soft)", borderRadius: 12, color: "var(--green)", fontWeight: 600 }}>
+            {stayList.length === 0 ? "上架民宿後,需要你處理的事(例如新訂單)會出現在這裡。" : "✅ 目前沒有待辦,一切順利!"}
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {todos.map((t, i) => (
