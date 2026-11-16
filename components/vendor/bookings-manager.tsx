@@ -262,6 +262,8 @@ export default function BookingsManager({ ownerId, isAdmin, stays: initialStays,
                       <button className="lnk danger" disabled={busy} onClick={() => doReject(b)}>拒絕</button>
                     </>}
                     {b.status === "deposit_reported" && <button className="lnk" disabled={busy} onClick={() => doConfirmDeposit(b)}>確認收到訂金</button>}
+                    {b.status === "booked" && <button className="lnk" disabled={busy} onClick={() => doCheckIn(b)}>報到</button>}
+                    {b.status === "checked_in" && <button className="lnk" disabled={busy} onClick={() => doCheckOut(b)}>退房</button>}
                     <button className="lnk" onClick={() => openDetail(b)}>詳情</button>
                   </div>
                 </td>
@@ -373,7 +375,13 @@ function DetailDrawer({ b, stayName, events, busy, onClose, onConfirm, onReject,
           </>}
           {b.status === "confirmed" && <>
             <div style={{ width: "100%", fontSize: 13, color: "var(--muted)", marginBottom: 2 }}>⏳ 等房客匯訂金並回報(他會在「我的訂房」按『我已匯款』)。收到回報後再核對入帳。</div>
-            <button className="btn btn-primary" disabled={busy} onClick={onConfirmDeposit}>房客已付訂金 → 直接完成</button>
+            <button className="btn btn-primary" disabled={busy} onClick={onConfirmDeposit}>房客已付訂金 → 訂房完成</button>
+            <button className="btn btn-ghost" disabled={busy} onClick={onCancel}>取消</button>
+          </>}
+          {b.status === "booked" && <>
+            <div style={{ width: "100%", fontSize: 13, color: "var(--muted)", marginBottom: 2 }}>✅ 訂房已成立。客人來的時候按「報到」,離開按「退房」。</div>
+            <button className="btn btn-primary" disabled={busy} onClick={onCheckIn}>報到(入住)</button>
+            <button className="btn btn-ghost" disabled={busy} onClick={onNoShow}>未到</button>
             <button className="btn btn-ghost" disabled={busy} onClick={onCancel}>取消</button>
           </>}
           {b.status === "checked_in" && <button className="btn btn-primary" disabled={busy} onClick={onCheckOut}>退房(完成)</button>}
