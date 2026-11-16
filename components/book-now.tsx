@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { promptLogin } from "@/lib/login-gate";
 import type { RoomType } from "@/lib/types";
 
-interface AvailRow { room_type_id: string; date: string; inventory: number | null; closed: boolean | null; price_override: number | null }
+interface AvailInfo { available: number | null; closed: boolean; price: number }
 
 // 消費者線上訂房:登入牆 → 表單 → create_booking RPC → 顯示訂單編號 + 確認訊息(booking_note)。
 // 偶宿不經手金流,款項由房客直接匯給民宿。
@@ -25,7 +25,7 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
-  const [availRows, setAvailRows] = useState<AvailRow[]>([]);
+  const [avail, setAvail] = useState<Record<string, AvailInfo>>({});
   const lock = useRef(false); // 防連點兩下重複建單(用 ref,state 非同步擋不住)
 
   const today = new Date().toLocaleDateString("en-CA"); // 本地時區 YYYY-MM-DD(避免 UTC 差一天)
@@ -41,29 +41,28 @@ export default function BookNow({ stayId, stayName, rooms, bookingNote, depositP
     while (d < end) { out.push(d.toLocaleDateString("en-CA")); d.setDate(d.getDate() + 1); }
     return out;
   })();
-  // 選好日期 → 撈該期間房況(room_availability 公開可讀)
+  // 選好日期 → 撈「真實房況」(RPC:有效房間數−已訂、是否休、區間價),前後台一致、不超賣
   useEffect(() => {
-    if (!ci || !co || nights <= 0 || rooms.length === 0) { setAvailRows([]); return; }
+    if (!ci || !co || nights <= 0 || rooms.length === 0) { setAvail({}); return; }
     let alive = true;
-    createClient().from("room_availability").select("room_type_id,date,inventory,closed,price_override")
-      .in("room_type_id", rooms.map((r) => r.id)).gte("date", ci).lt("date", co)
-      .then(({ data }) => { if (alive) setAvailRows((data as AvailRow[]) || []); });
+    createClient().rpc("booking_availability", { p_stay_id: stayId, p_check_in: ci, p_check_out: co })
+      .then(({ data }) => {
+        if (!alive) return;
+        const m: Record<string, AvailInfo> = {};
+        for (const row of (data as { room_type_id: string; available: number | null; closed: boolean; price: number }[]) || [])
+          m[row.room_type_id] = { available: row.available, closed: !!row.closed, price: Number(row.price) };
+        setAvail(m);
+      });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ci, co]);
-  // 某房型整段入住期間:可不可訂、最多幾間、該期間總價(有特殊日價就用特殊價)
+  // 某房型整段入住期間:可不可訂、剩幾間(真實剩餘)、該期間總價(含特殊日價)
   function roomAvail(r: RoomType) {
     const base = Number(r.price) || 0;
-    const byDate = new Map(availRows.filter((a) => a.room_type_id === r.id).map((a) => [a.date, a]));
-    let closed = false; let cap = Infinity; let price = 0;
-    for (const d of nightsList) {
-      const row = byDate.get(d);
-      if (row?.closed) closed = true;
-      if (row && row.inventory != null) cap = Math.min(cap, row.inventory);
-      price += (row && row.price_override != null ? Number(row.price_override) : base);
-    }
-    const maxQty = closed ? 0 : (cap === Infinity ? null : cap);
-    return { available: !closed && (maxQty === null || maxQty > 0), maxQty, price };
+    const a = avail[r.id];
+    if (!a) return { available: true, maxQty: null as number | null, price: base * nights }; // 尚未撈到 → 用底價估
+    const maxQty = a.closed ? 0 : a.available; // number|null(null = 不限)
+    return { available: !a.closed && (a.available === null || a.available > 0), maxQty, price: a.price };
   }
   const setQty = (id: string, q: number) => {
     const r = rooms.find((x) => x.id === id);
