@@ -62,6 +62,7 @@ export const getSiteSettings = unstable_cache(async function getSiteSettings(): 
       if (typeof d.contact_intro === "string" && d.contact_intro) s.contact_intro = d.contact_intro;
       if (typeof d.comment_banned_words === "string") s.comment_banned_words = d.comment_banned_words;
       if (typeof d.booking_live === "boolean") s.booking_live = d.booking_live;
+      if (typeof d.review_email === "string") s.review_email = d.review_email;
       if (Array.isArray(d.blocks) && d.blocks.length) {
         const parsed = d.blocks.map(sanitizeBlock).filter(Boolean) as Block[];
         if (parsed.length) s.blocks = parsed;

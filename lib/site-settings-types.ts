@@ -50,6 +50,7 @@ export interface SiteSettings {
   contact_intro: string;
   comment_banned_words: string; // 行程留言關鍵字過濾(逗號/換行分隔,命中即擋下)
   booking_live: boolean; // 線上訂房總開關:關閉時前台不顯示「線上訂房」/「我的訂房」(全站一鍵開關)
+  review_email: string;  // 審核通知寄到的官方信箱(逗號分隔多個;留空則用 OUSU_ADMIN_EMAILS)
   blocks: Block[];
 }
 
@@ -75,6 +76,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   contact_ig: "",
   contact_fb: "",
   booking_live: false, // 預設關:下週補完後在後台一鍵開啟
+  review_email: "",
   brand_philosophy: "偶爾出走,找一處喜歡的一宿。我們相信,旅行最美的部分,常常發生在「住下來」之後。",
   share_title: "偶宿 O! · 台灣民宿搜尋",
   share_desc: "彙整全台民宿 —— 宜蘭、花蓮、北海岸的包棟、親子、海景民宿一次搜尋,看房型、價格與周邊景點。不經手訂房,直接帶你聯繫民宿。",

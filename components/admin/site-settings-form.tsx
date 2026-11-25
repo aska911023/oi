@@ -106,7 +106,7 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
       contact_ig: s.contact_ig, contact_fb: s.contact_fb, brand_philosophy: s.brand_philosophy,
       share_title: s.share_title, share_desc: s.share_desc,
       footer_about: s.footer_about, footer_copyright: s.footer_copyright, footer_tagline: s.footer_tagline,
-      about_body: s.about_body, contact_intro: s.contact_intro, comment_banned_words: s.comment_banned_words, booking_live: s.booking_live, blocks: s.blocks, updated_at: new Date().toISOString(),
+      about_body: s.about_body, contact_intro: s.contact_intro, comment_banned_words: s.comment_banned_words, booking_live: s.booking_live, review_email: s.review_email, blocks: s.blocks, updated_at: new Date().toISOString(),
     }).eq("id", 1);
     setBusy(false);
     if (error) { alert("儲存失敗:" + error.message); return; }
@@ -333,6 +333,8 @@ export default function SiteSettingsForm({ initial }: { initial: SiteSettings })
             <span><b>線上訂房總開關</b> — 開啟後,有啟用訂房的民宿前台才會顯示「線上訂房」與「我的訂房」。關閉=全站先隱藏(各民宿的訂房設定/房況仍可照常準備)。</span>
           </label>
         </div>
+        <div className="field"><label>審核通知信箱(有人投認領 / 申請 / 投稿時寄到這;逗號分隔可多個)</label>
+          <input value={s.review_email} onChange={(e) => set("review_email", e.target.value)} placeholder="例:ops@oi-stay.com, admin@oi-stay.com" /></div>
         <div className="field"><label>行程留言 — 關鍵字過濾(逗號或換行分隔;留言含到任一詞會被擋下)</label>
           <textarea rows={3} value={s.comment_banned_words} onChange={(e) => set("comment_banned_words", e.target.value)} placeholder="例:髒話1, 髒話2, 廣告關鍵字" /></div>
         <div className="frow">
