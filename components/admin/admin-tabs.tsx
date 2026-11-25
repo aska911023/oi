@@ -20,6 +20,7 @@ const TOP = [
   { href: "/admin/bookings", label: "訂房" },
   { href: "/admin/members", label: "會員資料" },
   { href: "/admin/vendors", label: "業者審核" },
+  { href: "/admin/claims", label: "認領審核" },
   { href: "/admin/partners", label: "業者名單" },
   { href: "/admin/partnerships", label: "異業合作" },
   { href: "/admin/events", label: "活動" },

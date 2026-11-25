@@ -6,6 +6,7 @@ import PlaceComments from "@/components/place-comments";
 import PlacesMap from "@/components/places-map";
 import AddToTrip from "@/components/add-to-trip";
 import AdCarousel from "@/components/ad-carousel";
+import ClaimButton from "@/components/claim-button";
 import { DETAILS, type WeekHour } from "@/lib/places-config";
 import { KIND_SINGULAR, getNearby } from "@/lib/city";
 import { breadcrumbLd } from "@/lib/seo";
@@ -100,6 +101,12 @@ export default async function PlaceDetail({ place: p, kind }: { place: Place; ki
           <AddToTrip type={kind} refId={p.id} name={p.name} region={p.region} />
           {!imgs.length && <SaveBookmark type={kind} id={p.id} nextPath={`/${enc(p.region)}/${KIND_SINGULAR[kind]}/${enc(p.slug || p.id)}`} />}
         </div>
+
+        {!p.owner_id && (
+          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontSize: 13.5, color: "var(--muted)" }}>
+            🪪 是「{p.name}」的業者嗎?<ClaimButton kind={kind === "food" ? "restaurant" : kind} targetId={p.id} targetName={p.name} label="認領並管理這間" />
+          </div>
+        )}
 
         {(tagFields.length > 0 || scalars.length > 0 || pdfs.length > 0 || lists.length > 0 || weeks.length > 0) && (
           <div className="shop-block">

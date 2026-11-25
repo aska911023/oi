@@ -7,6 +7,7 @@ import RoomList from "@/components/room-list";
 import BookNow from "@/components/book-now";
 import ChatStayButton from "@/components/chat-stay-button";
 import AdCarousel from "@/components/ad-carousel";
+import ClaimButton from "@/components/claim-button";
 import RoomTile from "@/components/room-tile";
 import { getRoomsByRegion } from "@/lib/rooms";
 import BackLink from "@/components/back-link";
@@ -119,6 +120,12 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           <AddToTrip type="stay" refId={s.id} name={s.name} region={s.region} />
           <ShareStayButton stayId={s.id} name={s.name} />
         </div>
+
+        {!s.owner_id && (
+          <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontSize: 13.5, color: "var(--muted)" }}>
+            🪪 是「{s.name}」的業者嗎?<ClaimButton kind="stay" targetId={s.id} targetName={s.name} label="認領並管理這間" />
+          </div>
+        )}
 
         <div className="shop-block">
           <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
