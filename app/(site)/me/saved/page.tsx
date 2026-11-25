@@ -8,13 +8,14 @@ export const dynamic = "force-dynamic";
 interface Saved { id: string; name: string; region?: string | null; town?: string | null; image?: string | null; description?: string | null }
 
 // 各收藏類型 → 資料表與點擊後要去的頁面
-const KINDS: { kind: string; label: string; table: string; href: (id: string) => string }[] = [
+const KINDS: { kind: string; label: string; table: string; href: (id: string) => string; sel?: string }[] = [
   { kind: "attraction", label: "景點", table: "attractions", href: () => "/places/attraction" },
   { kind: "food", label: "餐廳", table: "restaurants", href: () => "/places/food" },
   { kind: "activity", label: "娛樂", table: "activities", href: () => "/places/activity" },
   { kind: "catering", label: "外燴", table: "caterings", href: () => "/places/catering" },
   { kind: "parking", label: "停車", table: "parking_lots", href: () => "/places/parking" },
   { kind: "rental", label: "租車", table: "rental_shops", href: () => "/rentals" },
+  { kind: "event", label: "活動", table: "happenings", href: () => "/events", sel: "id,name:title,region,town,image,description" },
 ];
 
 function Section({ title, items, href }: { title: string; items: Saved[]; href: (id: string) => string }) {
@@ -79,8 +80,8 @@ export default async function SavedPage() {
   const others = await Promise.all(KINDS.map(async (k) => {
     const ids = idsOf(k.kind);
     if (!ids.length) return { ...k, items: [] as Saved[] };
-    const { data } = await sb.from(k.table).select("id,name,region,town,image,description").in("id", ids);
-    return { ...k, items: (data || []) as Saved[] };
+    const { data } = await sb.from(k.table).select(k.sel || "id,name,region,town,image,description").in("id", ids);
+    return { ...k, items: (data || []) as unknown as Saved[] };
   }));
 
   const total = stays.length + others.reduce((n, o) => n + o.items.length, 0);
