@@ -36,6 +36,7 @@ export default function MobileMenu({ bookingLive = false }: { bookingLive?: bool
         <nav className="m-links">
           <Link href="/" onClick={close}>探索民宿</Link>
           <Link href="/places/food" onClick={close}>探索</Link>
+          <Link href="/events" onClick={close}>活動</Link>
           <Link href="/rentals" onClick={close}>租車</Link>
           <Link href="/plan" onClick={close}>規劃行程</Link>
           <Link href="/trips" onClick={close}>行程分享</Link>

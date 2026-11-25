@@ -53,6 +53,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
             <h4>探索</h4>
             <Link href="/">全部民宿</Link>
             {POI_KINDS.map((k) => <Link key={k.slug} href={`/places/${k.slug}`}>{k.label}</Link>)}
+            <Link href="/events">活動</Link>
             <Link href="/rentals">租車</Link>
           </div>
           <div className="footer-col">
