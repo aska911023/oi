@@ -17,14 +17,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 靜態頁(含「全台」分類總覽)
   const staticRoutes: MetadataRoute.Sitemap = [
-    "", "/trips", "/rentals", "/plan", "/stations",
+    "", "/trips", "/rentals", "/plan", "/stations", "/events",
     "/places/food", "/places/activity", "/places/catering", "/places/attraction", "/places/parking",
     "/about", "/contact", "/apply",
   ].map((p) => mk(p, p === "" ? 1 : 0.6));
 
   try {
     const sb = createPublicClient();
-    const [staysR, tripsR, attrR, foodR, parkR, actR, catR] = await Promise.all([
+    const [staysR, tripsR, attrR, foodR, parkR, actR, catR, evR] = await Promise.all([
       sb.from("stays").select("id, slug, updated_at, region, category").eq("published", true).eq("approved", true).eq("visibility", "published").limit(5000),
       sb.from("trips").select("id, slug, updated_at, region").eq("is_public", true).limit(5000),
       sb.from("attractions").select("id, slug, region").eq("published", true),
@@ -32,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       sb.from("parking_lots").select("id, slug, region").eq("published", true),
       sb.from("activities").select("id, slug, region").eq("published", true),
       sb.from("caterings").select("id, slug, region").eq("published", true),
+      sb.from("happenings").select("id, slug, updated_at").eq("published", true).eq("approved", true).limit(5000),
     ]);
     const stays = (staysR.data || []) as { id: string; slug?: string; updated_at?: string; region?: string; category?: string }[];
     const trips = (tripsR.data || []) as { id: string; slug?: string; updated_at?: string; region?: string }[];
@@ -70,8 +71,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const tripRoutes: MetadataRoute.Sitemap = trips.map((t) => ({ url: `${BASE}/trips/${enc(t.slug || t.id)}`, lastModified: t.updated_at ? new Date(t.updated_at) : now, changeFrequency: "weekly", priority: 0.6 }));
     const placeRoutes = (rows: PlaceRow[], kindSeg: string): MetadataRoute.Sitemap => rows.filter((r) => r.region).map((r) => mk(`/${enc(r.region!)}/${kindSeg}/${enc(r.slug || r.id)}`, 0.7, "weekly"));
     const entityRoutes = [...placeRoutes(attrs, "attraction"), ...placeRoutes(foods, "restaurant"), ...placeRoutes(parks, "parking"), ...placeRoutes(acts, "activity"), ...placeRoutes(cats, "catering")];
+    const evs = (evR.data || []) as { id: string; slug?: string; updated_at?: string }[];
+    const eventRoutes: MetadataRoute.Sitemap = evs.map((e) => ({ url: `${BASE}/events/${enc(e.slug || e.id)}`, lastModified: e.updated_at ? new Date(e.updated_at) : now, changeFrequency: "daily", priority: 0.6 }));
 
-    return [...staticRoutes, ...cityHubs, ...hotelLists, ...attrLists, ...foodLists, ...actLists, ...catLists, ...parkLists, ...itinLists, ...themeRoutes, ...stayRoutes, ...tripRoutes, ...entityRoutes];
+    return [...staticRoutes, ...cityHubs, ...hotelLists, ...attrLists, ...foodLists, ...actLists, ...catLists, ...parkLists, ...itinLists, ...themeRoutes, ...stayRoutes, ...tripRoutes, ...entityRoutes, ...eventRoutes];
   } catch {
     return staticRoutes;
   }

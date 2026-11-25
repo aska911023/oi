@@ -45,8 +45,9 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
   // 附近推薦:用 nearby_pois RPC 依「與這間民宿的距離」排序(真的附近,不是同縣市取最舊 N 筆)
   type NB = { id: string; name: string; slug?: string };
   const { data: nbRaw } = await sb.rpc("nearby_pois", { p_region: s.region, p_lat: s.lat ?? null, p_lng: s.lng ?? null, p_exclude: s.id });
-  const nb = (nbRaw || {}) as { attractions?: NB[]; restaurants?: NB[]; parking?: NB[]; rentals?: NB[] };
+  const nb = (nbRaw || {}) as { attractions?: NB[]; restaurants?: NB[]; parking?: NB[]; rentals?: NB[]; happenings?: NB[] };
   const nearby: { label: string; more: string; items: { id: string; name: string; href: string }[] }[] = [
+    { label: "附近活動", more: `/events`, items: (nb.happenings || []).map((x) => ({ id: x.id, name: x.name, href: `/events/${enc(x.slug || x.id)}` })) },
     { label: "附近景點", more: `/${enc(s.region)}/attractions`, items: (nb.attractions || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/attraction/${enc(x.slug || x.id)}` })) },
     { label: "附近美食", more: `/${enc(s.region)}/restaurants`, items: (nb.restaurants || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/restaurant/${enc(x.slug || x.id)}` })) },
     { label: "附近停車", more: `/${enc(s.region)}/parking`, items: (nb.parking || []).map((x) => ({ id: x.id, name: x.name, href: `/${enc(s.region)}/parking/${enc(x.slug || x.id)}` })) },

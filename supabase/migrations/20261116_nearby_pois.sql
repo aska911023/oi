@@ -22,7 +22,12 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' A
     'rentals', (select coalesce(jsonb_agg(jsonb_build_object('id',id,'name',name) order by dist asc nulls last, created_at desc), '[]'::jsonb)
       from (select id,name,created_at,(case when p_lat is null or lat is null then null else (lat-p_lat)^2+(lng-p_lng)^2 end) dist
             from public.rental_shops where published and approved and region=p_region and id is distinct from p_exclude
-            order by dist asc nulls last, created_at desc limit p_limit) a)
+            order by dist asc nulls last, created_at desc limit p_limit) a),
+    'happenings', (select coalesce(jsonb_agg(jsonb_build_object('id',id,'name',title,'slug',slug) order by dist asc nulls last, start_date asc nulls last), '[]'::jsonb)
+      from (select id,title,slug,start_date,(case when p_lat is null or lat is null then null else (lat-p_lat)^2+(lng-p_lng)^2 end) dist
+            from public.happenings where published and approved and region=p_region
+              and (coalesce(end_date,start_date) is null or coalesce(end_date,start_date) >= current_date)
+            order by dist asc nulls last, start_date asc nulls last limit p_limit) a)
   );
 $$;
 REVOKE ALL ON FUNCTION public.nearby_pois(text, float8, float8, uuid, int) FROM public;
