@@ -1,4 +1,5 @@
 import TripPlanner from "@/components/trip-planner";
+import TripTabs from "@/components/trip-tabs";
 import { getPublishedStays } from "@/lib/stays";
 import { getPublishedPlaces } from "@/lib/places";
 import { getPublishedRentalShops } from "@/lib/rentals";
@@ -52,6 +53,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   return (
     <main className="shell plan-wrap">
       <div className="plan-head">
+        <TripTabs />
         <h1 className="serif">規劃行程</h1>
         <p>設定天數與人數,把想去的民宿、景點、餐廳、停車點排進每一天,匯出檔案或列印,和旅伴一起討論。</p>
       </div>

@@ -19,10 +19,9 @@ export default async function SiteHeader({ onGreen = false }: { onGreen?: boolea
         <nav className="topnav">
           <HeaderSearch />
           <DestinationsNav />
-          <Link href="/places/food">探索</Link>
+          <Link href="/places/food">一宿一圈</Link>
           <Link href="/events">活動</Link>
-          <Link href="/plan">規劃行程</Link>
-          <Link href="/trips">行程分享</Link>
+          <Link href="/plan">行程</Link>
           <Link href="/contact">聯絡我們</Link>
           <HeaderAuth />
         </nav>

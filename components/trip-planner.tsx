@@ -418,7 +418,7 @@ export default function TripPlanner({ stays, rooms, attractions, foods, parkings
                   )}
                 </div>
                 <div className="pick-list">
-                  {pickResults.length === 0 && <div className="day-empty">{savedOnly ? "這個分類還沒有收藏。逛探索頁點圖片上的書籤收藏,再回來安排。" : "找不到,或這個分類還沒有資料。可切到「自訂」手動加。"}</div>}
+                  {pickResults.length === 0 && <div className="day-empty">{savedOnly ? "這個分類還沒有收藏。逛一宿一圈點圖片上的書籤收藏,再回來安排。" : "找不到,或這個分類還沒有資料。可切到「自訂」手動加。"}</div>}
                   {pickResults.map((x) => {
                     const isRoom = pickTab === "stay";
                     const refId = isRoom ? (x.stayId || x.id) : x.id;

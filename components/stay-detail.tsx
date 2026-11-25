@@ -83,7 +83,7 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
     <main className="shell" style={{ paddingTop: 100, paddingBottom: 70, maxWidth: 860 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbLd) }} />
-      <BackLink fallback={`/${enc(s.region)}/hotels`} label="← 回探索" />
+      <BackLink fallback={`/${enc(s.region)}/hotels`} label="← 返回" />
 
       <div className="shop">
         <TrackView stayId={s.id} />
