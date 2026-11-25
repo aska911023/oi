@@ -43,6 +43,10 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
   const reviews = (revData || []) as unknown as { rating: number; comment: string; created_at: string; profiles: { display_name: string } | null }[];
   const avg = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : 0;
 
+  // 這間民宿的活動專欄(店家自己的活動 / 專案 / 加購;admin 或業主在後台上架)
+  const { data: promoData } = await sb.from("stay_promos").select("*").eq("stay_id", s.id).eq("published", true).order("sort").order("created_at", { ascending: false });
+  const promos = (promoData || []) as { id: string; title: string; subtitle: string | null; image: string | null; link_url: string | null; price_note: string | null; badge: string | null; start_date: string | null; end_date: string | null }[];
+
   // 附近推薦:用 nearby_pois RPC 依「與這間民宿的距離」排序(真的附近,不是同縣市取最舊 N 筆)
   type NB = { id: string; name: string; slug?: string };
   const { data: nbRaw } = await sb.rpc("nearby_pois", { p_region: s.region, p_lat: s.lat ?? null, p_lng: s.lng ?? null, p_exclude: s.id });
@@ -127,6 +131,31 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
           </div>
         )}
 
+        {promos.length > 0 && (
+          <div className="shop-block">
+            <h2 className="serif shop-h">活動專欄 <span className="count">{promos.length}</span></h2>
+            <div style={{ display: "grid", gap: 12 }}>
+              {promos.map((p) => (
+                <div key={p.id} style={{ display: "flex", gap: 14, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--surface-2)" }}>
+                  {p.image && <img src={p.image} alt={p.title} style={{ width: 128, minWidth: 128, height: 128, objectFit: "cover" }} />}
+                  <div style={{ padding: "12px 14px", flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      {p.badge && <span className="pill feat" style={{ fontSize: 11 }}>{p.badge}</span>}
+                      <b style={{ fontSize: 16 }}>{p.title}</b>
+                    </div>
+                    {p.subtitle && <p style={{ color: "var(--text-2)", fontSize: 14, margin: "6px 0 0", lineHeight: 1.6 }}>{p.subtitle}</p>}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+                      {p.price_note && <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14.5 }}>{p.price_note}</span>}
+                      {(p.start_date || p.end_date) && <span style={{ color: "var(--muted)", fontSize: 13 }}>🗓 {[p.start_date, p.end_date].filter(Boolean).join(" ~ ")}</span>}
+                      {p.link_url && <a className="btn btn-ghost btn-sm" href={p.link_url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: "auto" }}>了解更多 {OUT}</a>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="shop-block">
           <h2 className="serif shop-h">房型 <span className="count">{rooms.length}</span></h2>
           {rooms.length === 0 ? <p style={{ color: "var(--muted)", fontSize: 14 }}>這間目前尚未提供房型資訊。</p> : <RoomList rooms={rooms} stayId={s.id} stayName={s.name} bookingEnabled={bookingLive && !!s.booking_enabled} bookingNote={s.booking_note} depositPct={s.booking_deposit_pct} />}
@@ -152,24 +181,6 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
             {s.notice_checkout && <><h2 className="serif shop-h">退房須知</h2><p className="shop-desc">{s.notice_checkout}</p></>}
           </div>
         )}
-
-        <div className="shop-block">
-          <h2 className="serif shop-h">評價 {reviews.length > 0 && <span className="count">★ {avg.toFixed(1)} · {reviews.length} 則</span>}</h2>
-          <ReviewForm stayId={s.id} />
-          {reviews.length > 0 && (
-            <div className="review-list">
-              {reviews.map((r, i) => (
-                <div className="review-row" key={i}>
-                  <div className="review-top">
-                    <span className="review-stars">{"★".repeat(r.rating)}<span className="review-off">{"★".repeat(5 - r.rating)}</span></span>
-                    <span className="review-name">{r.profiles?.display_name || "旅人"}</span>
-                  </div>
-                  {r.comment && <p className="review-comment">{r.comment}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {s.lat != null && s.lng != null && (
           <div className="shop-block">
@@ -197,6 +208,24 @@ export default async function StayDetail({ stay: s }: { stay: Stay }) {
             <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${enc((s.region + s.town + " Gogoro 換電站").trim())}`}>🔋 找附近換電站(Gogoro)</a>
             <a className="btn btn-ghost" target="_blank" rel="noopener noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${enc((s.region + s.town + " 加油站").trim())}`}>⛽ 找附近加油站</a>
           </div>
+        </div>
+
+        <div className="shop-block">
+          <h2 className="serif shop-h">評價 {reviews.length > 0 && <span className="count">★ {avg.toFixed(1)} · {reviews.length} 則</span>}</h2>
+          <ReviewForm stayId={s.id} />
+          {reviews.length > 0 && (
+            <div className="review-list">
+              {reviews.map((r, i) => (
+                <div className="review-row" key={i}>
+                  <div className="review-top">
+                    <span className="review-stars">{"★".repeat(r.rating)}<span className="review-off">{"★".repeat(5 - r.rating)}</span></span>
+                    <span className="review-name">{r.profiles?.display_name || "旅人"}</span>
+                  </div>
+                  {r.comment && <p className="review-comment">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="notice">房價與空房為參考;實際訂房、加購與活動請透過上方民宿官方管道確認。</div>

@@ -4,7 +4,7 @@ import { createPublicClient } from "./supabase/public";
 import { sbRetry } from "./retry";
 import type { RoomCard } from "./types";
 
-const PAGE = 24;
+const PAGE = 18;
 
 // 地區(＋可選風格)落地頁用:某地區/風格已上架民宿房型卡 + 總數。
 export function getRoomsByRegion(region: string, category?: string) {

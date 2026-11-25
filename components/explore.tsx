@@ -11,7 +11,7 @@ import SaveBookmark from "@/components/save-bookmark";
 import CompareToggle from "@/components/compare-toggle";
 import { DEFAULT_BLOCKS, type Block, type HeroLayout } from "@/lib/site-settings-types";
 
-const PAGE = 24;
+const PAGE = 18;
 
 // 「設施」「房型」兩排細項篩選先關起來:目前上架資料的設施/房型標籤還填得不完整,
 // 篩下去容易撈到空結果,反而讓人以為站上沒東西。等這兩個欄位填得夠齊再改回 true 即可

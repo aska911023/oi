@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Explore from "@/components/explore";
+import HomeEventZone from "@/components/home-event-zone";
 import { getRoomsInitial } from "@/lib/rooms";
 import { getSiteSettings } from "@/lib/site-settings";
 
@@ -27,6 +28,7 @@ export default async function Home() {
   return (
     <main>
       <Explore rooms={rooms} total={total} regions={regions} categories={categories} blocks={settings.blocks} searchHint={settings.search_hint} heroLayout={settings.hero_layout} heroSplitRatio={settings.hero_split_ratio} />
+      <HomeEventZone />
       {regions.length > 0 && (
         <section className="shell dest-home" style={{ paddingBottom: 54 }}>
           <h2 className="serif" style={{ fontSize: 22, marginBottom: 4 }}>熱門目的地</h2>
