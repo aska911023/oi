@@ -17,7 +17,7 @@ interface PageRow { path: string; views: number }
 interface TrafficStats { views?: number; sessions?: number; by_source?: SrcRow[]; top_pages?: PageRow[] }
 const SRC_LABEL: Record<string, string> = { search: "搜尋引擎", social: "社群(IG / FB / LINE…)", referral: "其他網站連入", direct: "直接進站 / 書籤" };
 
-const RANGES = [{ d: 7, l: "近 7 天" }, { d: 30, l: "近 30 天" }, { d: 90, l: "近 90 天" }, { d: 365, l: "近一年" }];
+const RANGES = [{ d: 0, l: "今日" }, { d: 7, l: "近 7 天" }, { d: 30, l: "近 30 天" }, { d: 90, l: "近 90 天" }, { d: 365, l: "近一年" }];
 const ORDER: Record<string, number> = { flagship: 0, featured: 1, free: 2 };
 
 export default async function Analytics({ searchParams }: { searchParams: Promise<{ days?: string }> }) {

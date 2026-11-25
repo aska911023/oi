@@ -55,7 +55,7 @@ export default function StayAnalytics({ stays }: { stays: { id: string; name: st
           {stays.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <div className="seg">
-          {[30, 90].map((d) => <button key={d} className={days === d ? "on" : ""} onClick={() => setDays(d)}>近 {d} 天</button>)}
+          {[0, 7, 30, 90].map((d) => <button key={d} className={days === d ? "on" : ""} onClick={() => setDays(d)}>{d === 0 ? "今日" : `近 ${d} 天`}</button>)}
         </div>
       </div>
 

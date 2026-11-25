@@ -5,7 +5,7 @@ import { buildAnalyticsXlsx, type TierRow, type TopRow, type Totals } from "@/li
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RANGES: Record<number, string> = { 7: "近 7 天", 30: "近 30 天", 90: "近 90 天", 365: "近一年" };
+const RANGES: Record<number, string> = { 0: "今日", 7: "近 7 天", 30: "近 30 天", 90: "近 90 天", 365: "近一年" };
 const ORDER: Record<string, number> = { flagship: 0, featured: 1, free: 2 };
 
 export async function GET(req: NextRequest) {
@@ -15,8 +15,9 @@ export async function GET(req: NextRequest) {
   const { data: profile } = await sb.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profile?.role !== "admin") return new NextResponse("Forbidden", { status: 403 });
 
-  const daysParam = Number(req.nextUrl.searchParams.get("days"));
-  const days = RANGES[daysParam] ? daysParam : 30;
+  const rawDays = req.nextUrl.searchParams.get("days");
+  const daysParam = rawDays === null ? 30 : Number(rawDays);
+  const days = daysParam in RANGES ? daysParam : 30;
   const rangeLabel = RANGES[days] || `近 ${days} 天`;
 
   const { data } = await sb.rpc("admin_stats", { p_days: days });
